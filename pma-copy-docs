@@ -46,8 +46,8 @@ server</a>.
 </body>
 </html>
 EOT
-scp $tmpdir/setup web.sourceforge.net:htdocs/documentation/
+scp -r $tmpdir/setup web.sourceforge.net:htdocs/documentation/
 cd output
 for lang in ?? ; do
-    scp $tmpdir/setup web.sourceforge.net:htdocs/localized_docs/$lang
+    scp -r $tmpdir/setup web.sourceforge.net:htdocs/localized_docs/$lang
 done
