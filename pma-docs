@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Script to generate phpdoc documentation of phpMyAdmin and publish it 
+# on phpmyadmin.net
+
+tmpdir=`mktemp -td pmadocXXXXXXX`
+chmod 755 $tmpdir
+tmpfile=`mktemp -t pmadoclogXXXXXXX`
+chmod 644 $tmpfile
+cd /home/pmaweb/pma/phpMyAdmin/
+svn -q up
+nice -19 \
+    phpdoc \
+        -d ./ \
+        -i lang/ \
+        -dn 'phpMyAdmin' \
+        -ti 'phpMyAdmin documentation' \
+        -o HTML:frames:phphtmllib \
+        -t $tmpdir \
+        > $tmpfile
+if [ $? -eq 0 ] ; then
+    rsync -az --delete $tmpdir/ web.sourceforge.net:htdocs/phpdoc/
+fi
+scp -q $tmpfile web.sourceforge.net:htdocs/phpdoc/build.log
+rm -rf $tmpdir $tmpfile

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Script to generate SVN statistics of phpMyAdmin repository
+
+set -e
+
+/usr/bin/mpy-svn-stats -o /home/pmaweb/stats/ \
+     https://phpmyadmin.svn.sourceforge.net/svnroot/phpmyadmin/trunk/phpMyAdmin
+rsync -az --delete /home/pmaweb/stats/ web.sourceforge.net:htdocs/svnstats/

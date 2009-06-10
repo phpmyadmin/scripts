@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Script to generate Planet phpMyAdmin content
+
+set -e
+
+cd /home/pmaweb/pma/planet/
+svn -q up
+planet planet.ini
