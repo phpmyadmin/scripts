@@ -32,7 +32,7 @@ cat > $tmpdir/setup/index.html <<EOT
 <body>
 <h1>phpMyAdmin Setup Script</h1>
 <p>
-phpMyAdmin tarbaill includes both documentation and setup script, however this
+phpMyAdmin tarball includes both documentation and setup script, however this
 online version includes only documentation, you have to use setup script on
 your phpMyAdmin installation. So please navigate to
 <code>http://your_server/path_to_phpMyAdmin/setup/</code> to configure your
