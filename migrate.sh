@@ -42,6 +42,40 @@ git branch -r | grep -v ' *tags/' | grep 'QA_[0-9_]*$\|MAINT_[0-9_]*$' | while r
     git branch $branch $branch
 done
 
+# First connect orphan MAINT to QA
+for branch in `git branch | grep MAINT_` ; do
+    masterbranch=`echo $branch | sed 's/MAINT_/QA_/; s/_[0-9]*$//'`
+    olddate="`git log $branch | grep '^Date' | tail -n 1 | sed 's/Date: *//'`"
+    masterdate="`git log $masterbranch | grep '^Date' | tail -n 1 | sed 's/Date: *//'`"
+    echo "$branch: $olddate / $masterdate"
+    if [ "$masterdate" = "$olddate" ] ; then
+        continue
+    fi
+    echo "Branch $branch is outdated!"
+    oldtail="`git log $branch | grep '^commit' | tail -n 1 | sed 's/commit *//'`"
+    echo $masterbranch
+    masterpoint="`git log --before="$olddate" $masterbranch | grep '^commit' | head -n 1 | sed 's/commit *//'`"
+    echo "Will point $oldtail to $masterpoint"
+    git checkout $branch
+    git filter-branch -f --tag-name-filter cat --parent-filter "test \$GIT_COMMIT = $oldtail && echo '-p $masterpoint' || cat" HEAD
+    git checkout master
+done
+
+# Now connect orphan QA to master
+for branch in `git branch | grep QA_` ; do
+    olddate="`git log $branch | grep '^Date' | tail -n 1 | sed 's/Date: *//'`"
+    echo "$branch: $olddate"
+    if [ "Thu May 3 17:25:09 2001 +0000" = "$olddate" ] ; then
+        continue
+    fi
+    echo "Branch is outdated!"
+    oldtail="`git log $branch | grep '^commit' | tail -n 1 | sed 's/commit *//'`"
+    masterpoint="`git log --before="$olddate" master | grep '^commit' | head -n 1 | sed 's/commit *//'`"
+    echo "Will point $oldtail to $masterpoint"
+    childfilter=`echo $branch | sed 's/QA_/MAINT_/'`
+    git filter-branch -f --tag-name-filter cat --parent-filter "test \$GIT_COMMIT = $oldtail && echo '-p $masterpoint' || cat" -- --all
+done
+
 # Back to top level directory
 cd ..
 
