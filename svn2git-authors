@@ -1,0 +1,35 @@
+nijel = Michal Čihař <michal@cihar.com>
+swix = Olivier Müller <om@omnis.ch>
+loic1 = Loïc Chapeaux <lolo@phpheaven.net>
+cybot_tm = Sebastian Mendel <cybot_tm@users.sourceforge.net>
+armel = Armel Fauveau <armel.fauveau@globalis-ms.com>
+garvinhicking = Garvin Hicking <me@supergarv.de>
+rabus = Alexander M. Turek <me@derrabus.de>
+lem9 = Marc Delisle <marc@infomarc.info>
+robbat2 = Robin Johnson <robbat2@users.sourceforge.net>
+mkkeck = Michael Keck <mkkeck@users.sourceforge.net>
+ne0x = Marcel Tschopp <ne0x@users.sourceforge.net>
+mikebeck = Mike Beck <mike.beck@web.de>
+gandon = Benjamin Gandon <gandon@isia.cma.fr>
+korakot = Korakot Chaovavanich <korakot@iname.com>
+glund = Geert Lund <glund@silversoft.dk>
+rajkissu = Raj Kissu Rajandran <rajkissu@gmail.com>
+crackpl = Piotr Przybylski <piotrprz@gmail.com>
+zahranaeem = Zahra Naeem <xara.fast@gmail.com>
+tomassrnka = Tomas Srnka <tomas.srnka@gmail.com>
+helmo = Herman van Rink <rink@initfour.nl>
+drummingds1 = Derek Schaefer <derek.schaefer@gmail.com>
+staybyte = Steve Alberty <alberty@neptunlabs.de>
+
+# These seem to be duplicates found in SVN history, all they own
+# just few commits in past and changelog points to mentioned authors.
+# However my guess might be wrong.
+uid52400 = Marc Delisle <marc@infomarc.info>
+uid23515 = Olivier Müller <om@omnis.ch>
+uid81396 = Alexander M. Turek <me@derrabus.de>
+
+# Missing authors:
+spiggy = <spiggy@users.sourceforge.net>
+
+# Fake first commit from cvs2svn
+(no author) = Michal Čihař <michal@cihar.com>
