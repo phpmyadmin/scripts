@@ -16,6 +16,6 @@ for example:
 
 [hooks]
     cia-project = phpmyadmin
-    mailinglist = phpmyadmin-svn@lists.sourceforge.net
+    mailinglist = phpmyadmin-git@lists.sourceforge.net
 
  -- Michal Čihař <michal@cihar.com>  Wed, 17 Feb 2010 08:55:17 +0100
