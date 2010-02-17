@@ -11,4 +11,11 @@ Please note that from commit hook environment, this path is translated to:
 
 /gitrepo/p/ph/phpmyadmin/scripts/hooks/
 
+To make the hooks work, you need to configure them, in git configuration, 
+for example:
+
+[hooks]
+    cia-project = phpmyadmin
+    mailinglist = phpmyadmin-svn@lists.sourceforge.net
+
  -- Michal Čihař <michal@cihar.com>  Wed, 17 Feb 2010 08:55:17 +0100
