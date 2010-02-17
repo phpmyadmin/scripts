@@ -1,0 +1,10 @@
+Git migration script used in phpMyAdmin
+=======================================
+
+This directory contains shell script which was used to migrate phpMyAdmin SVN
+repository to Git. It uses git-svn to do basic conversion, then fixes up
+disconnected branches (caused by empty commits on creating branches in SVN
+repository) and then filters out subdirectories to separate repositories.
+
+ -- Michal Čihař <michal@cihar.com>  Wed, 17 Feb 2010 08:59:35 +0100
+
