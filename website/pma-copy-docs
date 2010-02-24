@@ -13,7 +13,7 @@ rsync -az vendor_config.php web.sourceforge.net:htdocs/documentation/libraries/
 
 # Localised documentation
 cd /home/pmaweb/pma/localized_docs/
-svn -q up
+git pull
 rsync -az --delete output/ web.sourceforge.net:htdocs/localized_docs/
 
 # Generate pointer to setup
