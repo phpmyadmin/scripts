@@ -173,6 +173,7 @@ generate_email()
 		describe=$rev
 	fi
 
+	generate_email_header
 
 	# Call the correct body generation function
 	fn_name=general
@@ -184,25 +185,9 @@ generate_email()
 		fn_name=atag
 		;;
 	esac
+	generate_${change_type}_${fn_name}_email
 		
-	if [ "$change_type $fn_name" = "update branch" ]; then
-		branchname=${refname#refs/heads/}
-		if [ "$branchname" = "master" ]; then
-			branchname=""
-		fi
-		for merged in $(git rev-parse --not --branches | grep -v $(git rev-parse $refname) | git rev-list --reverse --stdin $oldrev..$newrev); do
-
-			generate_commit_log $merged | $sendmail
-
-			if [ -n "$cia_project" ]; then
- 				/gitrepo/p/ph/phpmyadmin/scripts/hooks/git-ciabot.pl $merged $branchname
-			fi
-		done
-	else
-		(generate_email_header;
-		generate_${change_type}_${fn_name}_email;
-		generate_email_footer;) | $sendmail
-	fi
+	generate_email_footer
 }
 
 generate_email_header()
