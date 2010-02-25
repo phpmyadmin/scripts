@@ -22,7 +22,7 @@
 #
 
 # The project as known to CIA
-project="foo"
+project="$(git repo-config hooks.cia-project)"
 
 # Set to true if you want the full log to be sent
 noisy=false
@@ -32,10 +32,10 @@ from="you@yourthing.com"
 to="cia@cia.vc"
 
 # SMTP client to use
-sendmail="/usr/bin/nbsmtp -f ${from}"
+sendmail="/usr/sbin/sendmail -t"
 
 # Changeset URL
-url="http://www.example.com/gitweb/?p=${project}.git;a=commit;h=@@sha1@@"
+url="http://phpmyadmin.git.sourceforge.net/git/gitweb.cgi?p=${project}/localized_docs;a=commit;h=@@sha1@@"
 
 # You shouldn't be touching anything else.
 if [[ $# = 0 ]] ; then
