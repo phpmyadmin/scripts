@@ -687,7 +687,7 @@ else
 		generate_email $oldrev $newrev $refname | send_mail
         if [ -n "$cia_project" ]; then
             for merged in $(git-rev-list $newrev ^$oldrev | tac); do
-                /gitrepo/p/ph/phpmyadmin/scripts/hooks/git-ciabot.pl $merged $refname
+                /gitrepo/p/ph/phpmyadmin/scripts/hooks/git-ciabot $merged $refname
             done
         fi
 	done
