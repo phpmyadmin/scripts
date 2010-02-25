@@ -48,6 +48,8 @@
 #     "t=%s; printf 'http://.../?id=%%s' \$t; echo;echo; git show -C \$t; echo"
 #   Be careful if "..." contains things that will be expanded by shell "eval"
 #   or printf.
+# hooks.cia-project
+#   Name of CIA project to notify
 #
 # Notes
 # -----
