@@ -678,11 +678,13 @@ if [ -n "$1" -a -n "$2" -a -n "$3" ]; then
 	# Output to the terminal in command line mode - if someone wanted to
 	# resend an email; they could redirect the output to sendmail
 	# themselves
-	cia_project=""
 	PAGER= generate_email $2 $3 $1
 else
 	while read oldrev newrev refname
 	do
 		generate_email $oldrev $newrev $refname | send_mail
+        if [ -n "$cia_project" ]; then
+            /gitrepo/p/ph/phpmyadmin/scripts/hooks/git-ciabot.pl $newrev $refname
+        fi
 	done
 fi
