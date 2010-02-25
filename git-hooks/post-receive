@@ -684,7 +684,9 @@ if [ -n "$1" -a -n "$2" -a -n "$3" ]; then
 else
 	while read oldrev newrev refname
 	do
+        echo 'Sending email...'
 		generate_email $oldrev $newrev $refname | send_mail
+        echo 'CIAbot in progress...'
         if [ -n "$cia_project" ]; then
             for merged in $(git-rev-list $newrev ^$oldrev | tac); do
                 /gitrepo/p/ph/phpmyadmin/scripts/hooks/git-ciabot $refname $merged
