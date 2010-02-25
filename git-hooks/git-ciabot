@@ -23,6 +23,7 @@
 
 # The project as known to CIA
 project="$(git config hooks.cia-project)"
+module=`basename $PWD`
 
 # Set to true if you want the full log to be sent
 noisy=false
@@ -34,7 +35,7 @@ to="cia@cia.vc"
 sendmail="/usr/sbin/sendmail -t"
 
 # Changeset URL
-url="http://phpmyadmin.git.sourceforge.net/git/gitweb.cgi?p=phpmyadmin/`basename $PWD`;a=commit;h=@@sha1@@"
+url="http://phpmyadmin.git.sourceforge.net/git/gitweb.cgi?p=phpmyadmin/$module;a=commit;h=@@sha1@@"
 
 # You shouldn't be touching anything else.
 if [[ $# = 0 ]] ; then
@@ -76,6 +77,7 @@ out="
   </generator>
   <source>
     <project>${project}</project>
+    <module>${module}</module>
     <branch>${refname}</branch>
   </source>
   <timestamp>${ts}</timestamp>
