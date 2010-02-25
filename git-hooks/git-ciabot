@@ -28,7 +28,6 @@ project="$(git config hooks.cia-project)"
 noisy=false
 
 # Addresses for the e-mail
-from="you@yourthing.com"
 to="cia@cia.vc"
 
 # SMTP client to use
@@ -98,7 +97,6 @@ ${logmessage}
 
 ${sendmail} << EOM
 Message-ID: <${merged:0:12}.${author}@${project}>
-From: ${from}
 To: ${to}
 Content-type: text/xml
 Subject: DeliverXML
