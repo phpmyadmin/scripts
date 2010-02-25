@@ -22,7 +22,7 @@
 #
 
 # The project as known to CIA
-project="$(git repo-config hooks.cia-project)"
+project="$(git config hooks.cia-project)"
 
 # Set to true if you want the full log to be sent
 noisy=false

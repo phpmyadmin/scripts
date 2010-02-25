@@ -671,7 +671,7 @@ announcerecipients=$(git config hooks.announcelist)
 envelopesender=$(git config hooks.envelopesender)
 emailprefix=$(git config hooks.emailprefix || echo '[SCM] ')
 custom_showrev=$(git config hooks.showrev)
-cia_project=$(git repo-config hooks.cia-project)
+cia_project=$(git config hooks.cia-project)
 
 # --- Main loop
 # Allow dual mode: run from the command line just like the update hook, or
