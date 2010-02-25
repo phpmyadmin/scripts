@@ -207,7 +207,7 @@ generate_email()
 
 generate_email_header()
 {
-	e --- Email (all stdout will be the email)
+	# --- Email (all stdout will be the email)
 	# Generate header
 	cat <<-EOF
 	To: $recipients
