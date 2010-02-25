@@ -35,7 +35,7 @@ to="cia@cia.vc"
 sendmail="/usr/sbin/sendmail -t"
 
 # Changeset URL
-url="http://phpmyadmin.git.sourceforge.net/git/gitweb.cgi?p=${project}/localized_docs;a=commit;h=@@sha1@@"
+url="http://phpmyadmin.git.sourceforge.net/git/gitweb.cgi?p=phpmyadmin/`basename $PWD`;a=commit;h=@@sha1@@"
 
 # You shouldn't be touching anything else.
 if [[ $# = 0 ]] ; then
