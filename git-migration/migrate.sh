@@ -88,7 +88,7 @@ cd repos
 for repo in data  history  localized_docs  phpMyAdmin  planet  scripts  themes  website ; do
     git clone ../pma-svn-git-work $repo
     cd $repo
-    if [ $repo = phpMyAdmin ] ; then
+    if [ $repo = phpMyAdmin -o $repo = themes ] ; then
         for branch in `git branch -r | grep 'QA_[0-9_]*$\|MAINT_[0-9_]*$'` ; do
             git branch `basename $branch` $branch
         done
