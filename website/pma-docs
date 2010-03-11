@@ -7,8 +7,8 @@ tmpdir=`mktemp -td pmadocXXXXXXX`
 chmod 755 $tmpdir
 tmpfile=`mktemp -t pmadoclogXXXXXXX`
 chmod 644 $tmpfile
-cd /home/pmaweb/pma/phpMyAdmin/
-svn -q up
+cd /home/pmaweb/pma/phpmyadmin/
+git pull -q
 nice -19 \
     phpdoc \
         -d ./ \

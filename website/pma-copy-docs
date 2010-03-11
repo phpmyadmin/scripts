@@ -3,8 +3,8 @@
 # Script to publish documentation on phpmyadmin.net
 
 # Main documentation + required files
-cd /home/pmaweb/pma/phpMyAdmin/
-svn -q up
+cd /home/pmaweb/pma/phpmyadmin/
+git pull -q
 rsync -az favicon.ico CREDITS ChangeLog Documentation.html INSTALL LICENSE README changelog.php docs.css license.php translators.html documentation-gsoc web.sourceforge.net:htdocs/documentation/
 cd themes/original/img/
 rsync -az docs_menu_bg.png logo_right.png web.sourceforge.net:htdocs/documentation/themes/original/img/
@@ -13,7 +13,7 @@ rsync -az vendor_config.php web.sourceforge.net:htdocs/documentation/libraries/
 
 # Localised documentation
 cd /home/pmaweb/pma/localized_docs/
-git pull
+git pull -q
 rsync -az --delete output/ web.sourceforge.net:htdocs/localized_docs/
 
 # Generate pointer to setup

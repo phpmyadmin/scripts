@@ -9,7 +9,7 @@ error_handler() {
 trap error_handler INT QUIT EXIT
 
 cd /home/pmaweb/pma/website/
-svn -q up
+git pull -q
 ./render.py \
     --quiet \
     --server http://www.phpmyadmin.net \

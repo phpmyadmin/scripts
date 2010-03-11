@@ -5,5 +5,5 @@
 set -e
 
 cd /home/pmaweb/pma/planet/
-svn -q up
+git pull -q
 planet planet.ini
