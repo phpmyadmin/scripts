@@ -56,7 +56,7 @@ rev=$(git describe ${merged} 2>/dev/null)
 
 rawcommit=$(git cat-file commit ${merged})
 
-author=$(sed -n -e '/^author .*<\([^@]*\).*$/s--\1-p' \
+author=$(sed -n -e '/^author .*<\([^>]*\).*$/s--\1-p' \
 	<<< "${rawcommit}")
 
 logmessage=$(sed -e '1,/^$/d' <<< "${rawcommit}")
