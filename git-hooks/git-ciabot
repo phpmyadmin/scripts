@@ -98,7 +98,7 @@ ${logmessage}
 </message>"
 
 ${sendmail} << EOM
-Message-ID: <${merged:0:12}.${author}@${project}>
+Message-ID: <${merged:0:12}-${project}.${author}>
 To: ${to}
 Content-type: text/xml
 Subject: DeliverXML
