@@ -684,6 +684,10 @@ if [ -n "$1" -a -n "$2" -a -n "$3" ]; then
 else
 	while read oldrev newrev refname
 	do
+        if [ $refname = STABLE -o $refname = TESTING ] ; then
+            echo "Skipped sending mail for $refname branch"
+            continue
+        fi
         echo 'Sending email...'
 		generate_email $oldrev $newrev $refname | send_mail
         echo 'CIAbot in progress...'
