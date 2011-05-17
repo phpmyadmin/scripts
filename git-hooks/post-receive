@@ -690,11 +690,11 @@ else
         fi
         echo 'Sending email...'
 		generate_email $oldrev $newrev $refname | send_mail
-#        echo 'CIAbot in progress...'
-#        if [ -n "$cia_project" ]; then
-#            for merged in $(git-rev-list $newrev ^$oldrev | tac); do
-#                /gitrepo/p/ph/phpmyadmin/scripts/hooks/git-ciabot $refname $merged
-#            done
-#        fi
+        echo 'CIAbot in progress...'
+        if [ -n "$cia_project" ]; then
+            for merged in $(git-rev-list $newrev ^$oldrev | tac); do
+                /gitrepo/p/ph/phpmyadmin/scripts/hooks/git-ciabot $refname $merged
+            done
+        fi
 	done
 fi
