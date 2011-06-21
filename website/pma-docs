@@ -10,13 +10,11 @@ chmod 644 $tmpfile
 cd /home/pmaweb/pma/phpmyadmin/
 git pull -q
 nice -19 \
-    phpdoc \
+    docblox run \
         -d ./ \
-        -i lang/ \
-        -dn 'phpMyAdmin' \
-        -ti 'phpMyAdmin documentation' \
-        -o HTML:frames:phphtmllib \
         -t $tmpdir \
+        -i libraries/PHPExcel/*,libraries/tcpdf/*,libraries/php-gettext/* \
+        --title 'phpMyAdmin documentation' \
         > $tmpfile
 if [ $? -eq 0 ] ; then
     rsync -az --delete $tmpdir/ web.sourceforge.net:htdocs/phpdoc/
