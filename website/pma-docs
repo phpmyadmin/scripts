@@ -9,9 +9,10 @@ tmpfile=`mktemp -t pmadoclogXXXXXXX`
 chmod 644 $tmpfile
 cd /home/pmaweb/pma/phpmyadmin/
 git pull -q
+cd ~
 nice -19 \
     docblox run \
-        -d ./ \
+        -d /home/pmaweb/pma/phpmyadmin/ \
         -t $tmpdir \
         -i libraries/PHPExcel/*,libraries/tcpdf/*,libraries/php-gettext/* \
         --title 'phpMyAdmin documentation' \
