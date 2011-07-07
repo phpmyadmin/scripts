@@ -17,5 +17,5 @@ git pull -q
     --quiet-cache \
     --log render.log \
     --extension php > crash.log 2>&1
-cp render.log crash.log output/
+cat render.log crash.log > output/render.log
 rsync -az --delete output/ web.sourceforge.net:htdocs/home_page/
