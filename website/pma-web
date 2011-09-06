@@ -4,6 +4,8 @@ set -e
 error_handler() {
     if [ -f crash.log ] ; then
         cat crash.log
+        cat crash.log >> render.log
+        scp render.log web.sourceforge.net:htdocs/home_page/
     fi
 }
 trap error_handler INT QUIT EXIT
