@@ -1,0 +1,90 @@
+#!/usr/bin/python
+'''
+This script removes strings which are not translated in a po file. It uses
+whitelist to prevent removal of things which might possibly be same in
+different languages.
+'''
+
+import glob
+from translate.storage import factory
+
+WHITELIST = frozenset([
+    'Microsoft Word 2000',
+    'Excel 97-2003 XLS Workbook',
+    'Excel 2007 XLSX Workbook',
+    'Open Document',
+    'Open Document Spreadsheet',
+    'Open Document Text',
+    'HTTP Realm',
+    'Cardinality',
+    'Microsoft Office',
+    'Texy! text',
+    'Import / export',
+    'Well Known Text',
+    'Well Known Binary',
+    'horizontal',
+    '%B %d, %Y at %I:%M %p',
+    'SQL Query box',
+    'case-insensitive',
+    'case-sensitive',
+    'SQL Validator',
+    'calendar-month-year',
+    'Administration',
+    'Partition %s',
+    'Distribution',
+    'tmp_table_size vs. max_heap_table_size',
+    'Thread cache',
+    'phpMyAdmin homepage',
+    'ENUM/SET editor',
+    'Logo link URL',
+    'Logo link target',
+    'Server socket',
+    'InnoDB Status',
+    'Master status',
+    'Slave status',
+    'Routine parameters',
+    'Edit routine',
+    'Edit trigger',
+    'Start Monitor',
+    'Delayed inserts',
+    'Flush query cache',
+    'Blowfish secret',
+    'Flush (close) all tables',
+    'Analyze table',
+    'Validate SQL',
+    'Documentation',
+    'Flush the table (FLUSH)',
+    'Data Dictionary',
+    'GZip output buffering',
+    'Browser transformation',
+    'Database server',
+    'Original position',
+    'Storage Engine',
+    'Storage Engines',
+    'Password Hashing',
+    'Control host',
+
+])
+
+for f in glob.glob('po/*.po'):
+    if f == 'po/en_GB.po':
+        continue
+    removed = 0
+    store = factory.getobject(f)
+    for unit in store.units:
+        if not unit.istranslated():
+            continue
+        if len(unit.source.strings) > 1:
+            continue
+        s = str(unit.source)
+        if s.isupper() or len(s) < 12:
+            continue
+        if s in WHITELIST:
+            continue
+        if s == unit.target:
+            unit.target = ''
+            removed += 1
+
+    if removed > 0:
+        print 'Removed %d in %s' % (removed, f)
+        store.save()
