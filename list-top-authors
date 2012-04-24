@@ -46,4 +46,4 @@ for a in authors:
     # Ignore people with short interval
     if first == last:
         continue
-    print '%s (%s - %s)' % (a['name'], first, last)
+    print '%s (%s - %s)' % (a['name'].encode('utf-8'), first, last)
