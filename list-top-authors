@@ -1,3 +1,4 @@
+#!/usr/bin/python
 
 import git
 import sys
@@ -40,8 +41,9 @@ authors.sort(lambda a, b: -1 * cmp(a['count'], b['count']))
 for a in authors:
     if a['count'] < threshold:
         break
-    print '%s (%s - %s)' % (
-        a['name'],
-        time.strftime("%b %Y", time.gmtime(a['first'])),
-        time.strftime("%b %Y", time.gmtime(a['last'])),
-        )
+    first = time.strftime("%b %Y", time.gmtime(a['first']))
+    last = time.strftime("%b %Y", time.gmtime(a['last']))
+    # Ignore people with short interval
+    if first == last:
+        continue
+    print '%s (%s - %s)' % (a['name'], first, last)
