@@ -1,0 +1,47 @@
+
+import git
+import sys
+import time
+
+if len(sys.argv) < 4:
+    print 'Usage: list-top-authors repo startrev threshold'
+    print
+    print 'Lists authors of commits in given repo, starting with startrev'
+    print 'The threshold defines minimal amount of commits author needs to be listed'
+    sys.exit()
+
+threshold = int(sys.argv[3])
+
+repo = git.Repo(sys.argv[1])
+
+authors = {}
+
+for commit in repo.iter_commits('%s..master' % sys.argv[2]):
+    author = commit.author.name
+    full_author = '%s <%s>' % (commit.author.name, commit.author.email)
+    date = commit.authored_date
+    if not author in authors:
+        authors[author] = {
+            'first': date,
+            'last': date,
+            'count': 1,
+            'name': full_author,
+        }
+    else:
+        if authors[author]['first'] > date:
+            authors[author]['first'] = date
+        if authors[author]['last'] < date:
+            authors[author]['last'] = date
+        authors[author]['count'] += 1
+
+authors = authors.values()
+authors.sort(lambda a, b: -1 * cmp(a['count'], b['count']))
+
+for a in authors:
+    if a['count'] < threshold:
+        break
+    print '%s (%s - %s)' % (
+        a['name'],
+        time.strftime("%b %Y", time.gmtime(a['first'])),
+        time.strftime("%b %Y", time.gmtime(a['last'])),
+        )
