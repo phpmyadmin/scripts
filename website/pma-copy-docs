@@ -6,49 +6,5 @@
 cd /home/pmaweb/pma/phpmyadmin/
 git pull -q
 rsync -az favicon.ico ChangeLog LICENSE README web.sourceforge.net:htdocs/documentation/
-cd themes/original/img/
-rsync -az docs_menu_bg.png logo_right.png web.sourceforge.net:htdocs/documentation/themes/original/img/
 cd /home/pmaweb/pma/phpmyadmin/libraries/
 rsync -az vendor_config.php web.sourceforge.net:htdocs/documentation/libraries/
-
-# Localised documentation
-cd /home/pmaweb/pma/localized_docs/
-git pull -q
-rsync -az --delete output/ web.sourceforge.net:htdocs/localized_docs/
-
-# Generate pointer to setup
-tmpdir=`mktemp -td pmadocXXXXXXX`
-chmod 755 $tmpdir
-mkdir $tmpdir/setup
-cat > $tmpdir/setup/index.html <<EOT
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US"
-    version="-//W3C//DTD XHTML 1.1//EN" dir="ltr">
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>phpMyAdmin Setup Script</title>
-</head>
-<body>
-<h1>phpMyAdmin Setup Script</h1>
-<p>
-phpMyAdmin tarball includes both documentation and setup script, however this
-online version includes only documentation, you have to use setup script on
-your phpMyAdmin installation. So please navigate to
-<code>http://your_server/path_to_phpMyAdmin/setup/</code> to configure your
-copy of phpMyAdmin.
-</p>
-<p>
-Alternatively you can try <a
-href="http://demo.phpmyadmin.net/master-config/setup/">setup script on our demo
-server</a>.
-</p>
-</body>
-</html>
-EOT
-scp -q -r $tmpdir/setup web.sourceforge.net:htdocs/documentation/
-cd output
-for lang in ?? ; do
-    scp -q -r $tmpdir/setup web.sourceforge.net:htdocs/localized_docs/$lang
-done
-rm -rf $tmpdir
