@@ -95,7 +95,7 @@ $cfg['Servers'][$i]['verbose'] = 'phpMyAdmin demo - Drizzle';
 
 $cfg['blowfish_secret'] = '123456';
 
-$tmp_url = parse_url(PMA_getenv('REQUEST_URI'), PHP_URL_PATH);
+$tmp_url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $tmp_dir = $tmp_url;
 while ($tmp_dir != '' && $tmp_dir != '/') {
     $tmp_url = $tmp_dir;
