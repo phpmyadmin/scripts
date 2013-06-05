@@ -113,6 +113,6 @@ $cfg['AllowThirdPartyFraming'] = true;
 $cfg['PmaNoRelation_DisableWarning'] = true;
 $cfg['TranslationWarningThreshold'] = 95;
 $cfg['ServerDefault'] = 2;
-$cfg['CSPAllow'] = "'stats.cihar.com'";
+$cfg['CSPAllow'] = 'stats.cihar.com';
 #$cfg['MaxDbList'] = 3;
 ?>
