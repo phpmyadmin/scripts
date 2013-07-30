@@ -1,3 +1,4 @@
+<?php if (PMA_VERSION != '4.1-dev') { ?>
 <script type="text/javascript" src="/common-script.js"></script>
 <div class="notice">
 <a href="/" target="_top">phpMyAdmin demo server</a><?php
@@ -17,6 +18,7 @@ if (file_exists('./revision-info.php')) {
 ?>.
 </div>
 <div style="clear:both;"></div>
+<?php } ?>
 <!-- Piwik -->
 <script type="text/javascript">
   var _paq = _paq || [];
