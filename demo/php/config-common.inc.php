@@ -114,4 +114,5 @@ $cfg['TranslationWarningThreshold'] = 95;
 $cfg['ServerDefault'] = 2;
 $cfg['CSPAllow'] = 'stats.cihar.com';
 #$cfg['MaxDbList'] = 3;
+$cfg['DBG']['demo'] = true;
 ?>
