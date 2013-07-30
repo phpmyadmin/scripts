@@ -109,7 +109,6 @@ $cfg['Error_Handler']['gather'] = true;
 $cfg['ShowPhpInfo'] = true;
 
 $cfg['SuhosinDisableWarning'] = true;
-$cfg['AllowThirdPartyFraming'] = true;
 $cfg['PmaNoRelation_DisableWarning'] = true;
 $cfg['TranslationWarningThreshold'] = 95;
 $cfg['ServerDefault'] = 2;
