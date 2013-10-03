@@ -105,7 +105,7 @@ while ($tmp_dir != '' && $tmp_dir != '/') {
 $GLOBALS['PMADEMO_DIR'] = $tmp_url;
 $cfg['PmaAbsoluteUri'] = 'http://demo.phpmyadmin.net' . $tmp_url;
 $cfg['Error_Handler']['display'] = true;
-$cfg['Error_Handler']['gather'] = true;
+$cfg['Error_Handler']['gather'] = false;
 $cfg['ShowPhpInfo'] = true;
 
 $cfg['SuhosinDisableWarning'] = true;
