@@ -8,5 +8,5 @@ drizzle -uroot <<EOT
 DROP SCHEMA IF EXISTS world;
 CREATE DATABASE world;
 USE world;
-SOURCE world-drizzle.sql;
+\. world-drizzle.sql;
 EOT
