@@ -10,7 +10,7 @@ GRANT SELECT ON mysql.db TO 'pma'@'192.168.30.%';
 GRANT SELECT ON mysql.host TO 'pma'@'192.168.30.%';
 GRANT SELECT (Host, Db, User, Table_name, Table_priv, Column_priv)
 ON mysql.tables_priv TO 'pma'@'192.168.30.%';
-GRANT SELECT, INSERT, UPDATE, DELETE ON <pma_db>.* TO 'pma'@'192.168.30.%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON phpmyadmin.* TO 'pma'@'192.168.30.%';
 
 
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'192.168.30.%';
