@@ -16,10 +16,11 @@ REPOS=`awk '/^branches/ {print $3}' ~/scripts/demo/php/versions.ini`
 # Update all repositories
 for REPONAME in $REPOS ; do
     DIRNAME=$BASEDIR/$REPONAME
-    UPDATE=0
     mkdir -p $DIRNAME
+
     if [ ! -d $DIRNAME/.git ] ; then
         cd $BASEDIR
+
         # Clone the repository
         if [ $REPONAME != 'master' ] ; then
             # Use master as reference repository to share objects database
@@ -27,23 +28,21 @@ for REPONAME in $REPOS ; do
         else
             git clone $REMOTE $REPONAME
         fi
-        cd $DIRNAME
+
         # Checkout correct branch
+        cd $DIRNAME
         git checkout ${REPONAME%-*}
-        UPDATE=1
     else
+        # Check for updates
         cd $DIRNAME
         orig_head=$(git log -n 1 --format=format:'%H')
         git pull -q
         new_head=$(git log -n 1 --format=format:'%H')
-        if [ $orig_head != $new_head ] ; then
-            UPDATE=1
-        fi
-    fi
 
-    # Check if there has been an update
-    if [ $UPDATE -eq 0 -o "x$1" = "x--force" ] ; then
-        continue
+        # Check if there has been an update
+        if [ $orig_head = $new_head -a "x$1" != "x--force" ] ; then
+            continue
+        fi
     fi
 
     # Store revision info
