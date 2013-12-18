@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# phpMyAdmin configuraiton storage
+mysql -uroot < create_tables.sql
+
+# Sakila
+mysql -uroot < sakila-db/sakila-schema.sql
+mysql -uroot < sakila-db/sakila-data.sql
+
+# Menagerie
+cd menagerie-db
+mysql -uroot <<EOT
+DROP SCHEMA IF EXISTS menagerie;
+CREATE DATABASE menagerie;
+USE menagerie;
+SOURCE cr_pet_tbl.sql;
+SOURCE ins_puff_rec.sql;
+SOURCE cr_event_tbl.sql;
+EOT
+mysqlimport --local menagerie event.txt > /dev/null
+mysqlimport --local menagerie pet.txt > /dev/null
+cd ..
+
+# World database
+mysql -uroot <<EOT
+DROP SCHEMA IF EXISTS world;
+CREATE DATABASE world;
+USE world;
+SOURCE world.sql;
+EOT
+
+# OpenGIS data
+mysql -uroot <<EOT
+DROP SCHEMA IF EXISTS opengis;
+CREATE DATABASE opengis;
+USE opengis;
+SOURCE opengis.sql;
+SOURCE world_borders.sql;
+EOT
