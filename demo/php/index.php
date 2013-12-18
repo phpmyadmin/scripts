@@ -77,12 +77,10 @@ function pma_branch_desc($branch, $short = false) {
   </p>
 
   <p>
-    Demo is running on <a href="http://www.mysql.com">MySQL</a> 5.5 in strict
-    mode, <a href="http://www.drizzle.org/">Drizzle</a> and <a href="http://askmonty.org/wiki/index.php/MariaDB">MariaDB</a>
-    5.3, site is served via <a href="http://www.lighttpd.net/">lighttpd</a>
-    webserver using <a href="http://www.php.net">PHP</a> as fast-cgi. All that
-    is built on top of <a href="http://www.debian.org">Debian
-    GNU/Linux</a>. phpMyAdmin has enabled additional relational features
+    Demo is running on <a href="http://www.mysql.com">MySQL</a>,
+    <a href="http://www.drizzle.org/">Drizzle</a> and
+    <a href="https://mariadb.org/">MariaDB</a>.
+    phpMyAdmin has enabled additional relational features
     and MIME transformations. Demos use mysqli extension, unless stated
     otherwise.
   </p>
