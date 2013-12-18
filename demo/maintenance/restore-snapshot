@@ -1,0 +1,9 @@
+#!/bin/sh
+# Script to merge LVM snapshot into original volume
+
+if [ -z "$1" ] ; then
+	echo "Usage: restore-snapshot NAME"
+	exit 1
+fi
+
+lvconvert --merge /dev/mapper/pma-demo--$1--snapshot

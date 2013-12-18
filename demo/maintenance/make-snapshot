@@ -1,0 +1,9 @@
+#!/bin/sh
+# Script to make a LVM snapshot of a demo server
+
+if [ -z "$1" ] ; then
+	echo "Usage: make-snapshot NAME"
+	exit 1
+fi
+
+lvcreate -s -n demo-$1-snapshot -L 4G /dev/mapper/pma-demo--$1

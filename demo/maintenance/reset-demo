@@ -1,0 +1,13 @@
+#!/bin/sh
+# Script to reset demo virtual machine to snapshot
+
+if [ -z "$1" ] ; then
+	echo "Usage: reset-demo NAME"
+	exit 1
+fi
+
+virsh destroy demo-$1
+sleep 5
+./restore-snapshot $1
+./make-snapshot $1
+virsh start demo-$1
