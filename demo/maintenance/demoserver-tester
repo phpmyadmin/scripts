@@ -1,0 +1,10 @@
+#!/bin/sh
+# Script to check demo server status and reset it to sane when wrong
+
+if ! ./mysql-tester mysql 192.168.30.23 ; then
+    ./reset-demo mysql
+fi
+
+if ! ./mysql-tester mariadb 192.168.30.22 ; then
+    ./reset-demo mariadb
+fi
