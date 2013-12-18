@@ -1,6 +1,5 @@
 <?php
-$pma_branches = array('master', 'QA_4_1', 'MAINT_4_1_0');
-$pma_master_rel = '4.2.0';
+require 'versions.php';
 
 function pma_branch_desc($branch, $short = false) {
     $match = array();
