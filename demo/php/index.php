@@ -1,5 +1,8 @@
 <?php
-require 'versions.php';
+
+$version_data = parse_ini_file('versions.ini');
+$pma_branches = $version_data['branches'];
+$pma_master_rel = $version_data['master-release'];
 
 function pma_branch_desc($branch, $short = false) {
     $match = array();
@@ -100,8 +103,6 @@ function pma_branch_desc($branch, $short = false) {
   <ul>
 
 <?php
-$pma_branches[] = 'STABLE';
-$pma_branches = array_reverse($pma_branches);
 foreach($pma_branches as $branch) {
     if (strstr($branch, 'master') !== false) continue;
     echo '<li>';
@@ -119,12 +120,8 @@ foreach($pma_branches as $branch) {
   <ul>
 
 <?php
-$my_pma_branches[] = 'master';
-$my_pma_branches[] = 'master-config';
-$my_pma_branches[] = 'master-http';
-$my_pma_branches[] = 'master-config-nopmadb';
-//$pma_branches[] = 'stable';
-foreach($my_pma_branches as $branch) {
+foreach($pma_branches as $branch) {
+    if (strstr($branch, 'master') === false) continue;
     echo '<li>';
     echo '<a href="/' . $branch . '/">';
     if (strstr($branch, '-config') !== false) {
