@@ -13,6 +13,7 @@ REMOTE=git://github.com/phpmyadmin/phpmyadmin.git
 # List of repositories to checkout
 REPOS=`awk '/^branches/ {print $3}' ~/scripts/demo/php/versions.ini`
 
+# Update all repositories
 for REPONAME in $REPOS ; do
     DIRNAME=$BASEDIR/$REPONAME
     UPDATE=0
@@ -57,4 +58,16 @@ for REPONAME in $REPOS ; do
     if [ -f ./scripts/remove-incomplete-mo ] ; then
         ./scripts/remove-incomplete-mo 0
     fi
+done
+
+# Delete stale directories
+find $BASEDIR -maxdepth 1 -mindepth 1 -type d | while read DIRNAME ; do
+    REPO=${DIRNAME##*/}
+    for TESTREPO in $REPOS ; do
+        if [ $TESTREPO = $REPO ] ; then
+            continue 2
+        fi
+    done
+    echo "Deleting stale repository $DIRNAME"
+    rm -rf "$DIRNAME"
 done
