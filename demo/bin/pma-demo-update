@@ -4,10 +4,16 @@
 
 set -e
 
+# Directory where repositories are stored
 BASEDIR=~/.pma-demo
+
+# Remote URL of repository to checkout
 REMOTE=git://github.com/phpmyadmin/phpmyadmin.git
 
-for REPONAME in `awk '/^branches/ {print $3}' ~/scripts/demo/php/versions.ini` ; do
+# List of repositories to checkout
+REPOS=`awk '/^branches/ {print $3}' ~/scripts/demo/php/versions.ini`
+
+for REPONAME in $REPOS ; do
     DIRNAME=$BASEDIR/$REPONAME
     UPDATE=0
     mkdir -p $DIRNAME
