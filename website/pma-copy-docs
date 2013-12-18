@@ -3,8 +3,8 @@
 # Script to publish documentation on phpmyadmin.net
 
 # Main documentation + required files
-cd /home/pmaweb/pma/phpmyadmin/
+cd /home/builder/phpmyadmin/
 git pull -q
 rsync -az favicon.ico ChangeLog LICENSE README web.sourceforge.net:htdocs/documentation/
-cd /home/pmaweb/pma/phpmyadmin/libraries/
+cd /home/builder/phpmyadmin/libraries/
 rsync -az vendor_config.php web.sourceforge.net:htdocs/documentation/libraries/

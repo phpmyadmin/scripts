@@ -4,6 +4,6 @@
 
 set -e
 
-cd /home/pmaweb/pma/planet/
+cd /home/builder/planet/
 git pull -q
 planet planet.ini

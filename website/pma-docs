@@ -7,12 +7,12 @@ tmpdir=`mktemp -td pmadocXXXXXXX`
 chmod 755 $tmpdir
 tmpfile=`mktemp -t pmadoclogXXXXXXX`
 chmod 644 $tmpfile
-cd /home/pmaweb/pma/phpmyadmin/
+cd /home/builder/phpmyadmin/
 git pull -q
 cd ~
 nice -19 \
     docblox run \
-        -d /home/pmaweb/pma/phpmyadmin/ \
+        -d /home/builder/phpmyadmin/ \
         -t $tmpdir \
         -i libraries/PHPExcel/*,libraries/tcpdf/*,libraries/php-gettext/* \
         --title 'phpMyAdmin documentation' \

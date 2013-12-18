@@ -10,7 +10,7 @@ error_handler() {
 }
 trap error_handler INT QUIT EXIT
 
-cd /home/pmaweb/pma/website/
+cd /home/builder/website/
 git pull -q
 ./render.py \
     --quiet \
