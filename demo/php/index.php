@@ -84,13 +84,6 @@ function pma_branch_desc($branch, $short = false) {
     otherwise.
   </p>
 
-  <p>
-    Additionally PHP installation includes <a
-    href="http://xcache.lighttpd.net/">XCache</a> module to speed up PHP
-    execution and <a href="http://www.hardened-php.net/suhosin/">Suhosin</a>
-    module and patch to protect against various types of attacks.
-  </p>
-
   <h2>Login information</h2>
   <p>
     Login is root with empty password or any user you create.
