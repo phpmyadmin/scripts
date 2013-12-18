@@ -1,0 +1,29 @@
+#!/bin/sh
+# Script to check MySQL/MariaDB server status
+
+if [ -z "$1" -o -z "$2" ] ; then
+	echo "Usage: mysql-tester NAME ADDRESS"
+	exit 1
+fi
+
+# Test Debian maintenance user
+if ! ssh demo-$1 /usr/bin/mysqladmin ping ; then
+    exit 1
+fi
+
+# Test root user
+if ! mysql -uroot -h $2 -e 'SHOW DATABASES' ; then
+    exit 2
+fi
+
+# Test root user privileges
+if ! mysql -uroot -h $2 -e 'SELECT * FROM mysql.user' ; then
+    exit 2
+fi
+
+# Test pma user
+if ! mysql -upma -pheslo -h $2 -e 'SHOW DATABASES' ; then
+    exit 3
+fi
+
+exit 0
