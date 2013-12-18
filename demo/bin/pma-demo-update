@@ -31,7 +31,16 @@ for REPONAME in $REPOS ; do
 
         # Checkout correct branch
         cd $DIRNAME
-        git checkout ${REPONAME%-*}
+        git checkout ${REPONAME%%-*}
+
+        # Symlink configuration
+        FLAVOUR=${REPONAME#*-}
+        if [ -f ~/scripts/demo/php/config-$FLAVOUR.inc.php ] ; then
+            ln -sf ~/scripts/demo/php/config-$FLAVOUR.inc.php config.inc.php
+        else
+            ln -sf ~/scripts/demo/php/config.inc.php config.inc.php
+        fi
+        ln -sf ~/scripts/demo/php/config.*.inc.php .
     else
         # Check for updates
         cd $DIRNAME
