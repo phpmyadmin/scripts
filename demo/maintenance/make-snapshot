@@ -6,4 +6,4 @@ if [ -z "$1" ] ; then
 	exit 1
 fi
 
-lvcreate -s -n demo-$1-snapshot -L 4G /dev/mapper/pma-demo--$1
+/sbin/lvcreate -s -n demo-$1-snapshot -L 4G /dev/mapper/pma-demo--$1
