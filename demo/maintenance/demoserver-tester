@@ -1,5 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 # Script to check demo server status and reset it to sane when wrong
+
+. ./demoserver-locklib
+
+exlock_now || exit 1
 
 if ! ./mysql-tester mysql 192.168.30.23 ; then
     ./reset-demo mysql

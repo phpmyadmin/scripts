@@ -1,5 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 # Script to reset demo server to clean state
+
+. ./demoserver-locklib
+
+exlock || exit 1
 
 ./reset-demo drizzle
 ./reset-demo mariadb
