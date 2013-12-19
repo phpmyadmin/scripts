@@ -1,0 +1,6 @@
+#!/bin/sh
+# Script to reset demo server to clean state
+
+./reset-demo drizzle
+./reset-demo mariadb
+./reset-demo mysql
