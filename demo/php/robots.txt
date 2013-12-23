@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /master
+Disallow: /master*
+Disallow: /MAINT_*
+Disallow: /QA_*
+Disallow: /STABLE
