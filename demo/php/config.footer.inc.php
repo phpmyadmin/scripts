@@ -1,4 +1,4 @@
-<?php if (substr(PMA_VERSION, 0, 3) != '4.1') { ?>
+<?php if (substr(PMA_VERSION, 0, 3) != '4.2' && substr(PMA_VERSION, 0, 3) != '4.1') { ?>
 <script type="text/javascript" src="/common-script.js"></script>
 <div class="notice">
 <a href="/" target="_top">phpMyAdmin demo server</a><?php
