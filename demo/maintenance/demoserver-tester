@@ -6,9 +6,9 @@
 exlock_now || exit 1
 
 if ! ./mysql-tester mysql 192.168.30.23 ; then
-    ./reset-demo mysql
+    ./reset-demo mysql $LOCKFD<&-
 fi
 
 if ! ./mysql-tester mariadb 192.168.30.22 ; then
-    ./reset-demo mariadb
+    ./reset-demo mariadb $LOCKFD<&-
 fi

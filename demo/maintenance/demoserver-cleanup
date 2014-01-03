@@ -5,6 +5,6 @@
 
 exlock || exit 1
 
-./reset-demo drizzle
-./reset-demo mariadb
-./reset-demo mysql
+./reset-demo drizzle $LOCKFD<&-
+./reset-demo mariadb $LOCKFD<&-
+./reset-demo mysql $LOCKFD<&-
