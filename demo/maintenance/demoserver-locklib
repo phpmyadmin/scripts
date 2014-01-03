@@ -12,7 +12,7 @@ LOCKFD=99
 TIMEOUT=600
 
 # PRIVATE
-_lock()             { flock -$1 -w $TIMEOUT $LOCKFD; }
+_lock()             { flock -$1 -o -w $TIMEOUT $LOCKFD; }
 _no_more_locking()  { _lock u; _lock xn && rm -f $LOCKFILE; }
 _prepare_locking()  { eval "exec $LOCKFD>\"$LOCKFILE\""; trap _no_more_locking EXIT; }
 
