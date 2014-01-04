@@ -7,7 +7,7 @@ if [ -z "$1" -o -z "$2" ] ; then
 fi
 
 # Test Debian maintenance user
-if ! ssh demo-$1 /usr/bin/mysqladmin ping ; then
+if ! ssh demo-$1 /usr/bin/mysqladmin status ; then
     exit 1
 fi
 
