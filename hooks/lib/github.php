@@ -48,7 +48,7 @@ function github_comment_commit($repo, $sha, $comment)
 
     //set the url, number of POST vars, POST data
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
-    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo, '/commits/' . $sha . '/comments');
+    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/commits/' . $sha . '/comments');
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array('body' => $comment)));
 
