@@ -26,7 +26,7 @@ $missing = array();
 
 foreach($commits as $commit) {
     if (strpos("\nSigned-Off-By:", $commit['commit']['message']) === false) {
-        github_comment_commit($repo_name, $commit['sha'], $message)
+        github_comment_commit($repo_name, $commit['sha'], $message);
         $missing[] = $commit['sha'];
     }
 }
