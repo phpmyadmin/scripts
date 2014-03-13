@@ -28,4 +28,4 @@ if (count($missing) > 0) {
     $message .= "\n\nSee https://github.com/phpmyadmin/phpmyadmin/blob/master/CONTRIBUTING.md for more information.";
     github_comment($data['pull_request']['number'], $message);
     die('Comment posted.');
-)
+}
