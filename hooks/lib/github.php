@@ -7,7 +7,7 @@ if (!defined('PMAHOOKS')) {
     die();
 }
 
-require_once('../config.php');
+require_once('./config.php');
 
 $curl_base_opts = array(
     CURLOPT_USERPWD => GITHUB_USERNAME . ':' . GITHUB_PASSWORD,
