@@ -18,7 +18,7 @@ if (! isset($data['pull_request'])) {
     die('No pull request data!');
 }
 
-$repo_name = $data['pull_request']['repo']['full_name'];
+$repo_name = $data['pull_request']['head']['repo']['full_name'];
 
 $commits = github_pull_commits($data['pull_request']['number']);
 
