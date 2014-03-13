@@ -23,9 +23,9 @@ foreach($commits as $commit) {
 }
 
 if (count($missing) > 0) {
-    $message = "Following commits are missing Signed-Off-By:\n\n";
+    $message = "Following commits are missing Signed-Off-By line to indicate that you agree with phpMyAdmin Developer's Certificate of Origin:\n\n";
     $message .= implode(', ', $missing);
-    $message .= "\n\nSee https://github.com/phpmyadmin/phpmyadmin/blob/master/CONTRIBUTING.md for more information.";
+    $message .= "\n\nPlease check [contributing documentation](https://github.com/phpmyadmin/phpmyadmin/blob/master/CONTRIBUTING.md) for more information.";
     github_comment($data['pull_request']['number'], $message);
     die('Comment posted.');
 }
