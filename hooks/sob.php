@@ -6,7 +6,7 @@ define('PMAHOOKS', True);
 
 require_once('./lib/github.php');
 
-$data = json_decode($_POST['payload']);
+$data = json_decode($_POST['payload'], true);
 
 if (! isset($data['pull_request'])) {
     die('No pull request data!');
