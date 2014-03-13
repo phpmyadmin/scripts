@@ -35,8 +35,8 @@ $repo_name = $data['pull_request']['head']['repo']['full_name'];
 $commits = github_pull_commits($data['pull_request']['number']);
 
 /* Process commits in the pull request to find one missing SOB */
-foreach($commits as $commit) {
-    if (strpos("\nsigned-off-by:", strtolower($commit['commit']['message'])) === false) {
+foreach ($commits as $commit) {
+    if ( ! preg_match("@\nSigned-off-by:@i", $commit['commit']['message'])) {
         github_comment_commit($repo_name, $commit['sha'], $message);
         echo 'Comment on ' . $commit['sha'] . ":\n";
         echo $commit['commit']['message'];
