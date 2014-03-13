@@ -36,7 +36,7 @@ function github_comment($pullid, $comment)
     //close connection
     curl_close($ch);
 
-    return json_decode($result);
+    return json_decode($result, true);
 }
 
 /**
@@ -54,5 +54,5 @@ function github_pull_commits($pullid)
     //close connection
     curl_close($ch);
 
-    return json_decode($result);
+    return json_decode($result, true);
 }
