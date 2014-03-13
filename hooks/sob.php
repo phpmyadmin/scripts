@@ -35,15 +35,11 @@ $repo_name = $data['pull_request']['head']['repo']['full_name'];
 $commits = github_pull_commits($data['pull_request']['number']);
 
 /* Process commits in the pull request to find one missing SOB */
-$missing = array();
 foreach($commits as $commit) {
     if (strpos("\nSigned-Off-By:", $commit['commit']['message']) === false) {
         github_comment_commit($repo_name, $commit['sha'], $message);
-        $missing[] = $commit['sha'];
+        echo 'Comment on ' . $commit['sha'] . ":\n";
+        echo $commit['commit']['message'];
+        echo "\n";
     }
-}
-
-/* Report back that we've posted comment */
-if (count($missing) > 0) {
-    die('Comment posted.');
 }
