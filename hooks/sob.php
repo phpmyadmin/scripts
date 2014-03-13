@@ -18,7 +18,7 @@ $missing = array();
 
 foreach($commits as $commit) {
     if (strpos("\nSigned-Off-By:", $commit['commit']['message']) === false) {
-        $missing[] = $commit['commit']['sha'];
+        $missing[] = $commit['sha'];
     }
 }
 
