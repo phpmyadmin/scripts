@@ -17,8 +17,10 @@ credentials. For example::
 Scripts
 +++++++
 
-Signed-Off-By checker
----------------------
+Commits checker
+---------------
 
-The ``sob.php`` is GitHub hook to check that all commits in a pull request have
-valid Signed-Off-By line.
+The ``commits.php`` is GitHub hook to check that all commits in a pull request
+are in a good shape:
+
+*  they have valid Signed-Off-By line
