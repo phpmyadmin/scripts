@@ -174,16 +174,6 @@ foreach($pma_branches as $branch) {
 <li><a href="/master-http"><?php echo 'HTTP auth'; ?></a></li>
 <li><a href="/master-config-nopmadb"><?php echo 'Config auth, no pmadb'; ?></a></li>
 </ul>
-
-<h3><?php echo 'More information'; ?></h3>
-<p>
-<?php echo 'This demo server is run and hosted by <a href="http://cihar.com/">Michal Čihař</a>.'; ?>
-
-</p>
-<h3>Sponsors</h3>
-<ul>
-<li><a href="http://www.ooshirts.com/">T-Shirt Printing</a></li>
-</ul>
 </div>
 
 <footer>
