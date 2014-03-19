@@ -78,3 +78,21 @@ function github_pull_commits($pullid)
 
     return json_decode($result, true);
 }
+
+/**
+ * Returns diff of pull request commits.
+ */
+function github_pull_diff($pullid)
+{
+    $ch = curl_init();
+    curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
+    curl_setopt($ch, CURLOPT_URL, 'https://github.com/phpmyadmin/phpmyadmin/pull/' . $pullid . '.patch');
+
+    //execute post
+    $result = curl_exec($ch);
+
+    //close connection
+    curl_close($ch);
+
+    return $result;
+}
