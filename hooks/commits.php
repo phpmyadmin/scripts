@@ -50,7 +50,8 @@ foreach ($commits as $commit) {
         echo "\n";
     }
     /* Check for tab in diff */
-    foreach ($commit['files'] as $file) {
+    $detail = github_commit_detail($commit['sha']);
+    foreach ($detail['files'] as $file) {
         if (strpos($file['patch'], "\t") !== false) {
             github_comment_commit($repo_name, $commit['sha'], $message_tab);
             echo 'Comment (TAB) on ' . $commit['sha'] . ":\n";

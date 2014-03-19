@@ -80,6 +80,24 @@ function github_pull_commits($pullid)
 }
 
 /**
+ * Returns diff of pull request commit detal.
+ */
+function github_commit_detail($commitid)
+{
+    $ch = curl_init();
+    curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
+    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/phpmyadmin/phpmyadmin/commits/' . $commit);
+
+    //execute post
+    $result = curl_exec($ch);
+
+    //close connection
+    curl_close($ch);
+
+    return json_decode($result, true);
+}
+
+/**
  * Returns diff of pull request commits.
  */
 function github_pull_diff($pullid)
