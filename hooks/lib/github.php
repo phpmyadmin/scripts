@@ -82,7 +82,7 @@ function github_pull_commits($pullid)
 /**
  * Returns diff of pull request commit detal.
  */
-function github_commit_detail($commitid)
+function github_commit_detail($commit)
 {
     $ch = curl_init();
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
