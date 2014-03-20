@@ -90,7 +90,7 @@ foreach ($commits as $commit) {
         if (preg_match("@\n\+[^\n]*\t@", $file['patch'])) {
             $files_tab[] = $file['filename'];
         }
-        if (preg_match("@\n)\+[^\n]* \n@", $file['patch'])) {
+        if (preg_match("@\n\+[^\n]* \n@", $file['patch'])) {
             $files_space[] = $file['filename'];
         }
         if (preg_match("@\n\+[^\n]*\r@", $file['patch'])) {
