@@ -102,20 +102,17 @@ foreach ($commits as $commit) {
         echo 'Comment (TAB) on ' . $commit['sha'] . ":\n";
         echo $commit['commit']['message'];
         echo "\n";
-        break;
     }
     if (count($files_space) && strpos($comments_text, 'PMABOT:SPACE') === false) {
         github_comment_commit($repo_name, $commit['sha'], $message_space . implode(', ', $files_space));
         echo 'Comment (SPACE) on ' . $commit['sha'] . ":\n";
         echo $commit['commit']['message'];
         echo "\n";
-        break;
     }
     if (count($files_eol) && strpos($comments_text, 'PMABOT:EOL') === false) {
         github_comment_commit($repo_name, $commit['sha'], $message_eol . implode(', ', $files_eol));
         echo 'Comment (EOL) on ' . $commit['sha'] . ":\n";
         echo $commit['commit']['message'];
         echo "\n";
-        break;
     }
 }
