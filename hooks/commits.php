@@ -12,13 +12,15 @@ require_once('./lib/github.php');
 $contributing_url = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/CONTRIBUTING.md';
 $guidelines_url = 'http://wiki.phpmyadmin.net/pma/Developer_guidelines';
 
-$message_sob = "This commit is missing Signed-Off-By line to indicate "
+$message_sob = "<!-- PMABOT:SOB -->\n"
+    . "This commit is missing Signed-Off-By line to indicate "
     . "that you agree with phpMyAdmin Developer's Certificate of Origin. "
     . "Please check [contributing documentation]("
     . $contributing_url
     . ") for more information.";
 
-$message_tab = "This commit is using tab character for indentation instead "
+$message_tab = "<!-- PMABOT:TAB -->\n"
+    . "This commit is using tab character for indentation instead "
     . "of spaces, what is mandated by phpMyAdmin. Please check our "
     . "[Developer guidelines]("
     . $guidelines_url
@@ -55,7 +57,7 @@ foreach ($commits as $commit) {
 
     /* Chek for missing SOB */
     if ( ! preg_match("@\nSigned-off-by:@i", $commit['commit']['message'])) {
-        if (strpos($comments_text, $contributing_url) === false) {
+        if (strpos($comments_text, 'PMABOT:SOB') === false) {
             github_comment_commit($repo_name, $commit['sha'], $message_sob);
             echo 'Comment (SOB) on ' . $commit['sha'] . ":\n";
             echo $commit['commit']['message'];
@@ -71,7 +73,7 @@ foreach ($commits as $commit) {
             $files[] = $file['filename'];
         }
     }
-    if (count($files) && strpos($comments_text, $guidelines_url) === false) {
+    if (count($files) && strpos($comments_text, 'PMABOT:TAB') === false) {
         github_comment_commit($repo_name, $commit['sha'], $message_tab . implode(', ', $files));
         echo 'Comment (TAB) on ' . $commit['sha'] . ":\n";
         echo $commit['commit']['message'];
