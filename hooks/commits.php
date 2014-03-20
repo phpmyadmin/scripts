@@ -87,13 +87,13 @@ foreach ($commits as $commit) {
     $files_space = array();
     $files_eol = array();
     foreach ($detail['files'] as $file) {
-        if (strpos($file['patch'], "\t") !== false) {
+        if (preg_match("@\n\+[^\n]*\t@", $file['patch'])) {
             $files_tab[] = $file['filename'];
         }
-        if (strpos($file['patch'], " \n") !== false) {
+        if (preg_match("@\n)\+[^\n]* \n@", $file['patch'])) {
             $files_space[] = $file['filename'];
         }
-        if (strpos($file['patch'], "\r") !== false) {
+        if (preg_match("@\n\+[^\n]*\r@", $file['patch'])) {
             $files_eol[] = $file['filename'];
         }
     }
