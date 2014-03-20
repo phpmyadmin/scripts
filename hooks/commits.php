@@ -27,6 +27,22 @@ $message_tab = "<!-- PMABOT:TAB -->\n"
     . "#Indentation) for more information."
     . "\n\nOffending files: ";
 
+$message_space = "<!-- PMABOT:SPACE -->\n"
+    . "This commit contains trailing whitespace, "
+    . "what is prohibited in phpMyAdmin. Please check our "
+    . "[Developer guidelines]("
+    . $guidelines_url
+    . "#Indentation) for more information."
+    . "\n\nOffending files: ";
+
+$message_eol = "<!-- PMABOT:EOL -->\n"
+    . "This commit is using DOS end of line characters instead "
+    . "of UNIX ones, what is mandated by phpMyAdmin. Please check our "
+    . "[Developer guidelines]("
+    . $guidelines_url
+    . "#Indentation) for more information."
+    . "\n\nOffending files: ";
+
 /* Parse JSON */
 $data = json_decode($_POST['payload'], true);
 
@@ -65,17 +81,39 @@ foreach ($commits as $commit) {
         }
     }
 
-    /* Check for tab in diff */
+    /* Check for tab or trailing whitespace in diff */
     $detail = github_commit_detail($commit['sha']);
-    $files = array();
+    $files_tab = array();
+    $files_space = array();
+    $files_eol = array();
     foreach ($detail['files'] as $file) {
         if (strpos($file['patch'], "\t") !== false) {
-            $files[] = $file['filename'];
+            $files_tab[] = $file['filename'];
+        }
+        if (strpos($file['patch'], " \n") !== false) {
+            $files_space[] = $file['filename'];
+        }
+        if (strpos($file['patch'], "\r") !== false) {
+            $files_eol[] = $file['filename'];
         }
     }
-    if (count($files) && strpos($comments_text, 'PMABOT:TAB') === false) {
-        github_comment_commit($repo_name, $commit['sha'], $message_tab . implode(', ', $files));
+    if (count($files_tab) && strpos($comments_text, 'PMABOT:TAB') === false) {
+        github_comment_commit($repo_name, $commit['sha'], $message_tab . implode(', ', $files_tab));
         echo 'Comment (TAB) on ' . $commit['sha'] . ":\n";
+        echo $commit['commit']['message'];
+        echo "\n";
+        break;
+    }
+    if (count($files_space) && strpos($comments_text, 'PMABOT:SPACE') === false) {
+        github_comment_commit($repo_name, $commit['sha'], $message_space . implode(', ', $files_space));
+        echo 'Comment (SPACE) on ' . $commit['sha'] . ":\n";
+        echo $commit['commit']['message'];
+        echo "\n";
+        break;
+    }
+    if (count($files_eol) && strpos($comments_text, 'PMABOT:EOL') === false) {
+        github_comment_commit($repo_name, $commit['sha'], $message_eol . implode(', ', $files_eol));
+        echo 'Comment (EOL) on ' . $commit['sha'] . ":\n";
         echo $commit['commit']['message'];
         echo "\n";
         break;
