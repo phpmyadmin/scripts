@@ -22,7 +22,8 @@ $message_tab = "This commit is using tab character for indentation instead "
     . "of spaces, what is mandated by phpMyAdmin. Please check our "
     . "[Developer guidelines]("
     . $guidelines_url
-    . "#Indentation) for more information.";
+    . "#Indentation) for more information."
+    . "\n\nOffending files: ";
 
 /* Parse JSON */
 $data = json_decode($_POST['payload'], true);
@@ -64,15 +65,17 @@ foreach ($commits as $commit) {
 
     /* Check for tab in diff */
     $detail = github_commit_detail($commit['sha']);
+    $files = array();
     foreach ($detail['files'] as $file) {
         if (strpos($file['patch'], "\t") !== false) {
-            if (strpos($comments_text, $guidelines_url) === false) {
-                github_comment_commit($repo_name, $commit['sha'], $message_tab);
-                echo 'Comment (TAB) on ' . $commit['sha'] . ":\n";
-                echo $commit['commit']['message'];
-                echo "\n";
-                break;
-            }
+            $files[] = $file['filename'];
         }
+    }
+    if (count($files) && strpos($comments_text, $guidelines_url) === false) {
+        github_comment_commit($repo_name, $commit['sha'], $message_tab . implode(', ', $files));
+        echo 'Comment (TAB) on ' . $commit['sha'] . ":\n";
+        echo $commit['commit']['message'];
+        echo "\n";
+        break;
     }
 }
