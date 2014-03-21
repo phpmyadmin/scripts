@@ -23,4 +23,8 @@ Commits checker
 The ``commits.php`` is GitHub hook to check that all commits in a pull request
 are in a good shape:
 
-*  they have valid Signed-Off-By line
+* all have valid Signed-Off-By line
+* the patch does not introduce some of coding style violations
+    * tab indentation
+    * DOS end of lines
+    * trailing whitespace
