@@ -111,7 +111,7 @@ $cfg['SuhosinDisableWarning'] = true;
 $cfg['PmaNoRelation_DisableWarning'] = true;
 $cfg['TranslationWarningThreshold'] = 95;
 $cfg['ServerDefault'] = 2;
-$cfg['CSPAllow'] = 'stats.cihar.com www.google-analytics.com ssl.google-analytics.com';
+$cfg['CSPAllow'] = 'www.google-analytics.com ssl.google-analytics.com';
 #$cfg['MaxDbList'] = 3;
 $cfg['DBG']['demo'] = true;
 ?>
