@@ -22,3 +22,4 @@ git pull -q
 date > output/render.log
 cat render.log crash.log >> output/render.log
 rsync -az --delete output/ web.sourceforge.net:htdocs/home_page/
+rm crash.log
