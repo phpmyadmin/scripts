@@ -154,3 +154,12 @@ function github_pull_diff($pullid)
 
     return $result;
 }
+
+/**
+ * Trigger website rendering.
+ */
+function trigger_website_render()
+{
+    $file = fopen(WEBSITE_HOOK, 'w');
+    fclose($file);
+}
