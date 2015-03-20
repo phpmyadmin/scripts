@@ -43,6 +43,14 @@ $message_eol = "<!-- PMABOT:EOL -->\n"
     . "#Indentation) for more information."
     . "\n\nOffending files: ";
 
+$message_commits = "<!-- PMABOT:COMMITS -->\n"
+    . "This pull requests contains too many commits, in most cases "
+    . "it is caused by wrong merge target. In case you have forked "
+    . "`master` branch you should also ask merging to `master` branch. "
+    . "See [GitHub documentation]"
+    . "(https://help.github.com/articles/creating-a-pull-request/) "
+    . "for more details.";
+
 /* Parse JSON */
 $data = json_decode($_POST['payload'], true);
 
@@ -53,6 +61,12 @@ if (! isset($data['pull_request']) || ! isset($data['action'])) {
 
 /* We don't care about closed requests */
 if ($data['action'] == 'closed') {
+    die();
+}
+
+/* Check number of commits */
+if ($data['pull_request']['commits'] > 50) {
+    github_comment_pull($data['pull_request']['number'], $message_commits);
     die();
 }
 
