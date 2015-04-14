@@ -13,6 +13,7 @@ REMOTE_THEMES=git://github.com/phpmyadmin/themes.git
 
 # List of repositories to checkout
 REPOS=`awk '/^branches/ {print $3}' ~/scripts/demo/php/versions.ini`
+THEMES=`awk '/^themes/ {print $3}' ~/scripts/demo/php/versions.ini`
 
 # Update all repositories
 for REPONAME in $REPOS ; do
@@ -57,6 +58,13 @@ for REPONAME in $REPOS ; do
 
     # Store revision info
     ~/scripts/demo/bin/pma-revision-info
+
+    # Link themes
+    for THEME in $THEMES ; do
+        if [ ! -e themes/$THEME ] ; then
+            ln -s ../../themes/$THEME themes/$THEME
+        fi
+    done
 
     # Generate locales
     if [ -f ./scripts/generate-mo ] ; then
