@@ -9,6 +9,7 @@ BASEDIR=~/.pma-demo
 
 # Remote URL of repository to checkout
 REMOTE=git://github.com/phpmyadmin/phpmyadmin.git
+REMOTE_THEMES=git://github.com/phpmyadmin/themes.git
 
 # List of repositories to checkout
 REPOS=`awk '/^branches/ {print $3}' ~/scripts/demo/php/versions.ini`
@@ -68,9 +69,20 @@ for REPONAME in $REPOS ; do
     fi
 done
 
+# Clone / update themes
+if [ -d $BASEDIR/themes/.git ] ; then
+    cd $BASEDIR/themes
+    git pull -q
+else
+    git clone $REMOTE_THEMES $BASEDIR/themes
+fi
+
 # Delete stale directories
 find $BASEDIR -maxdepth 1 -mindepth 1 -type d | while read DIRNAME ; do
     REPO=${DIRNAME##*/}
+    if [ $REPO = themes ] ; then 
+        continue
+    fi
     for TESTREPO in $REPOS ; do
         if [ $TESTREPO = $REPO ] ; then
             continue 2
