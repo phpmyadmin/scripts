@@ -78,6 +78,11 @@ $commits = github_pull_commits($data['pull_request']['number']);
 
 /* Process commits in the pull request */
 foreach ($commits as $commit) {
+    /* Ignore merge commits */
+    if (count($commit['parents']) > 1) {
+        continue;
+    }
+
     /* Fetch current comments */
     $current_comments = github_commit_comments($repo_name, $commit['sha'], $message_sob);
     $comments_text = '';
