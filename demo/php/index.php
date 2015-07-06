@@ -75,7 +75,7 @@ function pma_branch_desc($branch, $short = false) {
    </div>
    <div class="clearer"></div>
    </nav>
-    <h1><a href="https://www.phpmyadmin.net/" rel="home"><span id="logo">phpMyAdmin</span></a> Planet phpMyAdmin</h1>
+    <h1><a href="https://www.phpmyadmin.net/" rel="home"><span id="logo">phpMyAdmin</span></a> phpMyAdmin demo server</h1>
   </header>
   <div id="body" class="demo-body">
 <h2>Demo Server</h2>
