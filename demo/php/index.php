@@ -35,8 +35,8 @@ function pma_branch_desc($branch, $short = false) {
   <meta name="copyright" content="Copyright © 2003 - 2012 phpMyAdmin devel team" />
   <link rel="copyright" href="http://www.phpmyadmin.net/home_page/license.php" />
   <title>phpMyAdmin - Demo server</title>
-  <link rel="stylesheet" type="text/css" href="style.css" />
-  <link rel="stylesheet" type="text/css" href="slimbox.css" media="screen" />
+  <link rel="stylesheet" type="text/css" href="../css/style.css" />
+  <link rel="stylesheet" type="text/css" href="../css/slimbox.css" media="screen" />
   <link rel="shortcut icon" href="http://www.phpmyadmin.net/home_page/favicon.ico" type="image/x-icon" />
   <link rel="icon" href="http://www.phpmyadmin.net/home_page/favicon.ico" type="image/x-icon" />
   <link rel="vcs-git" href="git://github.com/phpmyadmin/phpmyadmin.git" title="phpMyAdmin Git repository" />
