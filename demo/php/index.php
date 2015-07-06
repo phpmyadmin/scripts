@@ -35,19 +35,13 @@ function pma_branch_desc($branch, $short = false) {
   <meta name="copyright" content="Copyright © 2003 - 2012 phpMyAdmin devel team" />
   <link rel="copyright" href="http://www.phpmyadmin.net/home_page/license.php" />
   <title>phpMyAdmin - Demo server</title>
-  <link rel="stylesheet" type="text/css" href="http://www.phpmyadmin.net/home_page/css/style.css" />
-  <link rel="stylesheet" type="text/css" href="http://www.phpmyadmin.net/home_page/css/slimbox.css" media="screen" />
-  <link rel="shortcut icon" href="http://www.phpmyadmin.net/home_page/favicon.ico" type="image/x-icon" />
-  <link rel="icon" href="http://www.phpmyadmin.net/home_page/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" type="text/css" href="https://www.phpmyadmin.net/static/css/style.css"/>
+  <link rel="stylesheet" href="https://www.phpmyadmin.net/static/css/font-awesome.min.css">
+
+  <link rel="shortcut icon" href="https://www.phpmyadmin.net/static/favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="https://www.phpmyadmin.net/static/favicon.ico" type="image/x-icon" />
   <link rel="vcs-git" href="git://github.com/phpmyadmin/phpmyadmin.git" title="phpMyAdmin Git repository" />
   <link rel="vcs-browse" href="http://github.com/phpmyadmin/" title="phpMyAdmin Git repository browser" />
-  <script src="http://www.phpmyadmin.net/home_page/js/mootools.js" type="text/javascript"></script>
-  <script src="http://www.phpmyadmin.net/home_page/js/mootools-more.js" type="text/javascript"></script>
-  <script src="http://www.phpmyadmin.net/home_page/js/slimbox.js" type="text/javascript"></script>
-  <script src="http://www.phpmyadmin.net/home_page/js/fader.js" type="text/javascript"></script>
-  <script src="http://www.phpmyadmin.net/home_page/js/master_sorting_table.js" type="text/javascript"></script>
-  <script src="http://www.phpmyadmin.net/home_page/js/utils.js" type="text/javascript"></script>
-  <meta http-equiv="X-Generated" content="Tue, 24 Mar 2012 12:59:03 GMT" />
   <meta name="verify-v1" content="3AM2eNj0zQ1Ao/N2eGE02S45V3p5KQxAyMIxdUJhtEQ=" />
   <meta name="robots" content="index, follow" />
   <script type="text/javascript">
@@ -58,11 +52,30 @@ function pma_branch_desc($branch, $short = false) {
   <header>
    <nav>
    <div class="menu">
-   <a href="http://www.phpmyadmin.net/home_page/">Home</a><a href="http://www.phpmyadmin.net/home_page/news.php">News</a><a href="http://www.phpmyadmin.net/home_page/security/">Security</a><a href="http://www.phpmyadmin.net/home_page/support.php">Support</a><a href="http://www.phpmyadmin.net/home_page/docs.php">Docs</a><a href="http://www.phpmyadmin.net/home_page/try.php" class="active">Try</a><a href="http://www.phpmyadmin.net/home_page/improve.php">Contribute</a><a href="http://www.phpmyadmin.net/home_page/contest.php">Contest</a><a href="http://www.phpmyadmin.net/home_page/sponsors.php">Sponsors</a><a href="http://www.phpmyadmin.net/home_page/themes.php">Themes</a><a href="http://www.phpmyadmin.net/home_page/downloads.php">Download</a>
+    <a href="https://www.phpmyadmin.net/" >Home</a>
+
+    <a href="https://www.phpmyadmin.net/news/">News</a>
+
+    <a href="https://www.phpmyadmin.net/security/" >Security</a>
+
+    <a href="https://www.phpmyadmin.net/support/" >Support</a>
+
+    <a href="https://www.phpmyadmin.net/docs/" >Docs</a>
+
+    <a href="https://www.phpmyadmin.net/try/" class="active" >Try</a>
+
+    <a href="https://www.phpmyadmin.net/contribute/" >Contribute</a>
+
+    <a href="https://www.phpmyadmin.net/sponsors/" >Sponsors</a>
+
+    <a href="https://www.phpmyadmin.net/themes/" >Themes</a>
+
+    <a href="https://www.phpmyadmin.net/downloads/" >Download</a>
+
    </div>
    <div class="clearer"></div>
    </nav>
-    <h1><a href="http://www.phpmyadmin.net/home_page/" rel="home"><span id="logo">phpMyAdmin</span></a> phpMyAdmin demo server</h1>
+    <h1><a href="https://www.phpmyadmin.net/" rel="home"><span id="logo">phpMyAdmin</span></a> Planet phpMyAdmin</h1>
   </header>
   <div id="body" class="demo-body">
 <h2>Demo Server</h2>
@@ -178,16 +191,16 @@ foreach($pma_branches as $branch) {
 
 <footer>
   <ul>
-    <li>Copyright © 2003 - 2013 <span class="vcard"><a class="url org fn" href="http://www.phpmyadmin.net/home_page/team.php">phpMyAdmin devel team</a><a href="mailto:phpmyadmin-devel@lists.sourceforge.net" class="email"></a></span></li>
-    <li><a href="http://www.phpmyadmin.net/home_page/license.php" rel="license">License</a></li>
-    <li><a href="http://www.phpmyadmin.net/home_page/donate.php" rel="payment" title="Support phpMyAdmin by donating money!">Donate</a></li>
-    <li><a href="http://www.phpmyadmin.net/home_page/sitemap.php" rel="contents">Sitemap</a></li>
-    <li><a href="http://www.phpmyadmin.net/home_page/search.php" title="Search for phpMyAdmin related questions">Search</a></li>
-    <li><a href="http://www.phpmyadmin.net/home_page/about-website.php" title="Information about website">About</a></li>
-    <li class="last">Valid <a href="http://validator.w3.org/check/referer">HTML</a> and <a href="http://jigsaw.w3.org/css-validator/check/referer">CSS</a></li>
-    <li class="logo"><a href="http://sourceforge.net/projects/phpmyadmin"><img src="http://sflogo.sourceforge.net/sflogo.php?group_id=23067&amp;type=10" width="80" height="15" alt="Get phpMyAdmin at SourceForge.net. Fast, secure and Free Open Source software downloads" /></a></li>
+    <li>Copyright &copy; 2003 - 2015 <span class="vcard"><a class="url org fn" href="https://www.phpmyadmin.net/team/">phpMyAdmin contributors</a><a href="mailto:phpmyadmin-devel@lists.sourceforge.net" class="email"></a></span></li>
+    <li><a href="https://www.phpmyadmin.net/license/" rel="license">License</a></li>
+    <li><a href="https://www.phpmyadmin.net/donate/" rel="payment" title="Support phpMyAdmin by donating money!">Donate</a></li>
+    <li><a href="https://www.phpmyadmin.net/search/" title="Search for phpMyAdmin related questions">Search</a></li>
+    <li><a href="https://www.phpmyadmin.net/about-website/" title="Information about website">About</a></li>
+    <li class="logo"><a href="http://google.com/+phpmyadmin"><i class="fa fa-google-plus-square"></i></a></li>
+    <li class="logo"><a href="http://twitter.com/phpmya"><i class="fa fa-twitter-square"></i></a></li>
+    <li class="logo"><a href="https://www.facebook.com/pages/PhpMyAdmin/157021164334486"><i class="fa fa-facebook-official"></i></a></li>
   </ul>
-</footer>
+  </footer>
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
