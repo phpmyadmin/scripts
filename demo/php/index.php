@@ -27,12 +27,12 @@ function pma_branch_desc($branch, $short = false) {
     }
 }
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE HTML>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
  <head profile="http://purl.org/uF/2008/03/ http://purl.org/uF/hAtom/0.1/">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <meta name="author" content="phpMyAdmin devel team" />
-  <meta name="copyright" content="Copyright © 2003 - 2012 phpMyAdmin devel team" />
+  <meta name="author" content="phpMyAdmin contributors" />
+  <meta name="copyright" content="Copyright &copy; 2003 - 2015 phpMyAdmin contributors" />
   <link rel="copyright" href="http://www.phpmyadmin.net/home_page/license.php" />
   <title>phpMyAdmin - Demo server</title>
   <link rel="stylesheet" type="text/css" href="http://www.phpmyadmin.net/home_page/css/style.css" />
@@ -178,7 +178,7 @@ foreach($pma_branches as $branch) {
 
 <footer>
   <ul>
-    <li>Copyright © 2003 - 2013 <span class="vcard"><a class="url org fn" href="http://www.phpmyadmin.net/home_page/team.php">phpMyAdmin devel team</a><a href="mailto:phpmyadmin-devel@lists.sourceforge.net" class="email"></a></span></li>
+    <li>Copyright © 2003 - 2013 <span class="vcard"><a class="url org fn" href="http://www.phpmyadmin.net/home_page/team.php">phpMyAdmin contributors</a><a href="mailto:phpmyadmin-devel@lists.sourceforge.net" class="email"></a></span></li>
     <li><a href="http://www.phpmyadmin.net/home_page/license.php" rel="license">License</a></li>
     <li><a href="http://www.phpmyadmin.net/home_page/donate.php" rel="payment" title="Support phpMyAdmin by donating money!">Donate</a></li>
     <li><a href="http://www.phpmyadmin.net/home_page/sitemap.php" rel="contents">Sitemap</a></li>
