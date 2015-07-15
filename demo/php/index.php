@@ -87,7 +87,7 @@ function pma_branch_desc($branch, $short = false) {
     restored, so you just break things for you and other users. Feel free to
     try any of the phpMyAdmin features. If you break
     something, just wait a while. The database configuration resets every
-    hour. Databases are cleaned every Monday morning, so do not expect
+    hour. Databases are cleaned weekly, so do not expect
     that your data will stay there forever.
   </p>
 
@@ -96,8 +96,7 @@ function pma_branch_desc($branch, $short = false) {
     <a href="http://www.drizzle.org/">Drizzle</a> and
     <a href="https://mariadb.org/">MariaDB</a>.
     phpMyAdmin has enabled additional relational features
-    and MIME transformations. Demos use mysqli extension, unless stated
-    otherwise.
+    and MIME transformations.
   </p>
 
   <h2>Login information</h2>
