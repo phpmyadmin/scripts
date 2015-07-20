@@ -1,3 +1,0 @@
-$(document).ready(function () {
-    $('#main_pane_left').prepend('<div class="group"><h2>phpMyAdmin Demo Server</h2><p style="margin: 0.5em 1em 0.5em 1em">You are using demo server. You can do anything here, but please do not change root, debian-sys-maint and pma users.  This demo server is run and hosted by <a href="http://cihar.com/">Michal Čihař</a>.  To support it you can <a href="http://cihar.com/donate/">give a donation</a> or <a href="http://flattr.com/thing/56982/phpMyAdmin-demo-server" target="_blank"> <img src="/flattr-badge-large.png" alt="Flattr this" title="Flattr this" border="0" width="93" height="20" /></a>. Find out more details about <a href="/" target="_top">phpMyAdmin demo server</a>.</p></div>');
-});
