@@ -5,6 +5,5 @@
 
 exlock || exit 1
 
-./reset-demo drizzle 99<&-
 ./reset-demo mariadb 99<&-
 ./reset-demo mysql 99<&-
