@@ -1,0 +1,9 @@
+#!/bin/sh
+# Script to make a LVM mirror
+
+if [ -z "$1" ] ; then
+	echo "Usage: lvm-make-mirror NAME"
+	exit 1
+fi
+
+lvconvert --mirrors 1 --type mirror --mirrorlog core --alloc anywhere  pma/demo-$1-template

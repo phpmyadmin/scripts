@@ -1,0 +1,9 @@
+#!/bin/sh
+# Script to split a LVM mirror
+
+if [ -z "$1" ] ; then
+	echo "Usage: lvm-split-mirror NAME"
+	exit 1
+fi
+
+lvconvert --splitmirrors 1 --name demo-$1 pma/demo-$1-template
