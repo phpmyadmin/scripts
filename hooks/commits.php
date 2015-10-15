@@ -107,7 +107,9 @@ foreach ($commits as $commit) {
     $files_eol = array();
     foreach ($detail['files'] as $file) {
         if (preg_match("@\n\+[^\n]*\t@", $file['patch'])) {
-            $files_tab[] = $file['filename'];
+            if ($file['filename'] != 'libraries/advisory_rules.txt') {
+                $files_tab[] = $file['filename'];
+            }
         }
         if (preg_match("@\n\+[^\n]* \n@", $file['patch'])) {
             $files_space[] = $file['filename'];
