@@ -12,17 +12,17 @@ if ! ssh demo-$1 /usr/bin/mysqladmin status ; then
 fi
 
 # Test root user
-if ! mysql -uroot -h $2 -e 'SHOW DATABASES' ; then
+if ! mysql -uroot -h $2 -e 'SHOW DATABASES' 2> /dev/null ; then
     exit 2
 fi
 
 # Test root user privileges
-if ! mysql -uroot -h $2 -e 'SELECT * FROM mysql.user' ; then
+if ! mysql -uroot -h $2 -e 'SELECT * FROM mysql.user' 2> /dev/null ; then
     exit 2
 fi
 
 # Test pma user
-if ! mysql -upma -pheslo -h $2 -e 'SHOW DATABASES' ; then
+if ! mysql -upma -pheslo -h $2 -e 'SHOW DATABASES' 2> /dev/null ; then
     exit 3
 fi
 
