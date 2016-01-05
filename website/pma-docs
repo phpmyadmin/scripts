@@ -1,24 +1,8 @@
 #!/bin/sh
 
 # Script to generate phpdoc documentation of phpMyAdmin and publish it 
-# on phpmyadmin.net
+# on develdocs.phpmyadmin.net
 
-tmpdir=`mktemp -td pmadocXXXXXXX`
-chmod 755 $tmpdir
-tmpfile=`mktemp -t pmadoclogXXXXXXX`
-chmod 644 $tmpfile
 cd /home/builder/phpmyadmin/
 git pull -q
-cd ~
-nice -19 \
-    docblox run \
-        -d /home/builder/phpmyadmin/ \
-        -t $tmpdir \
-        -i libraries/PHPExcel/*,libraries/tcpdf/*,libraries/php-gettext/* \
-        --title 'phpMyAdmin documentation' \
-        > $tmpfile
-if [ $? -eq 0 ] ; then
-    rsync -az --delete $tmpdir/ web.sourceforge.net:htdocs/phpdoc/
-fi
-scp -q $tmpfile web.sourceforge.net:htdocs/phpdoc/build.log
-rm -rf $tmpdir $tmpfile
+nice -19 phpdox > build/phpdox/html/build.log
