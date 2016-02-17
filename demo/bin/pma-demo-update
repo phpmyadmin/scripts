@@ -59,6 +59,11 @@ for REPONAME in $REPOS ; do
     # Store revision info
     ~/scripts/demo/bin/pma-revision-info
 
+    # Update composer deps
+    if [ -f composer.json ] ; then
+        composer update --quiet --no-dev
+    fi
+
     # Link themes
     for THEME in $THEMES ; do
         if [ ! -e themes/$THEME ] ; then
