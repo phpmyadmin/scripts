@@ -9,7 +9,7 @@ define('PMAHOOKS', True);
 
 require_once('./lib/github.php');
 
-$contributing_url = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/CONTRIBUTING.md';
+$contributing_url = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/.github/CONTRIBUTING.md';
 $guidelines_url = 'http://wiki.phpmyadmin.net/pma/Developer_guidelines';
 
 $message_sob = "<!-- PMABOT:SOB -->\n"
