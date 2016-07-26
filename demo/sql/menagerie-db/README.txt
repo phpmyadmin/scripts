@@ -19,7 +19,7 @@ For the mysql and mysqlimport commands, supply any connection parameters
 necessary (host, user, password) on the command line before the database
 name.  For more information, see:
 
-  http://dev.mysql.com/doc/mysql/en/invoking-programs.html
+  https://dev.mysql.com/doc/mysql/en/invoking-programs.html
 
 
 First, you must create the menagerie database.  Invoke the mysql program,
