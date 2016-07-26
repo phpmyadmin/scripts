@@ -10,7 +10,7 @@ define('PMAHOOKS', True);
 require_once('./lib/github.php');
 
 $contributing_url = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/.github/CONTRIBUTING.md';
-$guidelines_url = 'http://wiki.phpmyadmin.net/pma/Developer_guidelines';
+$guidelines_url = 'https://github.com/phpmyadmin/phpmyadmin/wiki/Developer_guidelines';
 
 $message_sob = "<!-- PMABOT:SOB -->\n"
     . "This commit is missing Signed-Off-By line to indicate "
