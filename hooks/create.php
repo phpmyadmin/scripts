@@ -26,6 +26,12 @@ if (! ctype_digit($parts[count($parts) - 1])) {
     die('Not a final release');
 }
 
+foreach ($parts as $part) {
+    if (! ctype_digit($part)) {
+        die('Not a release!');
+    }
+}
+
 $version = implode('.', array_slice($parts, 1));
 
 echo github_make_release(
