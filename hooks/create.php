@@ -9,6 +9,8 @@ define('PMAHOOKS', True);
 
 require_once('./lib/github.php');
 
+github_verify_post();
+
 /* Parse JSON */
 $data = json_decode($_POST['payload'], true);
 

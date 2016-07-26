@@ -9,6 +9,8 @@ define('PMAHOOKS', True);
 
 require_once('./lib/github.php');
 
+github_verify_post();
+
 $contributing_url = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/.github/CONTRIBUTING.md';
 $guidelines_url = 'https://github.com/phpmyadmin/phpmyadmin/wiki/Developer_guidelines';
 

@@ -9,4 +9,6 @@ define('PMAHOOKS', True);
 
 require_once('./lib/github.php');
 
+github_verify_post();
+
 trigger_website_render();

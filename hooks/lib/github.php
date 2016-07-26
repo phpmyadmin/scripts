@@ -7,6 +7,8 @@ if (!defined('PMAHOOKS')) {
     die();
 }
 
+$GLOBALS['hook_secret'] = '';
+
 require_once('./config.php');
 
 $curl_base_opts = array(
@@ -16,6 +18,30 @@ $curl_base_opts = array(
     CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
     CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
 );
+
+/**
+ * Verifies signature from GitHub
+ */
+function github_verify_post()
+{
+    if (empty($GLOBALS['hook_secret'])) {
+        return;
+    }
+    if (!isset($_SERVER['HTTP_X_HUB_SIGNATURE'])) {
+        die("HTTP header 'X-Hub-Signature' is missing.");
+    } elseif (!extension_loaded('hash')) {
+        die("Missing 'hash' extension to check the secret code validity.");
+    }
+
+    list($algo, $hash) = explode('=', $_SERVER['HTTP_X_HUB_SIGNATURE'], 2) + array('', '');
+    if (!in_array($algo, hash_algos(), TRUE)) {
+        die("Hash algorithm '$algo' is not supported.");
+    }
+    $rawPost = file_get_contents('php://input');
+    if ($hash !== hash_hmac($algo, $rawPost, $GLOBALS['hook_secret'])) {
+        die('Hook secret does not match.');
+    }
+}
 
 /**
  * Creates a GitHub release
