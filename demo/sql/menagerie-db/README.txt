@@ -8,12 +8,12 @@ menagerie.zip or menagerie.tar.gz distribution. Any MySQL programs
 that you use (such as mysql or mysqlimport) should be invoked from
 that directory.
 
-To invoke mysql or mysqlimport, either specify the full pathname
+To invoke mysql or mysqlimport, either specify the full path name
 to the program, or set your PATH environment variable to the bin
 directory that contains the programs so that you can invoke them
-from anywhere without specifying their full pathname. (See your
+from anywhere without specifying their full path name. (See your
 operating system's help instructions for environment variables.)
-The full pathname to the programs depends on where MySQL is installed.
+The full path name to the programs depends on where MySQL is installed.
 
 For the mysql and mysqlimport commands, supply any connection parameters
 necessary (host, user, password) on the command line before the database
