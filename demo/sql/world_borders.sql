@@ -1,6 +1,6 @@
 -- phpMyAdmin SQL Dump
 -- version 3.5.0-dev
--- http://www.phpmyadmin.net
+-- https://www.phpmyadmin.net
 --
 -- Host: localhost
 -- Generation Time: Jun 17, 2011 at 03:08 AM
