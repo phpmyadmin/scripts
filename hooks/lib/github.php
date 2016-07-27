@@ -25,7 +25,7 @@ $curl_base_opts = array(
 function github_verify_post()
 {
     if (empty($GLOBALS['hook_secret'])) {
-        return;
+        die('Missing hook secret configuration!');
     }
     if (!isset($_SERVER['HTTP_X_HUB_SIGNATURE'])) {
         die("HTTP header 'X-Hub-Signature' is missing.");
@@ -38,7 +38,8 @@ function github_verify_post()
         die("Hash algorithm '$algo' is not supported.");
     }
     $rawPost = file_get_contents('php://input');
-    if ($hash !== hash_hmac($algo, $rawPost, $GLOBALS['hook_secret'])) {
+    $newhash = hash_hmac($algo, $rawPost, $GLOBALS['hook_secret']);
+    if (! hash_equals($hash, $newhash)) {
         die('Hook secret does not match.');
     }
 }
