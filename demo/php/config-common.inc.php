@@ -80,7 +80,7 @@ $cfg['Servers'][$i]['verbose'] = 'phpMyAdmin demo - MySQL';
 
 /* End of servers configuration */
 
-$cfg['blowfish_secret'] = '123456';
+$cfg['blowfish_secret'] = '1234567890123456789012345678901234567890';
 
 $tmp_url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $tmp_dir = $tmp_url;
