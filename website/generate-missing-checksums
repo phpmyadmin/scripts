@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Generates missing checksums for donwload files
+
+cd /mnt/storage/files
+
+find . -name '*.bz2' -o -name '*.gz' -o -name '*.7z' -o -name '*.xz' -o -name '*.zip' | while read filename ; do
+        for hash in sha1 md5 sha256 ; do
+                if [ ! -f $filename.$hash ] ; then
+                        pushd `dirname $filename`
+                        base=`basename $filename`
+                        ${hash}sum $base > $base.$hash
+                        popd
+                fi
+        done
+done
