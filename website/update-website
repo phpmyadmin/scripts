@@ -6,7 +6,7 @@ set -e
 
 # Check for trigger created by hooks/website.php
 # (this is due to privilege separation)
-if [ ! -f /home/builder/.pma/build-website ] ; then 
+if [ ! -f /home/builder/.pma/build-website -a "x$1" != "x--force" ] ; then 
     exit 0
 fi
 
