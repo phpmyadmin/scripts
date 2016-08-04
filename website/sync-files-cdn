@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Syncrhonizes files to CDN and notifies website about new files
+
+# Needs setup to access CDN:
+# * the ssh to server must not ask for password, see
+#   https://client.cdn77.com/support/knowledgebase/cdn-resource/how-to-use-rsync-without-password
+# * .ssh/config has to contain entry for cdn host, for example:
+#
+# Host cdn
+#        User user_foo
+#        HostName example.cdn77.com
+#
+
+# rsync to CDN
+rsync -va /mnt/storage/files/ cdn:/www/
+
+# trigger website scan
+cd /home/builder/website/
+./manage.py import_files
+./manage.py import_themes
