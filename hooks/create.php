@@ -27,6 +27,8 @@ if ($parts[0] != 'RELEASE') {
 if (! ctype_digit($parts[count($parts) - 1])) {
     die('Not a final release');
 }
+// Remove RELEASE prefix
+$parts = array_slice($parts, 1);
 
 foreach ($parts as $part) {
     if (! ctype_digit($part)) {
@@ -34,7 +36,7 @@ foreach ($parts as $part) {
     }
 }
 
-$version = implode('.', array_slice($parts, 1));
+$version = implode('.', $parts);
 
 echo github_make_release(
     $data['ref'],
