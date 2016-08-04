@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# Script executed from cron on commit to website repo
+
+set -e
+
+# Check for trigger created by hooks/website.php
+# (this is due to privilege separation)
+if [ ! -f /home/builder/.pma/build-website ] ; then 
+    exit 0
+fi
+
+# Remove trigger
+rm -f /home/builder/.pma/build-website
+
+# Update website repo
+cd /home/builder/website/
+git pull --rebase -q
+sudo /root/bin/restart-uwsgi-website
+
+# Static files
+./manage.py collectstatic --noinput --link -v 0
+./manage.py compress -v 0 > /dev/null
+
+# Migrate database
+./manage.py migrate -v 0
+
+# Purge all pages in CDN
+./manage.py purge_cdn
+
