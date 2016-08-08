@@ -190,3 +190,12 @@ function trigger_website_render()
     $file = fopen(WEBSITE_HOOK, 'w');
     fclose($file);
 }
+
+/**
+ * Trigger website rendering.
+ */
+function trigger_docs_render()
+{
+    $file = fopen(DOCS_HOOK, 'w');
+    fclose($file);
+}
