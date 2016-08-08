@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Script executed from cron on commit to website repo
+
+set -e
+
+# Check for trigger created by hooks/docs.php
+# (this is due to privilege separation)
+if [ ! -f /home/builder/.pma/build-docs -a "x$1" != "x--force" ] ; then 
+    exit 0
+fi
+
+# Remove trigger
+rm -f /home/builder/.pma/build-docs
+
+# Update website repo
+cd /home/builder/website/
+
+# Purge all pages in CDN
+./manage.py purge_docs_cdn
+
