@@ -11,7 +11,7 @@ require_once('./lib/github.php');
 
 github_verify_post();
 
-$contributing_url = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/.github/CONTRIBUTING.md';
+$contributing_url = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/CONTRIBUTING.md';
 $guidelines_url = 'https://github.com/phpmyadmin/phpmyadmin/wiki/Developer_guidelines';
 
 $message_sob = "<!-- PMABOT:SOB -->\n"
