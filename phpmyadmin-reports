@@ -7,7 +7,13 @@ import sys
 from datetime import datetime, timedelta
 from argparse import ArgumentParser
 import dateutil.parser
-from github import Github
+try:
+    from github import Github
+except ImportError:
+    print('PyGithub is required, please install it')
+    print(' * using pip: pip3 install PyGithub')
+    print(' * using apt: apt install python3-github')
+    sys.exit(1)
 
 # Settings
 
