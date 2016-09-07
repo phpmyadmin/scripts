@@ -1,0 +1,162 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright © 2016 Michal Čihař <michal@cihar.com>
+# phpMyAdmin work reports generator
+
+import sys
+from datetime import datetime, timedelta
+from argparse import ArgumentParser
+import dateutil.parser
+from github import Github
+
+# Settings
+
+# List of projects to report
+PROJECTS = (
+    'phpmyadmin/phpmyadmin',
+    'phpmyadmin/phpmyadmin-security',
+    'phpmyadmin/docker',
+    'phpmyadmin/website',
+    'phpmyadmin/sql-parser',
+    'phpmyadmin/motranslator',
+    'phpmyadmin/private',
+    'phpmyadmin/shapefile',
+    'phpmyadmin/localized_docs',
+)
+# Only include commits not present elsewhere from this repository
+PROJECT_EXTRA_COMMITS = (
+    'phpmyadmin/phpmyadmin-security',
+)
+
+
+def get_parser():
+    """Create command line argument parser."""
+    parser = ArgumentParser(
+        description='phpMyAdmin reporting tool',
+    )
+    parser.add_argument(
+        '--user',
+        required=True,
+        help='GitHub username, used for both reporting and authentication'
+    )
+    parser.add_argument(
+        '--token',
+        required=True,
+        help='GitHub authentication token'
+    )
+    parser.add_argument(
+        '--start-date',
+        type=dateutil.parser.parse,
+        default=datetime.now() - timedelta(days=7),
+        help='Starting datetime'
+    )
+    parser.add_argument(
+        '--end-date',
+        type=dateutil.parser.parse,
+        default=datetime.now(),
+        help='Ending datetime'
+    )
+    parser.add_argument(
+        '--format',
+        choices=('markdown', ),
+        default='markdown',
+        help='Direction of call',
+    )
+    return parser
+
+
+def get_repo_data(gh, user, name, start, end):
+    """Get data for single repository"""
+    repo = gh.get_repo(name)
+    
+    commits = []
+    issues = []
+
+    all_commits = repo.get_commits(author=user, since=start, until=end)
+    for commit in all_commits:
+        # skip merge commits
+        if len(commit.parents) == 1:
+            commits.append(commit)
+
+    all_issues = repo.get_issues(
+        assignee=user, state='closed', sort='updated', direction='desc'
+    )
+    for issue in all_issues:
+        if issue.updated_at < start:
+            break
+        if issue.closed_at > end:
+            continue
+        if issue.closed_at < start:
+            continue
+        issues.append(issue)
+
+    return issues, commits
+
+
+def get_data(user, token, start, end):
+    """Retrieves data from github"""
+    gh = Github(user, token)
+
+    issues = []
+    commits = []
+    commit_set = set()
+
+    for project in PROJECTS:
+        issues_new, commits_new = get_repo_data(gh, user, project, start, end)
+        # Include all issues
+        issues.extend(issues_new)
+
+        if project in PROJECT_EXTRA_COMMITS:
+            # Only include commits not seen so far from this repo
+            for commit in commits_new:
+                sha = commit.sha[:7]
+                if sha not in commit_set:
+                    commits.append(commit)
+                    commit_set.add(sha)
+        else:
+            # Include all commits
+            commits.extend(commits_new)
+            commit_set.update([commit.sha[:7] for commit in commits_new])
+
+    return issues, commits
+
+
+def markdown_report(issues, commits):
+    """Displays report in markdown"""
+    print()
+    print('Handled issues:')
+    print()
+
+    for issue in issues:
+        print('* [#{0} {1}]({2})'.format(
+            issue.number,
+            issue.title,
+            issue.html_url,
+        ))
+
+    print()
+    print('Commits:')
+    print()
+
+    for commit in commits:
+        print('* [{0} - {2}]({1})'.format(
+            commit.sha[:7],
+            commit.html_url,
+            commit.commit.message.split('\n')[0]
+        ))
+
+
+def main(params):
+    """Main program"""
+    parser = get_parser()
+
+    args = parser.parse_args(params)
+
+    issues, commits = get_data(args.user, args.token, args.start_date, args.end_date)
+
+    if args.format == 'markdown':
+        markdown_report(issues, commits)
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
