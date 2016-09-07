@@ -32,7 +32,7 @@ PROJECT_EXTRA_COMMITS = (
 def get_parser():
     """Create command line argument parser."""
     parser = ArgumentParser(
-        description='phpMyAdmin reporting tool',
+        description='phpMyAdmin work reporting tool, generates list of commits and issues handled in given period',
     )
     parser.add_argument(
         '--user',
@@ -48,19 +48,19 @@ def get_parser():
         '--start-date',
         type=dateutil.parser.parse,
         default=datetime.now() - timedelta(days=7),
-        help='Starting datetime'
+        help='Starting datetime, defaults to 7 days ago'
     )
     parser.add_argument(
         '--end-date',
         type=dateutil.parser.parse,
         default=datetime.now(),
-        help='Ending datetime'
+        help='Ending datetime, defaults to current timestamp'
     )
     parser.add_argument(
         '--format',
         choices=('markdown', ),
         default='markdown',
-        help='Direction of call',
+        help='Output format',
     )
     return parser
 
