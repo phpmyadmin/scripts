@@ -35,29 +35,29 @@ def get_parser():
         description='phpMyAdmin work reporting tool, generates list of commits and issues handled in given period',
     )
     parser.add_argument(
-        '--user',
+        '-u', '--user',
         required=True,
         help='GitHub username, used for both reporting and authentication'
     )
     parser.add_argument(
-        '--token',
+        '-t', '--token',
         required=True,
         help='GitHub authentication token'
     )
     parser.add_argument(
-        '--start-date',
+        '-s', '--start-date',
         type=dateutil.parser.parse,
         default=datetime.now() - timedelta(days=7),
         help='Starting datetime, defaults to 7 days ago'
     )
     parser.add_argument(
-        '--end-date',
+        '-e', '--end-date',
         type=dateutil.parser.parse,
         default=datetime.now(),
         help='Ending datetime, defaults to current timestamp'
     )
     parser.add_argument(
-        '--format',
+        '-f', '--format',
         choices=('markdown', ),
         default='markdown',
         help='Output format',
