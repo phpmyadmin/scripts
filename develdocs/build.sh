@@ -9,7 +9,7 @@ git pull -q
 
 # Update doc build environment
 cd develdocs
-composer update
+composer update --quiet
 
 # Generate docs
 for repo in phpmyadmin sql-parser motranslator shapefile ; do
@@ -20,5 +20,5 @@ for repo in phpmyadmin sql-parser motranslator shapefile ; do
     else
         SOURCE='./libraries'
     fi
-    nice -19 /home/builder/develdocs/vendor/bin/apigen generate --source $SOURCE --destination /home/builder/scripts/output/$repo/
+    nice -19 /home/builder/develdocs/vendor/bin/apigen generate --quiet --source $SOURCE --destination /home/builder/scripts/output/$repo/
 done
