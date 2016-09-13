@@ -20,5 +20,5 @@ for repo in phpmyadmin sql-parser motranslator shapefile ; do
     else
         SOURCE='./libraries'
     fi
-    nice -19 /home/builder/scripts/develdocs/vendor/bin/apigen generate --quiet --source $SOURCE --destination /home/builder/scripts/output/$repo/
+    nice -19 /home/builder/scripts/develdocs/vendor/bin/apigen generate --todo --quiet --source $SOURCE --destination /home/builder/scripts/output/$repo/
 done
