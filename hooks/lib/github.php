@@ -47,13 +47,13 @@ function github_verify_post()
 /**
  * Creates a GitHub release
  */
-function github_make_release($tag, $version, $description)
+function github_make_release($repo, $tag, $version, $description)
 {
     $ch = curl_init();
 
     //set the url, number of POST vars, POST data
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
-    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/phpmyadmin/phpmyadmin/releases');
+    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/phpmyadmin/' . $repo . '/releases');
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array('tag_name' => $tag, 'name' => $version, 'body' => $description)));
 

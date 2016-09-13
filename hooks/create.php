@@ -39,6 +39,7 @@ foreach ($parts as $part) {
 $version = implode('.', $parts);
 
 echo github_make_release(
+    'phpmyadmin',
     $data['ref'],
     $version,
     'phpMyAdmin release ' . $version
