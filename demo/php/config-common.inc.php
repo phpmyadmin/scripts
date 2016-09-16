@@ -82,15 +82,6 @@ $cfg['Servers'][$i]['verbose'] = 'phpMyAdmin demo - MySQL';
 
 $cfg['blowfish_secret'] = '1234567890123456789012345678901234567890';
 
-$tmp_url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$tmp_dir = $tmp_url;
-while ($tmp_dir != '' && $tmp_dir != '/') {
-    $tmp_url = $tmp_dir;
-    $tmp_dir = dirname($tmp_dir);
-}
-
-$GLOBALS['PMADEMO_DIR'] = $tmp_url;
-$cfg['PmaAbsoluteUri'] = 'https://demo.phpmyadmin.net' . $tmp_url;
 $cfg['Error_Handler']['display'] = true;
 $cfg['Error_Handler']['gather'] = false;
 
