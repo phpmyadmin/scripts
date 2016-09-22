@@ -35,5 +35,5 @@ echo github_make_release(
     $data['repository']['name'],
     $tag,
     $version,
-    'release ' . $version
+    'Released version ' . $version
 );
