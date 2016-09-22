@@ -31,10 +31,6 @@ if (preg_match('/^[0-9.]+$/', $tag) === 0) {
     die('Not a version tag!');
 }
 
-
-
-$version = implode('.', $parts);
-
 echo github_make_release(
     $data['repository']['name'],
     $tag,
