@@ -18,10 +18,11 @@ if ($data['ref_type'] != 'tag') {
     die('Not a tag: ' . $data['ref_type']);
 }
 
-$version = $tag = $data['ref'];
+$version = $data['ref'];
+$tag = $data['ref'];
 
 /* Strip v prefix used on some repos */
-if (substr($version, 0, 1) == 'v') {
+if (substr($version, 0, 1) === 'v') {
     $version = substr($version, 1);
 }
 
