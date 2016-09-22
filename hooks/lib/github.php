@@ -51,6 +51,12 @@ function github_make_release($repo, $tag, $version, $description)
 {
     $ch = curl_init();
 
+    echo "Release:\n";
+    echo " project=$repo\n";
+    echo " tag=$tag\n";
+    echo " version=$version\n";
+    echo " description=$description\n";
+
     //set the url, number of POST vars, POST data
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
     curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/phpmyadmin/' . $repo . '/releases');
