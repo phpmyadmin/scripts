@@ -15,7 +15,7 @@ github_verify_post();
 $data = json_decode($_POST['payload'], true);
 
 if ($data['ref_type'] != 'tag') {
-    die('Not a tag');
+    die('Not a tag: ' . $data['ref_type']);
 }
 
 $version = $tag = $data['ref'];
