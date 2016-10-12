@@ -12,7 +12,7 @@ cd develdocs
 ~/bin/composer update --quiet
 
 # Generate docs
-for repo in phpmyadmin sql-parser motranslator shapefile ; do
+for repo in phpmyadmin sql-parser motranslator shapefile simple-math ; do
     cd /home/builder/$repo
     git pull -q
     if [ -d './src' ] ; then
