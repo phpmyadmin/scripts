@@ -34,6 +34,7 @@ PROJECTS = (
     'phpmyadmin/motranslator',
     'phpmyadmin/private',
     'phpmyadmin/shapefile',
+    'phpmyadmin/simple-math',
     'phpmyadmin/localized_docs',
 )
 # Only include commits not present elsewhere from this repository
