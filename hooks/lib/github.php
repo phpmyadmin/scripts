@@ -4,7 +4,7 @@
  */
 
 if (!defined('PMAHOOKS')) {
-    die();
+    fail('Invalid invocation!');
 }
 
 $GLOBALS['hook_secret'] = '';
@@ -25,25 +25,25 @@ $curl_base_opts = array(
 function github_verify_post()
 {
     if (empty($GLOBALS['hook_secret'])) {
-        die('Missing hook secret configuration!');
+        fail('Missing hook secret configuration!');
     }
     if (!isset($_SERVER['HTTP_X_HUB_SIGNATURE'])) {
-        die("HTTP header 'X-Hub-Signature' is missing.");
+        fail("HTTP header 'X-Hub-Signature' is missing.");
     } elseif (!extension_loaded('hash')) {
-        die("Missing 'hash' extension to check the secret code validity.");
+        fail("Missing 'hash' extension to check the secret code validity.");
     }
 
     list($algo, $hash) = explode('=', $_SERVER['HTTP_X_HUB_SIGNATURE'], 2) + array('', '');
     if (!in_array($algo, array('sha1', 'sha256', 'sha512'))) {
-        die("Hash algorithm '$algo' is not allowed.");
+        fail("Hash algorithm '$algo' is not allowed.");
     }
     if (!in_array($algo, hash_algos(), TRUE)) {
-        die("Hash algorithm '$algo' is not supported.");
+        fail("Hash algorithm '$algo' is not supported.");
     }
     $rawPost = file_get_contents('php://input');
     $newhash = hash_hmac($algo, $rawPost, $GLOBALS['hook_secret']);
     if (! hash_equals($hash, $newhash)) {
-        die('Hook secret does not match.');
+        fail('Hook secret does not match.');
     }
 }
 
@@ -207,4 +207,13 @@ function trigger_docs_render()
 {
     $file = fopen(DOCS_HOOK, 'w');
     fclose($file);
+}
+
+/**
+ * Terminates request with error
+ */
+function fail($message)
+{
+    header('HTTP/1.1 500 Internal Server Error')
+    die($mesage);
 }

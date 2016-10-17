@@ -58,7 +58,7 @@ $data = json_decode($_POST['payload'], true);
 
 /* Check request data */
 if (! isset($data['pull_request']) || ! isset($data['action'])) {
-    die('No pull request data!');
+    fail('No pull request data!');
 }
 
 /* We don't care about closed requests */

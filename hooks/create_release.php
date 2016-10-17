@@ -15,7 +15,7 @@ github_verify_post();
 $data = json_decode($_POST['payload'], true);
 
 if ($data['ref_type'] != 'tag') {
-    die('Not a tag: ' . $data['ref_type']);
+    fail('Not a tag: ' . $data['ref_type']);
 }
 
 $version = $data['ref'];
@@ -28,7 +28,7 @@ if (substr($version, 0, 1) === 'v') {
 
 /* Check version name */
 if (preg_match('/^[0-9.]+$/', $version) === 0) {
-    die('Not a version tag!');
+    fail('Not a version tag!');
 }
 
 echo github_make_release(
