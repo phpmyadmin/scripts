@@ -34,6 +34,9 @@ function github_verify_post()
     }
 
     list($algo, $hash) = explode('=', $_SERVER['HTTP_X_HUB_SIGNATURE'], 2) + array('', '');
+    if (!in_array($algo, array('sha1', 'sha256', 'sha512'))) {
+        die("Hash algorithm '$algo' is not allowed.");
+    }
     if (!in_array($algo, hash_algos(), TRUE)) {
         die("Hash algorithm '$algo' is not supported.");
     }
