@@ -214,6 +214,6 @@ function trigger_docs_render()
  */
 function fail($message)
 {
-    header('HTTP/1.1 500 Internal Server Error')
+    header('HTTP/1.1 500 Internal Server Error');
     die($mesage);
 }
