@@ -215,5 +215,16 @@ function trigger_docs_render()
 function fail($message)
 {
     header('HTTP/1.1 500 Internal Server Error');
-    die($mesage);
+    header('Content-Type: application/json; charset=UTF-8');
+    header('X-Content-Type-Options: nosniff');
+
+    echo json_encode(
+        array(
+            'status' => 'error',
+            'message' => $message,
+        ),
+        JSON_PRETTY_PRINT
+    );
+
+    die();
 }
