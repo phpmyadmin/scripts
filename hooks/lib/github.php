@@ -54,11 +54,14 @@ function github_make_release($repo, $tag, $version, $description)
 {
     $ch = curl_init();
 
-    echo "Release:\n";
-    echo " project=$repo\n";
-    echo " tag=$tag\n";
-    echo " version=$version\n";
-    echo " description=$description\n";
+    $result = array(
+        'release' => array(
+            'project' => $repo,
+            'tag' => $tag,
+            'version' => $version,
+            'description' => $description
+        )
+    );
 
     //set the url, number of POST vars, POST data
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
@@ -67,10 +70,12 @@ function github_make_release($repo, $tag, $version, $description)
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array('tag_name' => $tag, 'name' => $version, 'body' => $description)));
 
     //execute post
-    $result = curl_exec($ch);
+    $response = curl_exec($ch);
 
     //close connection
     curl_close($ch);
+
+    $result['response'] = json_decode($response);
 
     return $result;
 }
