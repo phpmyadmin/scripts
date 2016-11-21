@@ -210,21 +210,35 @@ function trigger_docs_render()
 }
 
 /**
+ * Issues JSON response
+ *
+ * @param mixed $data JSON data to print
+ */
+function json_response($data, $status='success', $message=null)
+{
+    header('Content-Type: application/json; charset=UTF-8');
+    header('X-Content-Type-Options: nosniff');
+
+    $response = array(
+        'status' => $status
+    );
+    if (isset($data)) {
+        $response['data'] = $data;
+    }
+    if (isset($message)) {
+        $response['message'] = $message;
+    }
+
+    echo json_encode($response, JSON_PRETTY_PRINT);
+}
+
+/**
  * Terminates request with error
  */
 function fail($message)
 {
     http_response_code(500);
-    header('Content-Type: application/json; charset=UTF-8');
-    header('X-Content-Type-Options: nosniff');
-
-    echo json_encode(
-        array(
-            'status' => 'error',
-            'message' => $message,
-        ),
-        JSON_PRETTY_PRINT
-    );
+    json_response(null, 'error', $message);
 
     die();
 }
