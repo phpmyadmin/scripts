@@ -8,8 +8,8 @@ set -e
 BASEDIR=~/.pma-demo
 
 # Remote URL of repository to checkout
-REMOTE=git://github.com/phpmyadmin/phpmyadmin.git
-REMOTE_THEMES=git://github.com/phpmyadmin/themes.git
+REMOTE=https://github.com/phpmyadmin/phpmyadmin.git
+REMOTE_THEMES=https://github.com/phpmyadmin/themes.git
 
 # List of repositories to checkout
 REPOS=`awk '/^branches/ {print $3}' ~/scripts/demo/php/versions.ini`
