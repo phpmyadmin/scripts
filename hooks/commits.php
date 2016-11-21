@@ -78,6 +78,8 @@ $repo_name = $data['pull_request']['head']['repo']['full_name'];
 /* List commits in the pull request */
 $commits = github_pull_commits($data['pull_request']['number']);
 
+$comments = array();
+
 /* Process commits in the pull request */
 foreach ($commits as $commit) {
     /* Ignore merge commits */
@@ -96,9 +98,11 @@ foreach ($commits as $commit) {
     if ( ! preg_match("@\nSigned-off-by:@i", $commit['commit']['message'])) {
         if (strpos($comments_text, 'PMABOT:SOB') === false) {
             github_comment_commit($repo_name, $commit['sha'], $message_sob);
-            echo 'Comment (SOB) on ' . $commit['sha'] . ":\n";
-            echo $commit['commit']['message'];
-            echo "\n";
+            $comments[] = array(
+                'type' => 'SOB',
+                'commit' => $commit['sha'],
+                'message' => $commit['commit']['message'],
+            );
         }
     }
 
@@ -122,20 +126,28 @@ foreach ($commits as $commit) {
     }
     if (count($files_tab) && strpos($comments_text, 'PMABOT:TAB') === false) {
         github_comment_commit($repo_name, $commit['sha'], $message_tab . implode(', ', $files_tab));
-        echo 'Comment (TAB) on ' . $commit['sha'] . ":\n";
-        echo $commit['commit']['message'];
-        echo "\n";
+        $comments[] = array(
+            'type' => 'TAB',
+            'commit' => $commit['sha'],
+            'message' => $commit['commit']['message'],
+        );
     }
     if (count($files_space) && strpos($comments_text, 'PMABOT:SPACE') === false) {
         github_comment_commit($repo_name, $commit['sha'], $message_space . implode(', ', $files_space));
-        echo 'Comment (SPACE) on ' . $commit['sha'] . ":\n";
-        echo $commit['commit']['message'];
-        echo "\n";
+        $comments[] = array(
+            'type' => 'SPACE',
+            'commit' => $commit['sha'],
+            'message' => $commit['commit']['message'],
+        );
     }
     if (count($files_eol) && strpos($comments_text, 'PMABOT:EOL') === false) {
         github_comment_commit($repo_name, $commit['sha'], $message_eol . implode(', ', $files_eol));
-        echo 'Comment (EOL) on ' . $commit['sha'] . ":\n";
-        echo $commit['commit']['message'];
-        echo "\n";
+        $comments[] = array(
+            'type' => 'EOL',
+            'commit' => $commit['sha'],
+            'message' => $commit['commit']['message'],
+        );
     }
 }
+
+json_response(array('comments' => $comments));
