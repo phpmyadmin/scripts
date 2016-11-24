@@ -135,6 +135,13 @@ def get_data(user, token, start, end):
     return issues, commits
 
 
+def markdown_item(title, url):
+    """Displays single markdown item"""
+    print('* [{0}]({1})'.format(
+        title, url,
+    ))
+
+
 def markdown_report(issues, commits):
     """Displays report in markdown"""
     print()
@@ -142,22 +149,26 @@ def markdown_report(issues, commits):
     print()
 
     for issue in issues:
-        print('* [#{0} {1}]({2})'.format(
-            issue.number,
-            issue.title,
+        markdown_item(
+            '#{0} {1}'.format(
+                issue.number,
+                issue.title,
+            ),
             issue.html_url,
-        ))
+        )
 
     print()
     print('Commits:')
     print()
 
     for commit in commits:
-        print('* [{0} - {2}]({1})'.format(
-            commit.sha[:7],
+        markdown_item(
+            '{0} - {1}'.format(
+                commit.sha[:7],
+                commit.commit.message.split('\n')[0]
+            ),
             commit.html_url,
-            commit.commit.message.split('\n')[0]
-        ))
+        )
 
 
 def main(params):
