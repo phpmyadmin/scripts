@@ -42,6 +42,13 @@ PROJECT_EXTRA_COMMITS = (
     'phpmyadmin/phpmyadmin-security',
 )
 
+# Markdown esp
+MARDOWN_TRANS = str.maketrans({
+    "[":  r"\[",
+    "]":  r"\]",
+    "\\": r"\\",
+})
+
 
 def get_parser():
     """Create command line argument parser."""
@@ -82,7 +89,7 @@ def get_parser():
 def get_repo_data(gh, user, name, start, end):
     """Get data for single repository"""
     repo = gh.get_repo(name)
-    
+
     commits = []
     issues = []
 
@@ -135,10 +142,15 @@ def get_data(user, token, start, end):
     return issues, commits
 
 
+def markdown_escape(text):
+    return text.translate(MARDOWN_TRANS)
+
+
 def markdown_item(title, url):
     """Displays single markdown item"""
     print('* [{0}]({1})'.format(
-        title, url,
+        markdown_escape(title),
+        markdown_escape(url),
     ))
 
 
