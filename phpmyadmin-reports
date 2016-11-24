@@ -10,9 +10,11 @@
 # * PyGithub
 # * python-dateutil
 
+from configparser import RawConfigParser, NoOptionError, NoSectionError
+import os
 import sys
 from datetime import datetime, timedelta
-from argparse import ArgumentParser
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import dateutil.parser
 try:
     from github import Github
@@ -53,16 +55,16 @@ MARDOWN_TRANS = str.maketrans({
 def get_parser():
     """Create command line argument parser."""
     parser = ArgumentParser(
-        description='phpMyAdmin work reporting tool, generates list of commits and issues handled in given period',
+        description='phpMyAdmin work reporting tool\n\nGenerates list of commits and issues handled in given period.',
+        epilog='Credentials can be also stored in ~/.config/phpmyadmin:\n\n[github]\nuser=USER\ntoken=TOKEN',
+        formatter_class=RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         '-u', '--user',
-        required=True,
         help='GitHub username, used for both reporting and authentication'
     )
     parser.add_argument(
         '-t', '--token',
-        required=True,
         help='GitHub authentication token'
     )
     parser.add_argument(
@@ -183,13 +185,35 @@ def markdown_report(issues, commits):
         )
 
 
+def merge_config(user, token):
+    if user is not None and token is not None:
+        return (user, token)
+
+    config = RawConfigParser()
+    config.read(os.path.expanduser('~/.config/phpmyadmin'))
+
+    try:
+        if user is None:
+            user = config.get('github', 'user')
+        if token is None:
+            token = config.get('github', 'token')
+    except (NoSectionError, NoOptionError):
+        print('Missing GitHub credentials!')
+        print('Please provide them on command line or in ~/.config/phpmyadmin')
+        sys.exit(1)
+
+    return user, token
+
+
 def main(params):
     """Main program"""
     parser = get_parser()
 
     args = parser.parse_args(params)
 
-    issues, commits = get_data(args.user, args.token, args.start_date, args.end_date)
+    user, token = merge_config(args.user, args.token)
+
+    issues, commits = get_data(user, token, args.start_date, args.end_date)
 
     if args.format == 'markdown':
         markdown_report(issues, commits)
