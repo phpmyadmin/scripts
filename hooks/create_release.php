@@ -27,7 +27,7 @@ if (substr($version, 0, 1) === 'v') {
 }
 
 /* Check version name */
-if (preg_match('/^[0-9.]+$/', $version) === 0) {
+if (preg_match('/^[0-9.-]+$/', $version) === 0) {
     fail('Not a version tag!');
 }
 
