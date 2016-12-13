@@ -38,12 +38,15 @@ foreach ($parts as $part) {
 
 $version = implode('.', $parts);
 
+$major_version = implode('.', array_slice($parts, 0, 3));
+
 $result = github_make_release(
     'phpmyadmin',
     $data['ref'],
     $version,
-    'phpMyAdmin release ' . $version .
-    ', see [release notes](https://www.phpmyadmin.net/files/' . $version . '/).'
+    'phpMyAdmin release ' . $version . "\n\n" .
+    '* [Release notes](https://www.phpmyadmin.net/files/' . $version . '/).' . "\n" .
+    '* [Fixed issues](https://github.com/phpmyadmin/phpmyadmin/issues?q=is%3Aclosed+is%3Aissue+milestone%3A' . $major_version . ")\n"
 );
 
 json_response($result);
