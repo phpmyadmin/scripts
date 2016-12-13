@@ -45,7 +45,7 @@ $result = github_make_release(
     $data['ref'],
     $version,
     'phpMyAdmin release ' . $version . "\n\n" .
-    '* [Release notes](https://www.phpmyadmin.net/files/' . $version . '/).' . "\n" .
+    '* [Release notes](https://www.phpmyadmin.net/files/' . $version . '/)' . "\n" .
     '* [Fixed issues](https://github.com/phpmyadmin/phpmyadmin/issues?q=is%3Aclosed+is%3Aissue+milestone%3A' . $major_version . ")\n"
 );
 
