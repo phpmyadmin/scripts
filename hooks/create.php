@@ -42,7 +42,8 @@ $result = github_make_release(
     'phpmyadmin',
     $data['ref'],
     $version,
-    'phpMyAdmin release ' . $version
+    'phpMyAdmin release ' . $version .
+    ', see [release notes](https://www.phpmyadmin.net/files/' . $version . '/).'
 );
 
 json_response($result);
