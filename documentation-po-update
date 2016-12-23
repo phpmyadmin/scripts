@@ -1,0 +1,56 @@
+#!/bin/sh
+
+set -e
+
+# Updates phpMyAdmin documentation
+
+WORKDIR=~/localized_docs/
+
+if [ ! -d "$WORKDIR" ] ; then
+    git clone git@github.com:phpmyadmin/localized_docs.git "$WORKDIR"
+fi
+
+cd "$WORKDIR"
+
+# Update localized_docs repo
+git pull -q
+git submodule update --init -q
+
+cd phpmyadmin
+
+# Check for remote changes in phpmyadmin repo
+oldrev=`git log -n 1 --format=format:%H @`
+git fetch -q origin
+newrev=`git log -n 1 --format=format:%H origin/master`
+
+# Is there some diff?
+if git diff --stat --exit-code $oldrev..$newrev -- doc/ ; then
+    exit 0
+fi
+
+cd ..
+
+# Lock Weblate and commit changes
+wlc lock
+wlc commit
+
+# Pull changes from weblate
+git pull
+
+# Update phpmyadmin submodule
+git submodule update --remote
+git commit -a -m 'Updated phpMyAdmin repository'
+
+# Update po files
+make
+git add .
+git commit -m 'Update po files'
+
+# Publish changes
+git push
+
+# Unlock Weblate
+wlc unlock
+
+
+
