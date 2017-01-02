@@ -47,6 +47,11 @@ PROJECTS = (
 PROJECT_EXTRA_COMMITS = (
     'phpmyadmin/phpmyadmin-security',
 )
+# Private repositories not to list in weekly reports
+PRIVATE = (
+    'phpmyadmin/phpmyadmin-security',
+    'phpmyadmin/private',
+)
 
 # Markdown esp
 MARDOWN_TRANS = str.maketrans({
@@ -89,6 +94,11 @@ def get_parser():
         default='markdown',
         help='Output format',
     )
+    parser.add_argument(
+        '-w', '--weekly',
+        action='store_true',
+        help='Weekly report not including private repositories'
+    )
     return parser
 
 
@@ -120,7 +130,7 @@ def get_repo_data(gh, user, name, start, end):
     return issues, commits
 
 
-def get_data(user, token, start, end):
+def get_data(user, token, start, end, weekly):
     """Retrieves data from github"""
     gh = Github(user, token)
 
@@ -129,6 +139,8 @@ def get_data(user, token, start, end):
     commit_set = set()
 
     for project in PROJECTS:
+        if weekly and project in PRIVATE:
+            continue
         issues_new, commits_new = get_repo_data(gh, user, project, start, end)
         # Include all issues
         issues.extend(issues_new)
@@ -219,7 +231,7 @@ def main(params):
 
     user, token = merge_config(args.user, args.token)
 
-    issues, commits = get_data(user, token, args.start_date, args.end_date)
+    issues, commits = get_data(user, token, args.start_date, args.end_date, args.weekly)
 
     if args.format == 'markdown':
         markdown_report(issues, commits)
