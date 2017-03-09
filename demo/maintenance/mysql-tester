@@ -30,7 +30,7 @@ fi
 if ! mysql -uroot -h $2 -e 'USE phpmyadmin' 2> /dev/null ; then
     exit 4
 fi
-if [ `mysql -uroot -h $2 -e 'SHOW TABLES FROM phpmyadmin' | wc -l` -ne 22 ] ; then
+if [ `mysql -uroot -h $2 -e 'SHOW TABLES FROM phpmyadmin' | wc -l` -ne 20 ] ; then
     exit 5
 fi
 
