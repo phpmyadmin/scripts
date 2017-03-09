@@ -13,4 +13,5 @@ ON mysql.tables_priv TO 'pma'@'192.168.30.%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON phpmyadmin.* TO 'pma'@'192.168.30.%';
 
 
+CRATE USER 'root'@'192.168.30.%' IDENTIFIED BY '';
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'192.168.30.%';
