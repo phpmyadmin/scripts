@@ -59,6 +59,11 @@ for REPONAME in $REPOS ; do
     # Store revision info
     ~/scripts/demo/bin/pma-revision-info
 
+    # Create twig cache dir
+    mkdir -p cache/twig
+    chmod 770 cache/twig/
+    chgrp www-data cache/twig/
+
     # Update composer deps
     if [ -f composer.json ] ; then
         composer update --quiet --no-dev
