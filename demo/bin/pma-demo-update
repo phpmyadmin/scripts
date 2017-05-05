@@ -59,10 +59,10 @@ for REPONAME in $REPOS ; do
     # Store revision info
     ~/scripts/demo/bin/pma-revision-info
 
-    # Create cache dir
-    mkdir -p cache/
-    chmod 770 cache/
-    chgrp www-data cache/
+    # Create temp dir
+    mkdir -p tmp/
+    chmod 770 tmp/
+    chgrp www-data tmp/
 
     # Update composer deps
     if [ -f composer.json ] ; then
