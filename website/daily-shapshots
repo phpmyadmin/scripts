@@ -26,3 +26,7 @@ mv release/*.* /mnt/storage/files/snapshots/
 
 # Rsync to CDN
 rsync -va /mnt/storage/files/ cdn:/www/
+
+# trigger website scan
+cd /home/builder/website/
+./manage.py import_files
