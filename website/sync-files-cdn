@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Syncrhonizes files to CDN and notifies website about new files
+# Synchronizes files to CDN and notifies website about new files
 
 # Needs setup to access CDN:
 # * the ssh to server must not ask for password, see
