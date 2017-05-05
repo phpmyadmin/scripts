@@ -3,7 +3,7 @@
 set -e
 
 # phpMyAdmin working copy
-cd ~/phpmyadmin/phpmyadmin
+cd ~/phpmyadmin
 
 # Update
 git pull -q
