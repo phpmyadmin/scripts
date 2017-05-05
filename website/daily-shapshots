@@ -18,8 +18,8 @@ rm -rf release
 # Storage directory
 mkdir -p /mnt/storage/files/snapshots/
 
-# Remove old files
-rm /mnt/storage/files/*
+# Remove old snapshots
+rm /mnt/storage/files/snapshots/*
 
 # Move new files
 mv release/*.* /mnt/storage/files/snapshots/
