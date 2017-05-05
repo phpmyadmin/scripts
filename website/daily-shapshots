@@ -1,0 +1,27 @@
+#!/bin/sh
+# Script to generate daily snapshots
+
+# phpMyAdmin working copy
+cd ~/phpmyadmin/phpmyadmin
+
+# Update
+git pull -q
+
+# Remove current release files
+rm -rf release
+
+# Create snapshots
+./scripts/create-release.sh --daily 4.7+snapshot QA_4_7
+./scripts/create-release.sh --daily 4.8+snapshot master
+
+# Storage directory
+mkdir -p /mnt/storage/files/snapshots/
+
+# Remove old files
+rm /mnt/storage/files/*
+
+# Move new files
+mv release/*.* /mnt/storage/files/snapshots/
+
+# Rsync to CDN
+rsync -va /mnt/storage/files/ cdn:/www/
