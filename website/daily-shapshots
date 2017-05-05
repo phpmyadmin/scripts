@@ -30,3 +30,9 @@ rsync -va /mnt/storage/files/ cdn:/www/
 # trigger website scan
 cd /home/builder/website/
 ./manage.py import_files
+
+# Trigger docker build
+# This file is not in VCS as it contains private tokens
+if [ -f ~/bin/trigger-docker ] ; then
+    ~/bin/trigger-docker
+fi
