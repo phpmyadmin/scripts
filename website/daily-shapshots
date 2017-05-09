@@ -31,8 +31,9 @@ rsync -va /mnt/storage/files/ cdn:/www/
 cd /home/builder/website/
 ./manage.py import_files
 
-# Trigger docker build
-# This file is not in VCS as it contains private tokens
-if [ -f ~/bin/trigger-docker ] ; then
-    ~/bin/trigger-docker
-fi
+# Trigger docker build for edge-4.7
+./manage.py docker_trigger --tag edge-4.7
+# Triggers are throttled, avoid problem by sleeping
+sleep 600
+# Trigger docker build for edge-4.8
+./manage.py docker_trigger --tag edge-4.8
