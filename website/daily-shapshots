@@ -5,7 +5,7 @@ set -e
 # phpMyAdmin working copy
 cd ~/phpmyadmin
 
-# Update
+# Update to have latest create-release.sh
 git pull -q
 
 # Remove current release files
