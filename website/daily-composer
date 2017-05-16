@@ -85,7 +85,7 @@ for branch in $BRANCHES ; do
         fi
         git merge phpmyadmin/$branch
     else
-        git branch $newbranch phpmyadmin/$branch
+        git checkout -b $newbranch phpmyadmin/$branch
     fi
 
     # Update content
