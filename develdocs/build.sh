@@ -9,7 +9,7 @@ git pull -q
 
 # Update doc build environment
 cd develdocs
-~/bin/composer update --quiet
+composer update --quiet
 
 # Generate docs
 for repo in phpmyadmin sql-parser motranslator shapefile simple-math ; do
