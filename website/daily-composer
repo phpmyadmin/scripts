@@ -14,10 +14,6 @@ DIR=~/composer
 # Branches we process
 BRANCHES="QA_4_7 master"
 
-# Regexp on releases we process
-TAGS="^RELEASE_4_7_[0-9]+(_[0-9]+)?$"
-
-
 generate_readme() {
     cat > README.rst <<EOT
 phpMyAdmin for Composer
