@@ -106,7 +106,7 @@ for tag in `git branch -r | grep 'phpmyadmin/tags/RELEASE_4_7_[0-9]\+\(_[0-9]+\)
     echo "Working on $newtag ($tag)"
 
     # Create temporary branch
-    git branch tmp $tag
+    git checkout -b tmp $tag
 
     # Update content
     generate_readme
