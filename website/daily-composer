@@ -92,6 +92,9 @@ for branch in $BRANCHES ; do
     generate_readme
     generate_mo
     line_counts
+
+    # Push
+    git push origin $newbranch
 done
 
 # Process tags
@@ -116,4 +119,7 @@ for tag in `git branch -r | grep 'phpmyadmin/tags/RELEASE_4_7_[0-9]\+\(_[0-9]+\)
     # Remove temporary branch
     git checkout master
     git branch -D tmp
+
+    # Push tags
+    git push --tags
 done
