@@ -1,0 +1,119 @@
+#!/bin/sh
+# Daily executed script to push changes to Packgagist
+#  - updates all maintained branches
+#  - updates all tags
+#  - generates README to describe that this is generated repo
+
+# Fail on error or undefined variable
+set -e
+set -u
+
+# Working directory
+DIR=~/composer
+
+# Branches we process
+BRANCHES="QA_4_7 master"
+
+# Regexp on releases we process
+TAGS="^RELEASE_4_7_[0-9]+(_[0-9]+)?$"
+
+
+generate_readme() {
+    cat > README.rst <<EOT
+phpMyAdmin for Composer
+=======================
+
+This is automatically generated repository to allow installation of phpMyAdmin
+using composer.
+
+You can find phpMyAdmin repository here:
+
+https://github.com/phpmyadmin/phpmyadmin/
+
+This repository is updated daily.
+EOT
+    if ! git diff --quiet -- README.rst ; then
+        git commit -m 'Updated README' README.rst
+    fi
+}
+
+generate_mo() {
+    rm -rf locale
+    ./scripts/generate-mo
+    git add -f locale
+    if ! git diff --quiet --cached ; then
+        git commit -m 'Update mo files'
+    fi
+}
+
+line_counts() {
+    ./scripts/line-counts.sh
+    git add -f js/line_counts.php
+    if ! git diff --quiet --cached ; then
+        git commit -m 'Updated line counts' js/line_counts.php
+    fi
+}
+
+# Ensure we have working dir
+if [ ! -d "$DIR" ] ; then
+    git clone git@github.com:phpmyadmin/composer.git "$DIR"
+    cd "$DIR"
+    git remote add --no-tags phpmyadmin https://github.com/phpmyadmin/phpmyadmin.git
+else
+    cd "$DIR"
+fi
+
+# Update phpmyadmin remote
+git remote update phpmyadmin
+# Fetch tags (we don't want them as tags)
+git fetch phpmyadmin '+refs/tags/*:refs/remotes/phpmyadmin/tags/*'
+
+# Process branches
+for branch in $BRANCHES ; do 
+    if [ $branch = master ] ; then
+        newbranch=master
+    else
+        newbranch=`echo $branch | sed -e 's/QA_//' -e 's/_/./g' `.x
+    fi
+    echo "Working on $newbranch ($branch)"
+
+    # Ensure we have the branch
+    if git rev-parse --verify --quiet $newbranch ; then
+        git checkout $newbranch
+        if [ `git log --oneline ..phpmyadmin/$branch | wc -l` -eq 0 ] ; then
+            continue
+        fi
+        git merge phpmyadmin/$branch
+    else
+        git branch $newbranch phpmyadmin/$branch
+    fi
+
+    # Update content
+    generate_readme
+    generate_mo
+    line_counts
+done
+
+# Process tags
+for tag in `git branch -r | grep 'phpmyadmin/tags/RELEASE_4_7_[0-9]\+\(_[0-9]+\)\?$'` ; do
+    newtag=`echo $tag | sed -e 's@.*RELEASE_@@' -e 's/_/./g'`
+    if git rev-parse --verify --quiet $newtag ; then
+        continue
+    fi
+    echo "Working on $newtag ($tag)"
+
+    # Create temporary branch
+    git branch tmp $tag
+
+    # Update content
+    generate_readme
+    generate_mo
+    line_counts
+
+    # Create tag
+    git tag -a -m "Composer tag for $tag" $newtag
+
+    # Remove temporary branch
+    git checkout master
+    git branch -D tmp
+done
