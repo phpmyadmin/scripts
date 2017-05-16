@@ -121,5 +121,5 @@ for tag in `git branch -r | grep 'phpmyadmin/tags/RELEASE_4_7_[0-9]\+\(_[0-9]+\)
     git branch -D tmp
 
     # Push tags
-    git push --tags
+    git push --tags origin
 done
