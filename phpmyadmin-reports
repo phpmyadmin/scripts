@@ -42,6 +42,7 @@ PROJECTS = (
     'phpmyadmin/shapefile',
     'phpmyadmin/simple-math',
     'phpmyadmin/localized_docs',
+    'phpmyadmin/error-reporting-server',
 )
 # Only include commits not present elsewhere from this repository
 PROJECT_EXTRA_COMMITS = (
