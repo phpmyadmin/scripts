@@ -79,7 +79,7 @@ for branch in $BRANCHES ; do
         if [ `git log --oneline ..phpmyadmin/$branch | wc -l` -eq 0 ] ; then
             continue
         fi
-        git merge phpmyadmin/$branch
+        git merge --no-edit --strategy=recursive --strategy-option=theirs phpmyadmin/$branch
     else
         git checkout -b $newbranch phpmyadmin/$branch
     fi
