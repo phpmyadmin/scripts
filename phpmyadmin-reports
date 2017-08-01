@@ -232,7 +232,13 @@ def main(params):
 
     user, token = merge_config(args.user, args.token)
 
-    issues, commits = get_data(user, token, args.start_date, args.end_date, args.weekly)
+    start = args.start_date
+    start = datetime(start.year, start.month, start.day)
+    end = args.end_date
+    end = datetime(end.year, end.month, end.day, 23, 59, 59)
+    weekly = args.weekly
+
+    issues, commits = get_data(user, token, start, end, weekly)
 
     if args.format == 'markdown':
         markdown_report(issues, commits)
