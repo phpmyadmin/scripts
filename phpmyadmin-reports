@@ -100,6 +100,16 @@ def get_parser():
         action='store_true',
         help='Weekly report not including private repositories'
     )
+    parser.add_argument(
+        '-W', '--last-week',
+        action='store_true',
+        help='Create report for last week'
+    )
+    parser.add_argument(
+        '-M', '--last-month',
+        action='store_true',
+        help='Create report for last month'
+    )
     return parser
 
 
@@ -232,11 +242,22 @@ def main(params):
 
     user, token = merge_config(args.user, args.token)
 
-    start = args.start_date
+    if args.last_week:
+        weekly = True
+        end = datetime.now()
+        end = end - timedelta(days=1 + end.weekday())
+        start = end - timedelta(days=6)
+    elif args.last_month:
+        end = datetime.now().replace(day=1) - timedelta(days=1)
+        start = end.replace(day=1)
+        weekly = False
+    else:
+        start = args.start_date
+        end = args.end_date
+        weekly = args.weekly
+
     start = datetime(start.year, start.month, start.day)
-    end = args.end_date
     end = datetime(end.year, end.month, end.day, 23, 59, 59)
-    weekly = args.weekly
 
     issues, commits = get_data(user, token, start, end, weekly)
 
