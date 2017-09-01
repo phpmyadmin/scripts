@@ -110,6 +110,11 @@ def get_parser():
         action='store_true',
         help='Create report for last month'
     )
+    parser.add_argument(
+        '--this-week',
+        action='store_true',
+        help='Create report for this week'
+    )
     return parser
 
 
@@ -242,10 +247,12 @@ def main(params):
 
     user, token = merge_config(args.user, args.token)
 
-    if args.last_week:
+    if args.last_week or args.this_week:
         weekly = True
         end = datetime.now()
-        end = end - timedelta(days=1 + end.weekday())
+        end -= timedelta(days=1 + end.weekday())
+        if args.this_week:
+            end += timedelta(days=7)
         start = end - timedelta(days=6)
     elif args.last_month:
         end = datetime.now().replace(day=1) - timedelta(days=1)
