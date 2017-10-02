@@ -1,6 +1,5 @@
 {
     "require": {
-        "apigen/apigen": "dev-master#e381f7c",
-        "roave/better-reflection": "dev-master#c87d856"
+        "apigen/apigen": "^4.1"
     }
 }
