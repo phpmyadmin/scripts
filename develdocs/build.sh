@@ -3,6 +3,8 @@
 # Script to generate phpdoc documentation of phpMyAdmin and publish it
 # on develdocs.phpmyadmin.net
 
+set -e
+
 # Update scripts
 cd /home/builder/scripts/
 git pull -q
@@ -21,5 +23,5 @@ for repo in phpmyadmin sql-parser motranslator shapefile simple-math ; do
         SOURCE='./libraries'
     fi
     rm -rf /home/builder/scripts/develdocs/output/$repo/
-    nice -19 /home/builder/scripts/develdocs/vendor/bin/apigen generate --todo --quiet --source $SOURCE --destination /home/builder/scripts/develdocs/output/$repo/
+    nice -19 /home/builder/scripts/develdocs/vendor/bin/apigen generate --quiet --destination /home/builder/scripts/develdocs/output/$repo/ -- $SOURCE > /dev/null
 done
