@@ -59,6 +59,7 @@ MARDOWN_TRANS = str.maketrans({
     "[":  r"\[",
     "]":  r"\]",
     "\\": r"\\",
+    '>': r'\>',
 })
 
 
