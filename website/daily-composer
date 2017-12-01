@@ -43,6 +43,9 @@ generate_mo() {
 }
 
 line_counts() {
+    if [ ! -x ./scripts/line-counts.sh ] ; then
+        return
+    fi
     ./scripts/line-counts.sh
     git add -f js/line_counts.php
     if ! git diff --quiet --cached ; then
