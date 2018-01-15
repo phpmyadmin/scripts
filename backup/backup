@@ -1,3 +1,11 @@
 #!/bin/sh
 export BORG_PASSPHRASE=`cat /etc/borg-key`
+
+# Create new backup
 borg create ssh://borgbackup/./backups/`hostname`::'{now:%Y-%m-%d_%H:%M}' `cat /etc/borg-dirs`
+
+# Prune old backups, we keep last year of backups in descending frequency
+# - daily backups for 14 days
+# - weekly backups for 8 weeks
+# - monthly backups for 12 months
+borg prune --keep-weekly 8 --keep-monthly 12 --keep-daily 14 ssh://borgbackup/./backups/`hostname`
