@@ -6,4 +6,4 @@ if [ -z "$1" ] ; then
 	exit 1
 fi
 
-/sbin/lvconvert --merge /dev/mapper/pma-demo--$1--snapshot
+/sbin/lvconvert --merge /dev/mapper/vg0-demo--$1--snapshot
