@@ -1,0 +1,2 @@
+#!/bin/sh
+borg init --encryption=repokey-blake2 ssh://borgbackup/./backups/`hostname`

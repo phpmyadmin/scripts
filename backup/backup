@@ -1,0 +1,2 @@
+#!/bin/sh
+borg create ssh://borgbackup/./backups/`hostname`::'{now:%Y-%m-%d_%H:%M}' `cat /etc/borg-dirs`
