@@ -6,4 +6,4 @@ if [ -z "$1" ] ; then
 	exit 1
 fi
 
-lvconvert --mirrors 1 --type mirror --mirrorlog core --alloc anywhere  pma/demo-$1-template
+lvconvert --mirrors 1 --type mirror --mirrorlog core --alloc anywhere  vg0/demo-$1-template

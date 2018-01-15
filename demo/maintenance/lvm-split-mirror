@@ -6,4 +6,4 @@ if [ -z "$1" ] ; then
 	exit 1
 fi
 
-lvconvert --splitmirrors 1 --name demo-$1 pma/demo-$1-template
+lvconvert --splitmirrors 1 --name demo-$1 vg0/demo-$1-template
