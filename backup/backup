@@ -1,2 +1,3 @@
 #!/bin/sh
+export BORG_PASSPHRASE=`cat /etc/borg-key`
 borg create ssh://borgbackup/./backups/`hostname`::'{now:%Y-%m-%d_%H:%M}' `cat /etc/borg-dirs`
