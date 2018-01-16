@@ -1,2 +1,3 @@
 #!/bin/sh
+export BORG_PASSPHRASE=`cat /etc/borg-key`
 borg init --encryption=repokey-blake2 ssh://borgbackup/./backups/`hostname`
