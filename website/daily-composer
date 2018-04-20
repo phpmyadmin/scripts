@@ -97,7 +97,7 @@ for branch in $BRANCHES ; do
 done
 
 # Process tags
-for tag in `git branch -r | grep 'phpmyadmin/tags/RELEASE_4_[78]_[0-9]\+\(_[0-9]+\)\?$'` ; do
+for tag in `git branch -r | grep 'phpmyadmin/tags/RELEASE_4_[78]_[0-9]\+\(_[0-9]\)\?$'` ; do
     newtag=`echo $tag | sed -e 's@.*RELEASE_@@' -e 's/_/./g'`
     if git rev-parse --verify --quiet $newtag ; then
         continue
