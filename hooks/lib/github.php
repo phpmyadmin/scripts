@@ -240,9 +240,9 @@ function json_response($data, $status='success', $message=null)
 /**
  * Terminates request with error
  */
-function fail($message)
+function fail($message, $code=500)
 {
-    http_response_code(500);
+    http_response_code($code);
     json_response(null, 'error', $message);
 
     die();

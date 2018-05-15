@@ -15,24 +15,24 @@ github_verify_post();
 $data = json_decode($_POST['payload'], true);
 
 if ($data['ref_type'] != 'tag') {
-    fail('Not a tag');
+    fail('Not a tag', 204);
 }
 
 $parts = explode('_', $data['ref']);
 
 if ($parts[0] != 'RELEASE') {
-    fail('Not a RELEASE');
+    fail('Not a RELEASE', 204);
 }
 
 if (! ctype_digit($parts[count($parts) - 1])) {
-    fail('Not a final release');
+    fail('Not a final release', 204);
 }
 // Remove RELEASE prefix
 $parts = array_slice($parts, 1);
 
 foreach ($parts as $part) {
     if (! ctype_digit($part)) {
-        fail('Not a release!');
+        fail('Not a release!', 204);
     }
 }
 
