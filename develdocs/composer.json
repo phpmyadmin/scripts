@@ -1,5 +1,5 @@
 {
     "require": {
-        "apigen/apigen": "^4.1"
+        "sami/sami": "^4.0"
     }
 }
