@@ -4,7 +4,8 @@
 # on develdocs.phpmyadmin.net
 
 # Update scripts
-cd /home/builder/scripts/
+BUILDER_ROOT="/home/builder"
+cd "$BUILDER_ROOT/scripts/"
 git pull -q
 
 # Update doc build environment
@@ -13,13 +14,19 @@ composer update --quiet
 
 # Generate docs
 for repo in phpmyadmin sql-parser motranslator shapefile simple-math ; do
-    cd /home/builder/$repo
+    cd "$BUILDER_ROOT/$repo"
     git pull -q
-    if [ -d './src' ] ; then
-        SOURCE='./src'
-    else
-        SOURCE='./libraries'
-    fi
-    rm -rf /home/builder/scripts/develdocs/output/$repo/
-    nice -19 /home/builder/scripts/develdocs/vendor/bin/apigen generate --todo --quiet --source $SOURCE --destination /home/builder/scripts/develdocs/output/$repo/
+    # Clean output
+    rm -rf "$BUILDER_ROOT/scripts/develdocs/output/$repo/"
+    # Generate config file
+    nice -19 "$BUILDER_ROOT/scripts/develdocs/sami.php" \
+    --root "$BUILDER_ROOT/$repo" \
+    --build-dir "$BUILDER_ROOT/scripts/develdocs/output/$repo/" \
+    --cache-dir "$BUILDER_ROOT/scripts/develdocs/tmp/$repo/" \
+    --output-config "$BUILDER_ROOT/scripts/develdocs/sami-$repo.php" \
+    --title-of-composer
+    # Render
+    nice -19 "$BUILDER_ROOT/scripts/develdocs/vendor/bin/sami.php" update  "$BUILDER_ROOT/scripts/develdocs/sami-$repo.php"
+    # Delete config file
+    rm "$BUILDER_ROOT/scripts/develdocs/sami-$repo.php"
 done
