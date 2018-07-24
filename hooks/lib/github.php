@@ -20,6 +20,62 @@ $curl_base_opts = array(
 );
 
 /**
+ * Builds the body of the email to send
+ *
+ * @param stdClass $inputData The JSON payload
+ * @see https://developer.github.com/v3/activity/events/types/#pushevent
+ * @return stdClass {
+ *       "repoName": "org/repo",
+ *       "compare": "URL TO COMPARE PAGE",
+ *       "emailBody": "THE RAW BODY",
+ *       "headCommitTitle": "commit title",
+ *       "headCommitShortHash": "abcde",
+ *       "authorName": "William Desportes",
+ *       "authorEmail": "williamdes@wdes.fr"
+ * }
+ */
+function gihub_webhook_push(stdClass $inputData): stdClass
+{
+    $msg  = '';
+    $msg .= 'Branch: ' . $inputData->ref . PHP_EOL;
+    $msg .= 'Home: ' . $inputData->repository->html_url . PHP_EOL;
+
+    foreach ($inputData->commits as $commit) {
+    $msg .= 'Commit: ' . $commit->id . PHP_EOL;
+    $msg .= $commit->url . PHP_EOL;
+    $msg .= 'Author: ' . $commit->author->name . ' <' . $commit->author->email . '>' . PHP_EOL;
+
+    $date = new DateTime($commit->timestamp);
+    $msg .= 'Date: ' . $date->format('Y-m-d (D, m F Y) P') . PHP_EOL . PHP_EOL;
+
+    $msg .= 'Changed paths: ' . PHP_EOL;
+    foreach ($commit->added as $file) {
+        $msg .= 'A ' . $file . PHP_EOL;
+    }
+    foreach ($commit->modified as $file) {
+        $msg .= 'M ' . $file . PHP_EOL;
+    }
+    foreach ($commit->removed as $file) {
+        $msg .= 'D ' . $file . PHP_EOL;
+    }
+    $msg .= PHP_EOL . 'Log Message:' . PHP_EOL . '-----------' . PHP_EOL;
+    $msg .= $commit->message . PHP_EOL . PHP_EOL;
+
+    }
+
+    $data = new stdClass();
+    $data->repoName            = $inputData->repository->full_name;
+    $data->compare             = $inputData->compare;
+    $data->emailBody           = $msg;
+    $data->headCommitTitle     = explode("\n", $inputData->commits[0]->message)[0];
+    $data->headCommitShortHash = substr($inputData->commits[0]->id, 0, 5);
+    $data->authorName          = $inputData->commits[0]->author->name;
+    $data->authorEmail         = $inputData->commits[0]->author->email;
+    return $data;
+}
+
+
+/**
  * Verifies signature from GitHub
  */
 function github_verify_post()
