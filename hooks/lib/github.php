@@ -68,7 +68,7 @@ function gihub_webhook_push(stdClass $inputData): stdClass
     $data->compare             = $inputData->compare;
     $data->emailBody           = $msg;
     $data->headCommitTitle     = explode("\n", $inputData->commits[0]->message)[0];
-    $data->headCommitShortHash = substr($inputData->commits[0]->id, 0, 5);
+    $data->headCommitShortHash = substr($inputData->commits[0]->id, 0, 6);
     $data->authorName          = $inputData->commits[0]->author->name;
     $data->authorEmail         = $inputData->commits[0]->author->email;
     return $data;
