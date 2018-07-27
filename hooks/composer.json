@@ -1,0 +1,10 @@
+{
+    "name": "phpmyadmin/scripts",
+    "type": "project",
+    "require": {
+        "phpmailer/phpmailer": "^6.0"
+    },
+    "homepage": "https://github.com/phpmyadmin/scripts",
+    "readme": "https://github.com/phpmyadmin/scripts#readme",
+    "description": "Various scripts used by phpMyAdmin"
+}
