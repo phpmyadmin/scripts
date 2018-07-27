@@ -39,6 +39,7 @@ $mail = new PHPMailer(true);
 try {
 
     $mail->SMTPDebug  = 0;
+    $mail->CharSet = 'UTF-8';
 
     if (defined('SMTP_HOST') && !empty(SMTP_HOST)) {
         $mail->isSMTP();
