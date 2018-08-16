@@ -15,7 +15,3 @@ rm -f /home/builder/.pma/build-docs
 
 # Update website repo
 cd /home/builder/website/
-
-# Purge all pages in CDN
-./manage.py purge_docs_cdn
-
