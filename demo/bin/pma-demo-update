@@ -69,6 +69,10 @@ for REPONAME in $REPOS ; do
         composer update --quiet --no-dev
     fi
 
+    if [ -f package.json ] ; then
+        yarn install --non-interactive --silent
+    fi
+
     # Link themes
     for THEME in $THEMES ; do
         if [ ! -e themes/$THEME ] ; then
@@ -98,7 +102,7 @@ fi
 # Delete stale directories
 find $BASEDIR -maxdepth 1 -mindepth 1 -type d | while read DIRNAME ; do
     REPO=${DIRNAME##*/}
-    if [ $REPO = themes ] ; then 
+    if [ $REPO = themes ] ; then
         continue
     fi
     for TESTREPO in $REPOS ; do
