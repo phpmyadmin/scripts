@@ -70,7 +70,9 @@ for REPONAME in $REPOS ; do
     fi
 
     if [ -f package.json ] ; then
-        yarn install --non-interactive --silent
+        # We still redirect output to /dev/null because even with the --silent flag, yarn still gives sass output such as
+        # $ sass themes/pmahomme/scss:themes/pmahomme/css themes/original/scss:themes/original/css themes/metro/scss:themes/metro/css
+        yarn install --non-interactive --silent > /dev/null
     fi
 
     # Link themes
