@@ -69,18 +69,19 @@ for REPONAME in $REPOS ; do
         composer update --quiet --no-dev
     fi
 
-    if [ -f package.json ] ; then
-        # We still redirect output to /dev/null because even with the --silent flag, yarn still gives sass output such as
-        # $ sass themes/pmahomme/scss:themes/pmahomme/css themes/original/scss:themes/original/css themes/metro/scss:themes/metro/css
-        yarn install --non-interactive --silent > /dev/null
-    fi
-
     # Link themes
     for THEME in $THEMES ; do
         if [ ! -e themes/$THEME ] ; then
             ln -s ../../themes/$THEME themes/$THEME
         fi
     done
+
+    if [ -f package.json ] ; then
+        yarn install --non-interactive --silent --ignore-scripts
+        if [ ${REPONAME%%-*} = 'master' ] ; then
+            yarn run --silent sass --style=compressed --quiet
+        fi
+    fi
 
     # Generate locales
     if [ -f ./scripts/generate-mo ] ; then
