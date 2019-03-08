@@ -32,7 +32,7 @@ cd ..
 
 # Lock Weblate and commit changes
 wlc lock
-wlc commit
+wlc push
 
 # Pull changes from weblate
 git pull
