@@ -13,6 +13,7 @@ github_verify_post();
 
 $contributing_url = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/CONTRIBUTING.md';
 $guidelines_url = 'https://github.com/phpmyadmin/phpmyadmin/wiki/Developer_guidelines';
+$dco_link = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/DCO#L39';
 
 $message_sob = "<!-- PMABOT:SOB -->\n"
     . "This commit is missing Signed-Off-By line to indicate "
@@ -20,6 +21,12 @@ $message_sob = "<!-- PMABOT:SOB -->\n"
     . "Please check [contributing documentation]("
     . $contributing_url
     . ") for more information.";
+
+$message_sob_invalid = "<!-- PMABOT:SOB --><!-- PMABOT:SOB:INVALID -->\n"
+    . "This commit has an invalid Signed-Off-By line, please use"
+    . "your full name for legal compliance reasons.\n"
+    . "Please check [Developer's Certificate of Origin]($dco_link)\n"
+    . "Here is a valid example: `Signed-off-by: Jane Smith <jane.smith@example.org>`";
 
 $message_tab = "<!-- PMABOT:TAB -->\n"
     . "This commit is using tab character for indentation instead "
@@ -88,21 +95,33 @@ foreach ($commits as $commit) {
     }
 
     /* Fetch current comments */
-    $current_comments = github_commit_comments($repo_name, $commit['sha'], $message_sob);
+    $current_comments = github_commit_comments($repo_name, $commit['sha']);
     $comments_text = '';
     foreach ($current_comments as $comment) {
         $comments_text .= $comment['body'];
     }
 
-    /* Chek for missing SOB */
+    /* Check for missing SOB */
     if ( ! preg_match("@\nSigned-off-by:@i", $commit['commit']['message'])) {
-        if (strpos($comments_text, 'PMABOT:SOB') === false) {
+        if (strpos($comments_text, '<!-- PMABOT:SOB -->') === false) {
             github_comment_commit($repo_name, $commit['sha'], $message_sob);
             $comments[] = array(
                 'type' => 'SOB',
                 'commit' => $commit['sha'],
                 'message' => $commit['commit']['message'],
             );
+        }
+    } else {
+        /* Check for invalid SOB */
+        if ( ! preg_match("@\nSigned-off-by: +(?:[\p{L}-\.]+\s){2,}<.*>@i", $commit['commit']['message'])) {
+            if (strpos($comments_text, '<!-- PMABOT:SOB:INVALID -->') === false) {
+                github_comment_commit($repo_name, $commit['sha'], $message_sob_invalid);
+                $comments[] = array(
+                    'type' => 'SOB',
+                    'commit' => $commit['sha'],
+                    'message' => $commit['commit']['message'],
+                );
+            }
         }
     }
 
