@@ -23,7 +23,7 @@ $message_sob = "<!-- PMABOT:SOB -->\n"
     . ") for more information.";
 
 $message_sob_invalid = "<!-- PMABOT:SOB --><!-- PMABOT:SOB:INVALID -->\n"
-    . "This commit has an invalid Signed-Off-By line, please use"
+    . "This commit has an invalid Signed-Off-By line, please use "
     . "your full name for legal compliance reasons.\n"
     . "Please check [Developer's Certificate of Origin]($dco_link)\n"
     . "Here is a valid example: `Signed-off-by: Jane Smith <jane.smith@example.org>`";
