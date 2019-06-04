@@ -7,8 +7,6 @@ if (!defined('PMAHOOKS')) {
     fail('Invalid invocation!');
 }
 
-$GLOBALS['hook_secret'] = '';
-
 require_once('./config.php');
 
 $curl_base_opts = array(
@@ -80,7 +78,7 @@ function gihub_webhook_push(stdClass $inputData): stdClass
  */
 function github_verify_post()
 {
-    if (empty($GLOBALS['hook_secret'])) {
+    if (empty(GITHUB_HOOK_SECRET)) {
         fail('Missing hook secret configuration!');
     }
     if (!isset($_SERVER['HTTP_X_HUB_SIGNATURE'])) {
@@ -97,7 +95,7 @@ function github_verify_post()
         fail("Hash algorithm '$algo' is not supported.");
     }
     $rawPost = file_get_contents('php://input');
-    $newhash = hash_hmac($algo, $rawPost, $GLOBALS['hook_secret']);
+    $newhash = hash_hmac($algo, $rawPost, GITHUB_HOOK_SECRET);
     if (! hash_equals($hash, $newhash)) {
         fail('Hook secret does not match.');
     }
