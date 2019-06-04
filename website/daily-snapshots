@@ -12,7 +12,7 @@ git pull -q
 rm -rf release
 
 # Create snapshots
-./scripts/create-release.sh --daily 4.8+snapshot QA_4_8
+./scripts/create-release.sh --daily 4.9+snapshot QA_4_9
 ./scripts/create-release.sh --daily 5.0+snapshot master
 
 # Storage directory
@@ -31,5 +31,5 @@ rsync -va /mnt/storage/files/ cdn:/www/
 cd /home/builder/website/
 ./manage.py import_files
 
-# Trigger docker build for edge-4.8
-./manage.py docker_trigger --tag edge-4.8
+# Trigger docker build for edge-4.9
+./manage.py docker_trigger --tag edge-4.9
