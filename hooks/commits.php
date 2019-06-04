@@ -80,7 +80,7 @@ if ($data['action'] == 'closed') {
 
 /* Check number of commits */
 if ($data['pull_request']['commits'] > 50) {
-    github_comment_pull($data['pull_request']['number'], $message_commits);
+    github_comment_pull($data['repository']['full_name'], $data['pull_request']['number'], $message_commits);
     die();
 }
 
@@ -88,7 +88,7 @@ if ($data['pull_request']['commits'] > 50) {
 $repo_name = $data['pull_request']['head']['repo']['full_name'];
 
 /* List commits in the pull request */
-$commits = github_pull_commits($data['pull_request']['number']);
+$commits = github_pull_commits($data['repository']['full_name'], $data['pull_request']['number']);
 
 $comments = array();
 
@@ -131,7 +131,7 @@ foreach ($commits as $commit) {
     }
 
     /* Check for tab or trailing whitespace in diff */
-    $detail = github_commit_detail($commit['sha']);
+    $detail = github_commit_detail($data['repository']['full_name'], $commit['sha']);
     $files_tab = array();
     $files_space = array();
     $files_eol = array();
