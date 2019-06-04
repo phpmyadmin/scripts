@@ -14,6 +14,11 @@ github_verify_post();
 /* Parse JSON */
 $data = json_decode($_POST['payload'], true);
 
+if (isset($data['zen']) && isset($data['hook']) && isset($data['hook_id'])) {
+    json_response(array('pong' => true));
+    die();
+}
+
 if ($data['ref_type'] != 'tag') {
     fail('Not a tag: ' . $data['ref_type']);
 }

@@ -17,14 +17,12 @@ All variables that begin with ``SMTP_`` are used by the ``push.php`` script, the
 WebHooks
 ++++++++
 
-Use one of the following url examples and set `Content-Type` to `application/x-www-form-urlencoded`
-
-- `protocol://host/folder/hooks/commits.php`
-- `protocol://host/folder/hooks/push.php`
+- `protocol://host/folder/hooks/commits.php` (`Content-Type: application/x-www-form-urlencoded`)
+- `protocol://host/folder/hooks/push.php` (`Content-Type: application/json`)
 - `protocol://host/folder/hooks/docs.php`
 - `protocol://host/folder/hooks/website.php`
-- `protocol://host/folder/hooks/create_release.php`
-- `protocol://host/folder/hooks/create.php`
+- `protocol://host/folder/hooks/create_release.php` (`Content-Type: application/x-www-form-urlencoded`)
+- `protocol://host/folder/hooks/create.php` (`Content-Type: application/x-www-form-urlencoded`)
 
 Scripts
 +++++++
