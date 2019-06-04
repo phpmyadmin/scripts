@@ -31,6 +31,12 @@ For example:
     define('SMTP_USERNAME', 'mail@example.org');
     define('SMTP_PASSWORD', 'P@ssw0rd12345');
 
+WebHook
++++++++
+
+Use the following url example and set `Content-Type` to `application/x-www-form-urlencoded`
+
+`protocol://host/folder/hooks/commits.php`
 
 Scripts
 +++++++
