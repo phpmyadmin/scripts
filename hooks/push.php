@@ -31,6 +31,10 @@ if (json_last_error() !== 0) {
     exit;
 }
 
+if (isset($inputData->zen) && isset($inputData->hook) && isset($inputData->hook_id)) {
+    json_response(array('pong' => true));
+    die();
+}
 
 $data = gihub_webhook_push($inputData);
 
