@@ -46,7 +46,7 @@ $version = implode('.', $parts);
 $major_version = implode('.', array_slice($parts, 0, 3));
 
 $result = github_make_release(
-    'phpmyadmin',
+    $data['repository']['full_name'],
     $data['ref'],
     $version,
     'phpMyAdmin release ' . $version . "\n\n" .

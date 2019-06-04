@@ -37,7 +37,7 @@ if (preg_match('/^[0-9.-]+$/', $version) === 0) {
 }
 
 $result = github_make_release(
-    $data['repository']['name'],
+    $data['repository']['full_name'],
     $tag,
     $version,
     'Released version ' . $version

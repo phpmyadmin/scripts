@@ -119,7 +119,7 @@ function github_make_release($repo, $tag, $version, $description)
 
     //set the url, number of POST vars, POST data
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
-    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/phpmyadmin/' . $repo . '/releases');
+    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/releases');
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array('tag_name' => $tag, 'name' => $version, 'body' => $description)));
 
