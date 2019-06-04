@@ -9,7 +9,7 @@ use PHPMailer\PHPMailer\Exception;
 
 error_reporting(E_ALL);
 
-define('PMAHOOKS', True);
+define('PMAHOOKS', true);
 
 require_once(__DIR__.'/lib/github.php');
 
