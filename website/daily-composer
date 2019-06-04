@@ -12,7 +12,7 @@ set -u
 DIR=~/composer
 
 # Branches we process
-BRANCHES="QA_4_8 QA_4_7 master"
+BRANCHES="QA_4_9 QA_4_8 QA_4_7 master"
 
 generate_readme() {
     cat > README.rst <<EOT
@@ -68,7 +68,7 @@ git remote update phpmyadmin
 git fetch phpmyadmin '+refs/tags/*:refs/remotes/phpmyadmin/tags/*'
 
 # Process branches
-for branch in $BRANCHES ; do 
+for branch in $BRANCHES ; do
     if [ $branch = master ] ; then
         newbranch=master
     else
@@ -97,7 +97,7 @@ for branch in $BRANCHES ; do
 done
 
 # Process tags
-for tag in `git branch -r | grep 'phpmyadmin/tags/RELEASE_4_[78]_[0-9]\+\(_[0-9]\)\?$'` ; do
+for tag in `git branch -r | grep 'phpmyadmin/tags/RELEASE_4_[789]_[0-9]\+\(_[0-9]\)\?$'` ; do
     newtag=`echo $tag | sed -e 's@.*RELEASE_@@' -e 's/_/./g'`
     if git rev-parse --verify --quiet $newtag ; then
         continue
