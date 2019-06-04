@@ -64,6 +64,11 @@ $message_commits = "<!-- PMABOT:COMMITS -->\n"
 $data = json_decode($_POST['payload'], true);
 
 /* Check request data */
+if (isset($data['zen']) && isset($data['hook']) && isset($data['hook_id'])) {
+    json_response(array('pong' => true));
+    die();
+}
+
 if (! isset($data['pull_request']) || ! isset($data['action'])) {
     fail('No pull request data!');
 }
