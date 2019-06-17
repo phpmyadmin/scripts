@@ -9,7 +9,7 @@ use PHPMailer\PHPMailer\Exception;
 
 error_reporting(E_ALL);
 
-define('PMAHOOKS', True);
+define('PMAHOOKS', true);
 
 require_once(__DIR__.'/lib/github.php');
 
@@ -31,6 +31,10 @@ if (json_last_error() !== 0) {
     exit;
 }
 
+if (isset($inputData->zen) && isset($inputData->hook) && isset($inputData->hook_id)) {
+    json_response(array('pong' => true));
+    die();
+}
 
 $data = gihub_webhook_push($inputData);
 

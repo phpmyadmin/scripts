@@ -5,7 +5,7 @@
 
 error_reporting(E_ALL);
 
-define('PMAHOOKS', True);
+define('PMAHOOKS', true);
 
 require_once('./lib/github.php');
 
@@ -13,6 +13,11 @@ github_verify_post();
 
 /* Parse JSON */
 $data = json_decode($_POST['payload'], true);
+
+if (isset($data['zen']) && isset($data['hook']) && isset($data['hook_id'])) {
+    json_response(array('pong' => true));
+    die();
+}
 
 if ($data['ref_type'] != 'tag') {
     fail('Not a tag: ' . $data['ref_type']);
@@ -32,7 +37,7 @@ if (preg_match('/^[0-9.-]+$/', $version) === 0) {
 }
 
 $result = github_make_release(
-    $data['repository']['name'],
+    $data['repository']['full_name'],
     $tag,
     $version,
     'Released version ' . $version

@@ -7,8 +7,6 @@ if (!defined('PMAHOOKS')) {
     fail('Invalid invocation!');
 }
 
-$GLOBALS['hook_secret'] = '';
-
 require_once('./config.php');
 
 $curl_base_opts = array(
@@ -80,7 +78,7 @@ function gihub_webhook_push(stdClass $inputData): stdClass
  */
 function github_verify_post()
 {
-    if (empty($GLOBALS['hook_secret'])) {
+    if (empty(GITHUB_HOOK_SECRET)) {
         fail('Missing hook secret configuration!');
     }
     if (!isset($_SERVER['HTTP_X_HUB_SIGNATURE'])) {
@@ -97,7 +95,7 @@ function github_verify_post()
         fail("Hash algorithm '$algo' is not supported.");
     }
     $rawPost = file_get_contents('php://input');
-    $newhash = hash_hmac($algo, $rawPost, $GLOBALS['hook_secret']);
+    $newhash = hash_hmac($algo, $rawPost, GITHUB_HOOK_SECRET);
     if (! hash_equals($hash, $newhash)) {
         fail('Hook secret does not match.');
     }
@@ -121,7 +119,7 @@ function github_make_release($repo, $tag, $version, $description)
 
     //set the url, number of POST vars, POST data
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
-    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/phpmyadmin/' . $repo . '/releases');
+    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/releases');
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array('tag_name' => $tag, 'name' => $version, 'body' => $description)));
 
@@ -139,13 +137,13 @@ function github_make_release($repo, $tag, $version, $description)
 /**
  * Posts a comment on GitHub pull request
  */
-function github_comment_pull($pullid, $comment)
+function github_comment_pull($repo, $pullid, $comment)
 {
     $ch = curl_init();
 
     //set the url, number of POST vars, POST data
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
-    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/phpmyadmin/phpmyadmin/issues/' . $pullid . '/comments');
+    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/issues/' . $pullid . '/comments');
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array('body' => $comment)));
 
@@ -183,11 +181,11 @@ function github_comment_commit($repo, $sha, $comment)
 /**
  * Returns list of pull request commits.
  */
-function github_pull_commits($pullid)
+function github_pull_commits($repo, $pullid)
 {
     $ch = curl_init();
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
-    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/phpmyadmin/phpmyadmin/pulls/' . $pullid . '/commits');
+    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/pulls/' . $pullid . '/commits');
 
     //execute post
     $result = curl_exec($ch);
@@ -201,11 +199,11 @@ function github_pull_commits($pullid)
 /**
  * Returns diff of pull request commit detal.
  */
-function github_commit_detail($commit)
+function github_commit_detail($repo, $commit)
 {
     $ch = curl_init();
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
-    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/phpmyadmin/phpmyadmin/commits/' . $commit);
+    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/commits/' . $commit);
 
     //execute post
     $result = curl_exec($ch);
@@ -237,11 +235,11 @@ function github_commit_comments($repo, $sha)
 /**
  * Returns diff of pull request commits.
  */
-function github_pull_diff($pullid)
+function github_pull_diff($repo, $pullid)
 {
     $ch = curl_init();
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
-    curl_setopt($ch, CURLOPT_URL, 'https://github.com/phpmyadmin/phpmyadmin/pull/' . $pullid . '.patch');
+    curl_setopt($ch, CURLOPT_URL, 'https://github.com/' . $repo . '/pull/' . $pullid . '.patch');
 
     //execute post
     $result = curl_exec($ch);

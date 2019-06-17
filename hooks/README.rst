@@ -9,28 +9,20 @@ Configuration
 The scripts accessing GitHub need configuration to be able to authorize against
 it.
 
-Please create file ``config.php`` in this directory with GitHub
-credentials.
+Please copy file ``config-example.php`` to ``config.php`` and fill the different variables.
 
 All variables that begin with ``SMTP_`` are used by the ``push.php`` script, they are not required if you no not use the ``push.php`` script.
 
-For example:
 
-.. code-block:: php
+WebHooks
+++++++++
 
-    <?php
-    define('GITHUB_USERNAME', 'phpmyadmin-bot');
-    define('GITHUB_PASSWORD', 'password');
-    define('SMTP_SEND_TO', 'maillist@example.org');
-    define('SMTP_SEND_FROM_EMAIL', 'mail@example.org');// Optional
-    define('SMTP_SEND_BACK_TO', 'maillist@example.org');// Optional
-    define('SMTP_HEADERS', [ 'Approved' => 'Secret' ]);// Optional
-    define('SMTP_HOST', 'smtp.example.org');// Optional, if empty all SMTP_* below will be skipped
-    define('SMTP_PORT', 587);
-    define('SMTP_MODE', 'tls');// ssl or tls
-    define('SMTP_USERNAME', 'mail@example.org');
-    define('SMTP_PASSWORD', 'P@ssw0rd12345');
-
+- ``protocol://host/folder/hooks/commits.php`` (``Content-Type: application/x-www-form-urlencoded``) event:``pull_request``
+- ``protocol://host/folder/hooks/push.php`` (``Content-Type: application/json``) event:``push``
+- ``protocol://host/folder/hooks/docs.php``
+- ``protocol://host/folder/hooks/website.php``
+- ``protocol://host/folder/hooks/create_release.php`` (``Content-Type: application/x-www-form-urlencoded``) event:``create``
+- ``protocol://host/folder/hooks/create.php`` (``Content-Type: application/x-www-form-urlencoded``) event:``create``
 
 Scripts
 +++++++

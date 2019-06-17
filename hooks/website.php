@@ -5,7 +5,7 @@
 
 error_reporting(E_ALL);
 
-define('PMAHOOKS', True);
+define('PMAHOOKS', true);
 
 require_once('./lib/github.php');
 

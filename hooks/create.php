@@ -5,7 +5,7 @@
 
 error_reporting(E_ALL);
 
-define('PMAHOOKS', True);
+define('PMAHOOKS', true);
 
 require_once('./lib/github.php');
 
@@ -13,6 +13,11 @@ github_verify_post();
 
 /* Parse JSON */
 $data = json_decode($_POST['payload'], true);
+
+if (isset($data['zen']) && isset($data['hook']) && isset($data['hook_id'])) {
+    json_response(array('pong' => true));
+    die();
+}
 
 if ($data['ref_type'] != 'tag') {
     fail('Not a tag', 204);
@@ -41,7 +46,7 @@ $version = implode('.', $parts);
 $major_version = implode('.', array_slice($parts, 0, 3));
 
 $result = github_make_release(
-    'phpmyadmin',
+    $data['repository']['full_name'],
     $data['ref'],
     $version,
     'phpMyAdmin release ' . $version . "\n\n" .
