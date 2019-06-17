@@ -13,7 +13,7 @@ github_verify_post();
 
 $contributing_url = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/CONTRIBUTING.md';
 $guidelines_url = 'https://github.com/phpmyadmin/phpmyadmin/wiki/Developer_guidelines';
-$dco_link = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/DCO#L39';
+$dco_link = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/DCO';
 
 $message_sob = "<!-- PMABOT:SOB -->\n"
     . "This commit is missing Signed-Off-By line to indicate "
