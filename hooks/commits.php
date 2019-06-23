@@ -118,7 +118,7 @@ foreach ($commits as $commit) {
         }
     } else {
         /* Check for invalid SOB */
-        if ( ! preg_match("@\nSigned-off-by: +(?:[\p{L}-\.]+\s){2,}<.*>@i", $commit['commit']['message'])) {
+        if ( ! preg_match("@\nSigned-off-by: +(?:[\p{L}\-\.]+\s){2,}<.*>@iu", $commit['commit']['message'])) {
             if (strpos($comments_text, '<!-- PMABOT:SOB:INVALID -->') === false) {
                 github_comment_commit($repo_name, $commit['sha'], $message_sob_invalid);
                 $comments[] = array(
