@@ -26,6 +26,5 @@ cat > revision-info.php.tmp <<EOT
 \$reponame = '$reponame';
 \$repobranchbase = '$repobranchbase';
 \$branch = '$ref';
-?>
 EOT
 mv revision-info.php.tmp revision-info.php
