@@ -53,6 +53,15 @@ line_counts() {
     fi
 }
 
+generate_css() {
+    yarn install --non-interactive --silent
+    git add --force themes/*/css/*.css
+    git add --force themes/*/css/*.css.map
+    if ! git diff --quiet --cached ; then
+        git commit -m 'Update generated CSS files'
+    fi
+}
+
 # Ensure we have working dir
 if [ ! -d "$DIR" ] ; then
     git clone git@github.com:phpmyadmin/composer.git "$DIR"
@@ -111,6 +120,7 @@ for tag in `git branch -r | grep 'phpmyadmin/tags/RELEASE_[45]_[7890]_[0-9]\+\(_
     generate_readme
     generate_mo
     line_counts
+    generate_css
 
     # Create tag
     git tag -a -m "Composer tag for $tag" $newtag
