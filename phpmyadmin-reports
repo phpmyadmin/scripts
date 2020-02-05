@@ -43,6 +43,7 @@ PROJECTS = (
     'phpmyadmin/simple-math',
     'phpmyadmin/localized_docs',
     'phpmyadmin/error-reporting-server',
+    'phpmyadmin/twig-i18n-extension',
 )
 # Only include commits not present elsewhere from this repository
 PROJECT_EXTRA_COMMITS = (
