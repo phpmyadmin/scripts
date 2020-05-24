@@ -75,6 +75,10 @@ for REPONAME in $REPOS ; do
         yarn install --non-interactive --silent > /dev/null
     fi
 
+    if [ -f libraries/cache/routes.cache.php ] ; then
+        rm -f libraries/cache/routes.cache.php
+    fi
+
     # Link themes
     for THEME in $THEMES ; do
         if [ ! -e themes/$THEME ] ; then
