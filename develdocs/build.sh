@@ -5,7 +5,8 @@
 
 # Update scripts
 BUILDER_ROOT=${BUILDER_ROOT:-"/home/builder"}
-cd "$BUILDER_ROOT/scripts/"
+BUILDER_REPO="$BUILDER_ROOT/${BUILDER_REPO_NAME:-scripts}"
+cd "$BUILDER_REPO"
 git pull -q
 
 # Update doc build environment
@@ -17,16 +18,16 @@ for repo in phpmyadmin sql-parser motranslator shapefile simple-math ; do
     cd "$BUILDER_ROOT/$repo"
     git pull -q
     # Clean output
-    rm -rf "$BUILDER_ROOT/scripts/develdocs/output/$repo/"
+    rm -rf "$BUILDER_REPO/develdocs/output/$repo/"
     # Generate config file
-    nice -19 "$BUILDER_ROOT/scripts/develdocs/sami.php" \
+    nice -19 "$BUILDER_REPO/develdocs/sami.php" \
     --root "$BUILDER_ROOT/$repo" \
-    --build-dir "$BUILDER_ROOT/scripts/develdocs/output/$repo/" \
-    --cache-dir "$BUILDER_ROOT/scripts/develdocs/tmp/$repo/" \
-    --output-config "$BUILDER_ROOT/scripts/develdocs/sami-$repo.php" \
+    --build-dir "$BUILDER_REPO/develdocs/output/$repo/" \
+    --cache-dir "$BUILDER_REPO/develdocs/tmp/$repo/" \
+    --output-config "$BUILDER_REPO/develdocs/sami-$repo.php" \
     --title-of-composer
     # Render
-    nice -19 "$BUILDER_ROOT/scripts/develdocs/vendor/bin/sami.php" update  "$BUILDER_ROOT/scripts/develdocs/sami-$repo.php"
+    nice -19 "$BUILDER_REPO/develdocs/vendor/bin/sami.php" update  "$BUILDER_REPO/develdocs/sami-$repo.php"
     # Delete config file
-    rm "$BUILDER_ROOT/scripts/develdocs/sami-$repo.php"
+    rm "$BUILDER_REPO/develdocs/sami-$repo.php"
 done
