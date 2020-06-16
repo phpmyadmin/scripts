@@ -4,7 +4,7 @@
 # on develdocs.phpmyadmin.net
 
 # Update scripts
-BUILDER_ROOT="/home/builder"
+BUILDER_ROOT=${BUILDER_ROOT:-"/home/builder"}
 cd "$BUILDER_ROOT/scripts/"
 git pull -q
 
