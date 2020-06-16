@@ -34,3 +34,6 @@ cd /home/builder/website/
 
 # Trigger docker build for edge-4.9
 ./manage.py docker_trigger --tag edge-4.9
+
+# Trigger docker build for edge-5.0
+./manage.py docker_trigger --tag edge-5.0
