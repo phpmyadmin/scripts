@@ -7,7 +7,7 @@ if (! defined('PMAHOOKS')) {
     fail('Invalid invocation!');
 }
 
-require_once './config.php';
+require_once __DIR__ . '/../config.php';
 
 $curlBaseOpts = [
     CURLOPT_USERAGENT => 'phpMyAdmin-bot',

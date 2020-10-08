@@ -11,15 +11,15 @@ error_reporting(E_ALL);
 
 define('PMAHOOKS', true);
 
-require_once(__DIR__.'/lib/github.php');
+require_once __DIR__ . '/lib/github.php';
 
-if ( !is_file(__DIR__.'/vendor/autoload.php')) {
-    fail("Run composer install");
+if ( !is_file(__DIR__ . '/vendor/autoload.php')) {
+    fail('Run composer install');
     exit;
 }
 
 //Load Composer's autoloader
-require_once(__DIR__.'/vendor/autoload.php');
+require_once __DIR__ . '/vendor/autoload.php';
 
 github_verify_post();
 

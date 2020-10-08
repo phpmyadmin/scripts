@@ -7,7 +7,7 @@ error_reporting(E_ALL);
 
 define('PMAHOOKS', true);
 
-require_once('./lib/github.php');
+require_once __DIR__ . '/lib/github.php';
 
 github_verify_post();
 
