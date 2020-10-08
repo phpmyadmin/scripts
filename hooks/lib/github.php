@@ -68,10 +68,12 @@ function github_webhook_push(stdClass $inputData): stdClass
     $data->repoName            = $inputData->repository->full_name;
     $data->compare             = $inputData->compare;
     $data->emailBody           = $msg;
-    $data->headCommitTitle     = explode("\n", $inputData->commits[0]->message)[0];
-    $data->headCommitShortHash = substr($inputData->commits[0]->id, 0, 6);
-    $data->authorName          = $inputData->commits[0]->author->name;
-    $data->authorEmail         = $inputData->commits[0]->author->email;
+    // Commits can be empty and head_commit filled in case of a tag
+    $firstCommit = $inputData->commits[0] ?? $inputData->head_commit;
+    $data->headCommitTitle     = explode("\n", $firstCommit->message)[0];
+    $data->headCommitShortHash = substr($firstCommit->id, 0, 6);
+    $data->authorName          = $firstCommit->author->name;
+    $data->authorEmail         = $firstCommit->author->email;
 
     return $data;
 }
