@@ -3,25 +3,27 @@
  * GitHub operations layer.
  */
 
-if (!defined('PMAHOOKS')) {
+if (! defined('PMAHOOKS')) {
     fail('Invalid invocation!');
 }
 
-require_once('./config.php');
+require_once './config.php';
 
-$curl_base_opts = array(
+$curl_base_opts = [
     CURLOPT_USERPWD => GITHUB_USERNAME . ':' . GITHUB_PASSWORD,
     CURLOPT_USERAGENT => 'phpMyAdmin-bot',
     CURLOPT_RETURNTRANSFER => 1,
     CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
-    CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
-);
+    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+];
 
 /**
  * Builds the body of the email to send
  *
- * @param stdClass $inputData The JSON payload
  * @see https://developer.github.com/v3/activity/events/types/#pushevent
+ *
+ * @param stdClass $inputData The JSON payload
+ *
  * @return stdClass {
  *       "repoName": "org/repo",
  *       "compare": "URL TO COMPARE PAGE",
@@ -39,26 +41,25 @@ function gihub_webhook_push(stdClass $inputData): stdClass
     $msg .= 'Home: ' . $inputData->repository->html_url . PHP_EOL;
 
     foreach ($inputData->commits as $commit) {
-    $msg .= 'Commit: ' . $commit->id . PHP_EOL;
-    $msg .= $commit->url . PHP_EOL;
-    $msg .= 'Author: ' . $commit->author->name . ' <' . $commit->author->email . '>' . PHP_EOL;
+        $msg .= 'Commit: ' . $commit->id . PHP_EOL;
+        $msg .= $commit->url . PHP_EOL;
+        $msg .= 'Author: ' . $commit->author->name . ' <' . $commit->author->email . '>' . PHP_EOL;
 
-    $date = new DateTime($commit->timestamp);
-    $msg .= 'Date: ' . $date->format('Y-m-d (D, m F Y) P') . PHP_EOL . PHP_EOL;
+        $date = new DateTime($commit->timestamp);
+        $msg .= 'Date: ' . $date->format('Y-m-d (D, m F Y) P') . PHP_EOL . PHP_EOL;
 
-    $msg .= 'Changed paths: ' . PHP_EOL;
-    foreach ($commit->added as $file) {
-        $msg .= 'A ' . $file . PHP_EOL;
-    }
-    foreach ($commit->modified as $file) {
-        $msg .= 'M ' . $file . PHP_EOL;
-    }
-    foreach ($commit->removed as $file) {
-        $msg .= 'D ' . $file . PHP_EOL;
-    }
-    $msg .= PHP_EOL . 'Log Message:' . PHP_EOL . '-----------' . PHP_EOL;
-    $msg .= $commit->message . PHP_EOL . PHP_EOL;
-
+        $msg .= 'Changed paths: ' . PHP_EOL;
+        foreach ($commit->added as $file) {
+            $msg .= 'A ' . $file . PHP_EOL;
+        }
+        foreach ($commit->modified as $file) {
+            $msg .= 'M ' . $file . PHP_EOL;
+        }
+        foreach ($commit->removed as $file) {
+            $msg .= 'D ' . $file . PHP_EOL;
+        }
+        $msg .= PHP_EOL . 'Log Message:' . PHP_EOL . '-----------' . PHP_EOL;
+        $msg .= $commit->message . PHP_EOL . PHP_EOL;
     }
 
     $data = new stdClass();
@@ -69,9 +70,9 @@ function gihub_webhook_push(stdClass $inputData): stdClass
     $data->headCommitShortHash = substr($inputData->commits[0]->id, 0, 6);
     $data->authorName          = $inputData->commits[0]->author->name;
     $data->authorEmail         = $inputData->commits[0]->author->email;
+
     return $data;
 }
-
 
 /**
  * Verifies signature from GitHub
@@ -81,24 +82,26 @@ function github_verify_post()
     if (empty(GITHUB_HOOK_SECRET)) {
         fail('Missing hook secret configuration!');
     }
-    if (!isset($_SERVER['HTTP_X_HUB_SIGNATURE'])) {
+    if (! isset($_SERVER['HTTP_X_HUB_SIGNATURE'])) {
         fail("HTTP header 'X-Hub-Signature' is missing.");
-    } elseif (!extension_loaded('hash')) {
+    } elseif (! extension_loaded('hash')) {
         fail("Missing 'hash' extension to check the secret code validity.");
     }
 
-    list($algo, $hash) = explode('=', $_SERVER['HTTP_X_HUB_SIGNATURE'], 2) + array('', '');
-    if (!in_array($algo, array('sha1', 'sha256', 'sha512'), true)) {
+    [$algo, $hash] = explode('=', $_SERVER['HTTP_X_HUB_SIGNATURE'], 2) + ['', ''];
+    if (! in_array($algo, ['sha1', 'sha256', 'sha512'], true)) {
         fail("Hash algorithm '$algo' is not allowed.");
     }
-    if (!in_array($algo, hash_algos(), true)) {
+    if (! in_array($algo, hash_algos(), true)) {
         fail("Hash algorithm '$algo' is not supported.");
     }
     $rawPost = file_get_contents('php://input');
     $newhash = hash_hmac($algo, $rawPost, GITHUB_HOOK_SECRET);
-    if (! hash_equals($hash, $newhash)) {
-        fail('Hook secret does not match.');
+    if (hash_equals($hash, $newhash)) {
+        return;
     }
+
+    fail('Hook secret does not match.');
 }
 
 /**
@@ -108,20 +111,20 @@ function github_make_release($repo, $tag, $version, $description)
 {
     $ch = curl_init();
 
-    $result = array(
-        'release' => array(
+    $result = [
+        'release' => [
             'project' => $repo,
             'tag' => $tag,
             'version' => $version,
-            'description' => $description
-        )
-    );
+            'description' => $description,
+        ],
+    ];
 
     //set the url, number of POST vars, POST data
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
     curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/releases');
     curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array('tag_name' => $tag, 'name' => $version, 'body' => $description)));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['tag_name' => $tag, 'name' => $version, 'body' => $description]));
 
     //execute post
     $response = curl_exec($ch);
@@ -145,7 +148,7 @@ function github_comment_pull($repo, $pullid, $comment)
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
     curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/issues/' . $pullid . '/comments');
     curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array('body' => $comment)));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['body' => $comment]));
 
     //execute post
     $result = curl_exec($ch);
@@ -167,7 +170,7 @@ function github_comment_commit($repo, $sha, $comment)
     curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
     curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/commits/' . $sha . '/comments');
     curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array('body' => $comment)));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['body' => $comment]));
 
     //execute post
     $result = curl_exec($ch);
@@ -273,14 +276,12 @@ function trigger_docs_render()
  *
  * @param mixed $data JSON data to print
  */
-function json_response($data, $status='success', $message=null)
+function json_response($data, $status = 'success', $message = null)
 {
     header('Content-Type: application/json; charset=UTF-8');
     header('X-Content-Type-Options: nosniff');
 
-    $response = array(
-        'status' => $status
-    );
+    $response = ['status' => $status];
     if (isset($data)) {
         $response['data'] = $data;
     }
@@ -294,10 +295,10 @@ function json_response($data, $status='success', $message=null)
 /**
  * Terminates request with error
  */
-function fail($message, $code=500)
+function fail($message, $code = 500)
 {
     http_response_code($code);
     json_response(null, 'error', $message);
 
-    die();
+    die;
 }
