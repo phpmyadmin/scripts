@@ -2,7 +2,7 @@
 
 define('GITHUB_HOOK_SECRET', 'xxxxxxxxxxxxxxREPLACEMExxxxxxxxxxxxxxxxxx');
 define('GITHUB_USERNAME', 'phpmyadmin-bot');
-define('GITHUB_TOKEN', 'xxxxxxxxxxxxxxREPLACEMExxxxxxxxxxxxxxxxxx');
+define('GITHUB_TOKEN', 'xxxxxxxxxxxxxxREPLACEMExxxxxxxxxxxxxxxxxx');// https://github.com/settings/tokens/new scopes: repo, workflow
 define('SMTP_SEND_TO', 'maillist@example.org');
 define('SMTP_SEND_FROM_EMAIL', 'mail@example.org');// Optional
 define('SMTP_SEND_BACK_TO', 'maillist@example.org');// Optional
