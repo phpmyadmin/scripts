@@ -12,3 +12,6 @@ define('SMTP_PORT', 587);
 define('SMTP_MODE', 'tls');// ssl or tls
 define('SMTP_USERNAME', 'mail@example.org');
 define('SMTP_PASSWORD', 'P@ssw0rd12345');
+
+define('WEBSITE_HOOK', 'https://example.org/replaceme-by-an-url');
+define('DOCS_HOOK', 'https://example.org/replaceme-by-an-url');
