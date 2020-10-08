@@ -12,8 +12,11 @@ require_once './config.php';
 $curlBaseOpts = [
     CURLOPT_USERAGENT => 'phpMyAdmin-bot',
     CURLOPT_RETURNTRANSFER => 1,
-    CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
-    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+    CURLOPT_HTTPHEADER => [
+        'Content-Type: application/json',
+        'Authorization: token ' . GITHUB_TOKEN,
+
+    ],
 ];
 
 /**
