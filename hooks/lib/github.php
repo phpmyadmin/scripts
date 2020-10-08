@@ -9,7 +9,7 @@ if (! defined('PMAHOOKS')) {
 
 require_once './config.php';
 
-$curl_base_opts = [
+$curlBaseOpts = [
     CURLOPT_USERAGENT => 'phpMyAdmin-bot',
     CURLOPT_RETURNTRANSFER => 1,
     CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
@@ -108,6 +108,8 @@ function github_verify_post()
  */
 function github_make_release($repo, $tag, $version, $description)
 {
+    global $curlBaseOpts;
+
     $ch = curl_init();
 
     $result = [
@@ -120,7 +122,7 @@ function github_make_release($repo, $tag, $version, $description)
     ];
 
     //set the url, number of POST vars, POST data
-    curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
+    curl_setopt_array($ch, $curlBaseOpts);
     curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/releases');
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['tag_name' => $tag, 'name' => $version, 'body' => $description]));
@@ -141,10 +143,12 @@ function github_make_release($repo, $tag, $version, $description)
  */
 function github_comment_pull($repo, $pullid, $comment)
 {
+    global $curlBaseOpts;
+
     $ch = curl_init();
 
     //set the url, number of POST vars, POST data
-    curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
+    curl_setopt_array($ch, $curlBaseOpts);
     curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/issues/' . $pullid . '/comments');
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['body' => $comment]));
@@ -163,10 +167,12 @@ function github_comment_pull($repo, $pullid, $comment)
  */
 function github_comment_commit($repo, $sha, $comment)
 {
+    global $curlBaseOpts;
+
     $ch = curl_init();
 
     //set the url, number of POST vars, POST data
-    curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
+    curl_setopt_array($ch, $curlBaseOpts);
     curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/commits/' . $sha . '/comments');
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['body' => $comment]));
@@ -185,8 +191,10 @@ function github_comment_commit($repo, $sha, $comment)
  */
 function github_pull_commits($repo, $pullid)
 {
+    global $curlBaseOpts;
+
     $ch = curl_init();
-    curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
+    curl_setopt_array($ch, $curlBaseOpts);
     curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/pulls/' . $pullid . '/commits');
 
     //execute post
@@ -203,8 +211,10 @@ function github_pull_commits($repo, $pullid)
  */
 function github_commit_detail($repo, $commit)
 {
+    global $curlBaseOpts;
+
     $ch = curl_init();
-    curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
+    curl_setopt_array($ch, $curlBaseOpts);
     curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/commits/' . $commit);
 
     //execute post
@@ -221,8 +231,10 @@ function github_commit_detail($repo, $commit)
  */
 function github_commit_comments($repo, $sha)
 {
+    global $curlBaseOpts;
+
     $ch = curl_init();
-    curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
+    curl_setopt_array($ch, $curlBaseOpts);
     curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/commits/' . $sha . '/comments');
 
     //execute post
@@ -239,8 +251,10 @@ function github_commit_comments($repo, $sha)
  */
 function github_pull_diff($repo, $pullid)
 {
+    global $curlBaseOpts;
+
     $ch = curl_init();
-    curl_setopt_array($ch, $GLOBALS['curl_base_opts']);
+    curl_setopt_array($ch, $curlBaseOpts);
     curl_setopt($ch, CURLOPT_URL, 'https://github.com/' . $repo . '/pull/' . $pullid . '.patch');
 
     //execute post
