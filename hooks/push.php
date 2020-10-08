@@ -36,7 +36,7 @@ if (isset($inputData->zen) && isset($inputData->hook) && isset($inputData->hook_
     die();
 }
 
-$data = gihub_webhook_push($inputData);
+$data = github_webhook_push($inputData);
 
 
 $mail = new PHPMailer(true);

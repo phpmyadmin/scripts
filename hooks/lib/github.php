@@ -34,7 +34,7 @@ $curl_base_opts = [
  *       "authorEmail": "williamdes@wdes.fr"
  * }
  */
-function gihub_webhook_push(stdClass $inputData): stdClass
+function github_webhook_push(stdClass $inputData): stdClass
 {
     $msg  = '';
     $msg .= 'Branch: ' . $inputData->ref . PHP_EOL;
@@ -200,7 +200,7 @@ function github_pull_commits($repo, $pullid)
 }
 
 /**
- * Returns diff of pull request commit detal.
+ * Returns diff of pull request commit detail.
  */
 function github_commit_detail($repo, $commit)
 {
@@ -218,7 +218,7 @@ function github_commit_detail($repo, $commit)
 }
 
 /**
- * Returns diff of pull request commit detal.
+ * Returns diff of pull request commit detail.
  */
 function github_commit_comments($repo, $sha)
 {
