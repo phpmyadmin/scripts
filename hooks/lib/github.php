@@ -135,6 +135,8 @@ function github_make_release($repo, $tag, $version, $description)
     //execute post
     $response = curl_exec($ch);
 
+    continueOrFailOnHttpCode(curl_getinfo($ch, CURLINFO_HTTP_CODE));
+
     //close connection
     curl_close($ch);
 
@@ -161,6 +163,8 @@ function github_comment_pull($repo, $pullid, $comment)
     //execute post
     $result = curl_exec($ch);
 
+    continueOrFailOnHttpCode(curl_getinfo($ch, CURLINFO_HTTP_CODE));
+
     //close connection
     curl_close($ch);
 
@@ -185,6 +189,8 @@ function github_comment_commit($repo, $sha, $comment)
     //execute post
     $result = curl_exec($ch);
 
+    continueOrFailOnHttpCode(curl_getinfo($ch, CURLINFO_HTTP_CODE));
+
     //close connection
     curl_close($ch);
 
@@ -204,6 +210,8 @@ function github_pull_commits($repo, $pullid)
 
     //execute post
     $result = curl_exec($ch);
+
+    continueOrFailOnHttpCode(curl_getinfo($ch, CURLINFO_HTTP_CODE));
 
     //close connection
     curl_close($ch);
@@ -225,6 +233,8 @@ function github_commit_detail($repo, $commit)
     //execute post
     $result = curl_exec($ch);
 
+    continueOrFailOnHttpCode(curl_getinfo($ch, CURLINFO_HTTP_CODE));
+
     //close connection
     curl_close($ch);
 
@@ -245,6 +255,8 @@ function github_commit_comments($repo, $sha)
     //execute post
     $result = curl_exec($ch);
 
+    continueOrFailOnHttpCode(curl_getinfo($ch, CURLINFO_HTTP_CODE));
+
     //close connection
     curl_close($ch);
 
@@ -264,6 +276,8 @@ function github_pull_diff($repo, $pullid)
 
     //execute post
     $result = curl_exec($ch);
+
+    continueOrFailOnHttpCode(curl_getinfo($ch, CURLINFO_HTTP_CODE));
 
     //close connection
     curl_close($ch);
@@ -308,6 +322,13 @@ function json_response($data, $status = 'success', $message = null)
     }
 
     echo json_encode($response, JSON_PRETTY_PRINT);
+}
+
+function continueOrFailOnHttpCode(int $httpCode): void
+{
+    if ($httpCode > 204) {
+        fail('Request failed with a code ' . $httpCode);
+    }
 }
 
 /**
