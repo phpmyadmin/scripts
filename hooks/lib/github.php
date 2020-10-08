@@ -10,7 +10,6 @@ if (! defined('PMAHOOKS')) {
 require_once './config.php';
 
 $curl_base_opts = [
-    CURLOPT_USERPWD => GITHUB_USERNAME . ':' . GITHUB_PASSWORD,
     CURLOPT_USERAGENT => 'phpMyAdmin-bot',
     CURLOPT_RETURNTRANSFER => 1,
     CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
