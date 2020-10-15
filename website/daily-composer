@@ -55,8 +55,8 @@ line_counts() {
 
 generate_css() {
     yarn install --non-interactive --silent
-    git add --force themes/*/css/*.css
-    git add --force themes/*/css/*.css.map
+    git add --force themes/*/css/*.css || echo "No css file found, not adding to git repository"
+    git add --force themes/*/css/*.css.map || echo "No css.map files found, not adding to git repository"
     if ! git diff --quiet --cached ; then
         git commit -m 'Update generated CSS files'
     fi
