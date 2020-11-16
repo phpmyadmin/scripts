@@ -137,7 +137,9 @@ foreach ($commits as $commit) {
     $files_eol = array();
     foreach ($detail['files'] as $file) {
         if (preg_match("@\n\+[^\n]*\t@", $file['patch'])) {
-            if (! preg_match('/^libraries\/advisory_rules.*\.txt$/', $file['filename'])) {
+            $matchAdvisory = preg_match('/^libraries\/advisory_rules.*\.txt$/', $file['filename']);
+            $matchPhpStan = preg_match('/^phpstan-baseline.neon$/', $file['filename']);
+            if (! $matchAdvisory && ! $matchPhpStan) {
                 $files_tab[] = $file['filename'];
             }
         }
