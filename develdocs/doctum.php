@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?php
-$_CLI = getopt('', ['slug:', 'root:', 'build-dir:', 'cache-dir:', 'output-config:', 'title::', 'title-of-composer']);
+$_CLI = getopt('', ['slug:', 'root:', 'build-dir:', 'cache-dir:', 'docs-branch:', 'output-config:', 'title::', 'title-of-composer']);
 
 $SOURCE = 'src';
 
@@ -28,6 +28,7 @@ return new Doctum($iterator, [
     'title'                => json_decode(file_get_contents('%s'))->description,
     'build_dir'            => '%s',
     'cache_dir'            => '%s',
+    'version'              => '%s',
     'remote_repository'    => new GitHubRemoteRepository('%s', '%s'),
 ]);
 EOT;
@@ -40,6 +41,7 @@ $output = sprintf(
     $root . 'composer.json',
     $_CLI['build-dir'],
     $_CLI['cache-dir'],
+    $_CLI['docs-branch'],
     $_CLI['slug'],
     $root
 );
