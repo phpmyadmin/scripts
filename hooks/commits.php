@@ -138,8 +138,12 @@ foreach ($commits as $commit) {
     foreach ($detail['files'] as $file) {
         if (preg_match("@\n\+[^\n]*\t@", $file['patch'])) {
             $matchAdvisory = preg_match('/^libraries\/advisory_rules.*\.txt$/', $file['filename']);
-            $matchPhpStan = preg_match('/^phpstan-baseline.neon$/', $file['filename']);
-            if (! $matchAdvisory && ! $matchPhpStan) {
+            // Example: https://api.github.com/repos/phpmyadmin/phpmyadmin/commits/b7cb1c84bacc5de1490a4e5cf241401cbfa5c105
+            $isABaseLineFile = in_array($file['filename'], [
+                'phpstan-baseline.neon',
+                'psalm-baseline.xml',
+            ]);
+            if (! $matchAdvisory && ! $isABaseLineFile) {
                 $files_tab[] = $file['filename'];
             }
         }
