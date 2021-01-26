@@ -12,9 +12,8 @@ git pull -q
 rm -rf release
 
 # Create snapshots
-./scripts/create-release.sh --daily 4.9+snapshot QA_4_9
-./scripts/create-release.sh --daily 5.0+snapshot QA_5_0
-./scripts/create-release.sh --daily 5.1+snapshot master
+./scripts/create-release.sh --daily 5.1+snapshot QA_5_1
+./scripts/create-release.sh --daily 5.2+snapshot master
 
 # Storage directory
 mkdir -p /mnt/storage/files/snapshots/
