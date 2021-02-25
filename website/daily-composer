@@ -54,11 +54,19 @@ line_counts() {
 }
 
 generate_css() {
-    yarn install --non-interactive --silent
+    yarn install --non-interactive --silent --production
     git add --force themes/*/css/*.css || echo "No css file found, not adding to git repository"
     git add --force themes/*/css/*.css.map || echo "No css.map files found, not adding to git repository"
     if ! git diff --quiet --cached ; then
         git commit -m 'Update generated CSS files'
+    fi
+}
+
+generate_js() {
+    yarn install --non-interactive --silent --production
+    git add --force js/dist/ || echo "No JS files found, not adding to git repository"
+    if ! git diff --quiet --cached ; then
+        git commit -m 'Update generated JS files'
     fi
 }
 
@@ -101,6 +109,7 @@ for branch in $BRANCHES ; do
     generate_mo
     line_counts
     generate_css
+    generate_js
 
     # Push
     git push origin $newbranch
@@ -122,6 +131,7 @@ for tag in `git branch -r | grep 'phpmyadmin/tags/RELEASE_[45]_[7890]_[0-9]\+\(_
     generate_mo
     line_counts
     generate_css
+    generate_js
 
     # Create tag
     git tag -a -m "Composer tag for $tag" $newtag
