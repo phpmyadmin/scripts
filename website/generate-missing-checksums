@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Generates missing checksums for donwload files
+# Generates missing checksums for download files
 
 cd /mnt/storage/files
 

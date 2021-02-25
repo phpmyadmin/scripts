@@ -12,7 +12,7 @@ import urllib.request
 try:
     from bs4 import BeautifulSoup
 except ModuleNotFoundError:
-    print("The BeautifulSoup modue is not available. Please make sure you have the proper module or are running the correct venv.")
+    print("The BeautifulSoup module is not available. Please make sure you have the proper module or are running the correct venv.")
     raise SystemExit
 import datetime
 
