@@ -12,8 +12,17 @@ git pull -q
 rm -rf release
 
 # Create snapshots
+# Change branch to be sure to have a working release script
+git checkout QA_5_1
+# Destroy any possible local changes
+git reset --hard
 ./scripts/create-release.sh --daily 5.1+snapshot QA_5_1
+git checkout -
+git checkout master
+# Destroy any possible local changes
+git reset --hard
 ./scripts/create-release.sh --daily 5.2+snapshot master
+git checkout -
 
 # Storage directory
 mkdir -p /mnt/storage/files/snapshots/
