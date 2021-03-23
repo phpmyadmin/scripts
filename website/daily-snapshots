@@ -1,9 +1,12 @@
 #!/bin/sh
 # Script to generate daily snapshots
-set -e
+set -ex
 
 # phpMyAdmin working copy
 cd ~/phpmyadmin
+
+# Delete any local changes
+git reset --hard
 
 # Update to have latest create-release.sh
 git pull -q
@@ -16,12 +19,20 @@ rm -rf release
 git checkout QA_5_1
 # Destroy any possible local changes
 git reset --hard
+# Force an update
+git pull --ff-only
 ./scripts/create-release.sh --daily 5.1+snapshot QA_5_1
+# Destroy any possible local changes
+git reset --hard
 git checkout -
 git checkout master
 # Destroy any possible local changes
 git reset --hard
+# Force an update
+git pull --ff-only
 ./scripts/create-release.sh --daily 5.2+snapshot master
+# Destroy any possible local changes
+git reset --hard
 git checkout -
 
 # Storage directory
