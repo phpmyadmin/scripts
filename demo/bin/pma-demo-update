@@ -56,9 +56,6 @@ for REPONAME in $REPOS ; do
         fi
     fi
 
-    # Store revision info
-    ~/scripts/demo/bin/pma-revision-info
-
     # Create temp dir
     mkdir -p tmp/
     chmod 770 tmp/
@@ -66,6 +63,24 @@ for REPONAME in $REPOS ; do
 
     # Update composer deps
     if [ -f composer.json ] ; then
+
+        # Dev modules are needed to use the CLI
+        composer update --quiet
+
+        if [ -f libraries/cache/routes.cache.php ] ; then
+            rm -f libraries/cache/routes.cache.php
+        fi
+
+        if [ -f ./scripts/console ]; then
+            # Write new routing cache
+            ./scripts/console cache:warmup --routing --no-interaction -v
+            # Write the revision-info.php file
+            # Use the CLI or fallback
+            # TODO: remove fallback when no demo server is below 5.2
+            ./scripts/console write-revision-info --no-interaction -v || ~/scripts/demo/bin/pma-revision-info
+        fi
+
+        # Remove dev vendors
         composer update --quiet --no-dev
     fi
 
@@ -73,10 +88,6 @@ for REPONAME in $REPOS ; do
         # We still redirect output to /dev/null because even with the --silent flag, yarn still gives sass output such as
         # $ sass themes/pmahomme/scss:themes/pmahomme/css themes/original/scss:themes/original/css themes/metro/scss:themes/metro/css
         yarn install --non-interactive --silent > /dev/null
-    fi
-
-    if [ -f libraries/cache/routes.cache.php ] ; then
-        rm -f libraries/cache/routes.cache.php
     fi
 
     # Link themes
