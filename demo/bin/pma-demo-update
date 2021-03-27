@@ -47,6 +47,7 @@ for REPONAME in $REPOS ; do
         # Check for updates
         cd $DIRNAME
         orig_head=$(git log -n 1 --format=format:'%H')
+        git checkout -- yarn.lock
         git pull -q
         new_head=$(git log -n 1 --format=format:'%H')
 
