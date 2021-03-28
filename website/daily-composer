@@ -54,7 +54,7 @@ line_counts() {
 }
 
 generate_css() {
-    yarn install --non-interactive --silent --production
+    yarn install --frozen-lockfile --non-interactive --silent --production
     git add --force themes/*/css/*.css || echo "No css file found, not adding to git repository"
     git add --force themes/*/css/*.css.map || echo "No css.map files found, not adding to git repository"
     if ! git diff --quiet --cached ; then
@@ -63,7 +63,7 @@ generate_css() {
 }
 
 generate_js() {
-    yarn install --non-interactive --silent --production
+    yarn install --frozen-lockfile --non-interactive --silent --production
     git add --force js/dist/ || echo "No JS files found, not adding to git repository"
     if ! git diff --quiet --cached ; then
         git commit -m 'Update generated JS files'
@@ -140,6 +140,6 @@ for tag in `git branch -r | grep 'phpmyadmin/tags/RELEASE_[45]_[7890]_[0-9]\+\(_
     git checkout master
     git branch -D tmp
 
-    # Push tags
-    git push --tags origin
+    # Push the tag
+    git push origin $newtag
 done
