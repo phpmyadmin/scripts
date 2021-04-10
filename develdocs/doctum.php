@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?php
-$_CLI = getopt('', ['slug:', 'root:', 'build-dir:', 'cache-dir:', 'docs-branch:', 'output-config:', 'title::', 'title-of-composer']);
+$_CLI = getopt('', ['slug:', 'root:', 'base-url:', 'build-dir:', 'cache-dir:', 'docs-branch:', 'output-config:', 'title::', 'title-of-composer']);
 
 $SOURCE = 'src';
 
@@ -30,6 +30,7 @@ return new Doctum($iterator, [
     'cache_dir'            => '%s',
     'version'              => '%s',
     'remote_repository'    => new GitHubRemoteRepository('%s', '%s'),
+    'base_url'             => '%s',
 ]);
 EOT;
 
@@ -43,7 +44,8 @@ $output = sprintf(
     $_CLI['cache-dir'],
     $_CLI['docs-branch'],
     $_CLI['slug'],
-    $root
+    $root,
+    $_CLI['base-url']
 );
 
 file_put_contents($_CLI['output-config'], $output);

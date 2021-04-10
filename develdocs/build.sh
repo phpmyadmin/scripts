@@ -28,6 +28,7 @@ for repo in phpmyadmin sql-parser motranslator shapefile simple-math ; do
     --cache-dir "$BUILDER_REPO/develdocs/tmp/$repo/" \
     --docs-branch "master" \
     --slug "phpmyadmin/$repo" \
+    --base-url "https://develdocs.phpmyadmin.net/$repo/" \
     --output-config "$BUILDER_REPO/develdocs/doctum-$repo.php"
     # Render
     nice -19 "$BUILDER_REPO/develdocs/vendor/bin/doctum.php" update --force --ignore-parse-errors "$BUILDER_REPO/develdocs/doctum-$repo.php"
