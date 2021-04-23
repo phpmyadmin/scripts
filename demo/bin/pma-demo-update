@@ -1,8 +1,44 @@
-#!/bin/sh
+#!/bin/bash
+
 # Script to update repositories for the demo server
 # Requires ~/scripts to be checkout of scripts repository
 
 set -e
+
+FORCE_MODE="0"
+QUIET_MODE="0"
+
+# Source: https://stackoverflow.com/a/31024664/5155484
+while [[ $# > 0 ]]
+do
+    key="$1"
+    while [[ ${key+x} ]]
+    do
+        case $key in
+            --force)
+                FORCE_MODE="1"
+                ;;
+            -q)
+                QUIET_MODE="1"
+                ;;
+            *)
+                # unknown option
+                echo "Unknown option: $key" #1>&2
+                exit 10
+                ;;
+        esac
+        # prepare for next option in this key, if any
+        [[ "$key" = -? || "$key" == --* ]] && unset key || key="${key/#-?/-}"
+    done
+    shift # option(s) fully processed, proceed to next input argument
+done
+
+debugLog() {
+    if [ "${QUIET_MODE}" = "1" ]; then
+        return
+    fi
+    echo "$1"
+}
 
 # Directory where repositories are stored
 BASEDIR=~/.pma-demo
@@ -19,7 +55,7 @@ THEMES=`awk '/^themes/ {print $3}' ~/scripts/demo/php/versions.ini`
 for REPONAME in $REPOS ; do
     DIRNAME=$BASEDIR/$REPONAME
     mkdir -p $DIRNAME
-    echo "Working on repository: $REPONAME"
+    debugLog "Working on repository: $REPONAME"
 
     if [ ! -d $DIRNAME/.git ] ; then
         cd $BASEDIR
@@ -53,8 +89,8 @@ for REPONAME in $REPOS ; do
         new_head=$(git log -n 1 --format=format:'%H')
 
         # Check if there has been an update
-        if [ $orig_head = $new_head -a "x$1" != "x--force" ] ; then
-            echo "Skipping repository: $REPONAME, no update found"
+        if [ $orig_head = $new_head -a "${FORCE_MODE}" = "0" ] ; then
+            debugLog "Skipping repository: $REPONAME, no update found"
             continue
         fi
     fi
@@ -66,7 +102,7 @@ for REPONAME in $REPOS ; do
 
     # Update composer deps
     if [ -f composer.json ] ; then
-
+        debugLog "Managing php dependencies"
         # Dev modules are needed to use the CLI
         composer update --quiet
 
@@ -91,6 +127,7 @@ for REPONAME in $REPOS ; do
     find ./themes/ -maxdepth 1 -type l -exec unlink {} \;
 
     if [ -f package.json ] ; then
+        debugLog "Managing JS dependencies"
         # We still redirect output to /dev/null because even with the --silent flag, yarn still gives sass output such as
         # $ sass themes/pmahomme/scss:themes/pmahomme/css themes/original/scss:themes/original/css themes/metro/scss:themes/metro/css
         yarn install --production --frozen-lockfile --non-interactive --silent > /dev/null
@@ -116,7 +153,7 @@ for REPONAME in $REPOS ; do
     fi
 done
 
-echo "Updating themes"
+debugLog "Updating themes"
 
 # Clone / update themes
 if [ -d $BASEDIR/themes/.git ] ; then
@@ -126,7 +163,7 @@ else
     git clone $REMOTE_THEMES $BASEDIR/themes
 fi
 
-echo "Deleting stale directories"
+debugLog "Deleting stale directories"
 
 # Delete stale directories
 find $BASEDIR -maxdepth 1 -mindepth 1 -type d | while read DIRNAME ; do
@@ -139,8 +176,8 @@ find $BASEDIR -maxdepth 1 -mindepth 1 -type d | while read DIRNAME ; do
             continue 2
         fi
     done
-    echo "Deleting stale repository $DIRNAME"
+    debugLog "Deleting stale repository $DIRNAME"
     rm -rf "$DIRNAME"
 done
 
-echo "All done"
+debugLog "All done"
