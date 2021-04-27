@@ -40,6 +40,15 @@ debugLog() {
     echo "$1"
 }
 
+fetchReleaseSeriesFromFile() {
+    # version<5.1 do not have the file
+    if [ ! -f libraries/classes/Version.php ]; then
+        echo "old";
+        return;
+    fi
+    php -r "define('VERSION_SUFFIX', ''); require_once('libraries/classes/Version.php'); echo \PhpMyAdmin\Version::SERIES;"
+}
+
 # Directory where repositories are stored
 BASEDIR=~/.pma-demo
 
@@ -111,12 +120,22 @@ for REPONAME in $REPOS ; do
         fi
 
         if [ -f ./scripts/console ]; then
+            CLI_VERBOSE="-v"
+            if [ "${QUIET_MODE}" = "1" ]; then
+                CLI_VERBOSE="-q"
+            fi
             # Write new routing cache
-            ./scripts/console cache:warmup --routing --no-interaction -v
+            ./scripts/console cache:warmup --routing --no-interaction ${CLI_VERBOSE}
             # Write the revision-info.php file
             # Use the CLI or fallback
             # TODO: remove fallback when no demo server is below 5.2
-            ./scripts/console write-revision-info --no-interaction -v || ~/scripts/demo/bin/pma-revision-info
+            if [ "$(fetchReleaseSeriesFromFile)" = "5.1" ] || [ "$(fetchReleaseSeriesFromFile)" = "old" ]; then
+                debugLog "Using the old revision script"
+                ~/scripts/demo/bin/pma-revision-info
+            else
+                debugLog "Using the new revision script"
+                ./scripts/console write-revision-info --no-interaction ${CLI_VERBOSE}
+            fi
         fi
 
         # Remove dev vendors
@@ -130,7 +149,8 @@ for REPONAME in $REPOS ; do
         debugLog "Managing JS dependencies"
         # We still redirect output to /dev/null because even with the --silent flag, yarn still gives sass output such as
         # $ sass themes/pmahomme/scss:themes/pmahomme/css themes/original/scss:themes/original/css themes/metro/scss:themes/metro/css
-        yarn install --production --frozen-lockfile --non-interactive --silent > /dev/null
+        # Use a subshell method to absorb all the output because "Browserslist: caniuse-lite is outdated." misbehaves
+        (yarn install --production --frozen-lockfile --non-interactive --silent) >/dev/null 2>&1
         # They waste too much space, clear them out
         rm -rf ./node_modules
     fi
