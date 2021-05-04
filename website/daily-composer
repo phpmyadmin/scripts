@@ -84,6 +84,9 @@ git remote update phpmyadmin
 # Fetch tags (we don't want them as tags)
 git fetch phpmyadmin '+refs/tags/*:refs/remotes/phpmyadmin/tags/*'
 
+# Destroy local changes
+git reset --hard
+
 # Process branches
 for branch in $BRANCHES ; do
     if [ $branch = master ] ; then
@@ -103,6 +106,11 @@ for branch in $BRANCHES ; do
     else
         git checkout -b $newbranch phpmyadmin/$branch
     fi
+
+    # Destroy any possible changes
+    git reset --hard
+    # Force an update just in case
+    git pull --ff
 
     # Update content
     generate_readme
