@@ -12,7 +12,7 @@ set -u
 DIR=~/composer
 
 # Branches we process
-BRANCHES="QA_5_1 QA_5_0 QA_4_9 QA_4_8 QA_4_7 master"
+BRANCHES="QA_5_1 QA_5_0 QA_4_9 master"
 
 generate_readme() {
     cat > README.rst <<EOT
