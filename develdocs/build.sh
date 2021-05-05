@@ -31,7 +31,7 @@ for repo in phpmyadmin sql-parser motranslator shapefile simple-math ; do
     --base-url "https://develdocs.phpmyadmin.net/$repo/" \
     --output-config "$BUILDER_REPO/develdocs/doctum-$repo.php"
     # Render
-    nice -19 "$BUILDER_REPO/develdocs/vendor/bin/doctum.php" update --force --ignore-parse-errors "$BUILDER_REPO/develdocs/doctum-$repo.php"
+    nice -19 "$BUILDER_REPO/develdocs/vendor/bin/doctum.php" update --force --no-progress --no-ansi --ignore-parse-errors "$BUILDER_REPO/develdocs/doctum-$repo.php"
     # Delete config file
     rm "$BUILDER_REPO/develdocs/doctum-$repo.php"
 done
