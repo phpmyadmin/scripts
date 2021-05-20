@@ -44,6 +44,8 @@ PROJECTS = (
     'phpmyadmin/localized_docs',
     'phpmyadmin/error-reporting-server',
     'phpmyadmin/twig-i18n-extension',
+    'phpmyadmin/coding-standard',
+    'phpmyadmin/scripts',
 )
 # Only include commits not present elsewhere from this repository
 PROJECT_EXTRA_COMMITS = (
