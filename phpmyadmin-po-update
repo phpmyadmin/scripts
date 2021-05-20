@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -e
+
+# Updates phpMyAdmin PO files
+
+WORKDIR=~/phpmyadmin/
+
+if [ ! -d "$WORKDIR" ] ; then
+    git clone git@github.com:phpmyadmin/phpmyadmin.git "$WORKDIR"
+fi
+
+cd "$WORKDIR"
+
+# Update phpmyadmin repo
+git pull -q
+
+# Lock Weblate and commit changes
+wlc lock
+wlc push
+
+# Pull changes from Weblate
+git pull
+
+# Update PHP dependencies
+composer update -q
+
+# Update po files
+./scripts/update-po
+
+# Publish changes
+git push
+
+# Unlock Weblate
+wlc unlock
