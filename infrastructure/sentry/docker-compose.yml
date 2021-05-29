@@ -25,6 +25,9 @@ services:
       POSTGRES_DB: sentry
     volumes:
      - ${POSTGRES_DATA_VOLUME}:/var/lib/postgresql/data
+  smtp:
+    restart: unless-stopped
+    image: tianon/exim4
 
   sentry:
     image: sentry:9.1.2
@@ -41,6 +44,11 @@ services:
       SENTRY_DB_USER: sentry
       SENTRY_DB_PASSWORD: "${POSTGRES_PASSWORD}"
       SENTRY_REDIS_HOST: redis
+      SENTRY_FILESTORE_DIR: /data/filestorage
+      SENTRY_SERVER_EMAIL: "${SENTRY_SERVER_EMAIL}"
+      SENTRY_EMAIL_HOST: smtp
+    volumes:
+     - ${SENTRY_DATA_VOLUME}:/data
 
   cron:
     image: sentry:9.1.2
@@ -56,6 +64,11 @@ services:
       SENTRY_DB_USER: sentry
       SENTRY_DB_PASSWORD: "${POSTGRES_PASSWORD}"
       SENTRY_REDIS_HOST: redis
+      SENTRY_FILESTORE_DIR: /data/filestorage
+      SENTRY_SERVER_EMAIL: "${SENTRY_SERVER_EMAIL}"
+      SENTRY_EMAIL_HOST: smtp
+    volumes:
+     - ${SENTRY_DATA_VOLUME}:/data
 
   worker:
     image: sentry:9.1.2
@@ -71,3 +84,8 @@ services:
       SENTRY_DB_USER: sentry
       SENTRY_DB_PASSWORD: "${POSTGRES_PASSWORD}"
       SENTRY_REDIS_HOST: redis
+      SENTRY_FILESTORE_DIR: /data/filestorage
+      SENTRY_SERVER_EMAIL: "${SENTRY_SERVER_EMAIL}"
+      SENTRY_EMAIL_HOST: smtp
+    volumes:
+     - ${SENTRY_DATA_VOLUME}:/data
