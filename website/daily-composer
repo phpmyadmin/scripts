@@ -54,7 +54,8 @@ line_counts() {
 }
 
 generate_css() {
-    yarn install --frozen-lockfile --non-interactive --silent --production
+    # You can not use --production because it creates the error "[BABEL]: Cannot find module 'browserslist'"
+    yarn install --frozen-lockfile --non-interactive --silent
     git add --force themes/*/css/*.css || echo "No css file found, not adding to git repository"
     git add --force themes/*/css/*.css.map || echo "No css.map files found, not adding to git repository"
     if ! git diff --quiet --cached ; then
@@ -63,7 +64,8 @@ generate_css() {
 }
 
 generate_js() {
-    yarn install --frozen-lockfile --non-interactive --silent --production
+    # You can not use --production because it creates the error "[BABEL]: Cannot find module 'browserslist'"
+    yarn install --frozen-lockfile --non-interactive --silent
     git add --force js/dist/ || echo "No JS files found, not adding to git repository"
     if ! git diff --quiet --cached ; then
         git commit -m 'Update generated JS files'
