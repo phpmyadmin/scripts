@@ -72,6 +72,26 @@ generate_js() {
     fi
 }
 
+reset_not_allowed_to_change_source_files() {
+    # Source: https://stackoverflow.com/a/68019875/5155484
+    CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!js/dist/*.js' ':!locale/*.mo' ':!themes/*.css' ':!themes/*.css.map')"
+
+    if [ -z "$CHANGED_FILES" ]; then
+        echo "No files did change"
+        return
+    fi
+
+    echo "Files changed: $CHANGED_FILES"
+
+    echo "$CHANGED_FILES" | xargs git checkout phpmyadmin/$branch --theirs
+    echo "$CHANGED_FILES" | xargs git add --force
+    unset CHANGED_FILES
+
+    if ! git diff --quiet --cached ; then
+        git commit -m 'Reset changed source files'
+    fi
+}
+
 # Ensure we have working dir
 if [ ! -d "$DIR" ] ; then
     git clone git@github.com:phpmyadmin/composer.git "$DIR"
@@ -113,6 +133,9 @@ for branch in $BRANCHES ; do
     git reset --hard
     # Force an update just in case
     git pull --ff
+
+    # Reset content that could have changed by mistake
+    reset_not_allowed_to_change_source_files
 
     # Update content
     generate_readme
