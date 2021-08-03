@@ -27,6 +27,8 @@ services:
      - ${POSTGRES_DATA_VOLUME}:/var/lib/postgresql/data
   smtp:
     restart: unless-stopped
+    # Use this value to have correct SMTP HELO value
+    hostname: hertz.phpmyadmin.net
     image: tianon/exim4
 
   sentry:
