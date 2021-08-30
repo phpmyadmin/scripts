@@ -3,10 +3,9 @@
 # This script will get a list of currently supported versions from phpmyadmin.net.
 # For each version, it pulls the Docker image for each flavor, including major and minor
 # version shortcuts (5, 5.0, and 5.0.0). We check that the expected version is listed in ChangeLog.
-# 
-# This does not currently test 'edge' development versions.
+#
 # Future versions could use jq to parse package.json for the "version" field
-# 
+#
 # Written by Isaac Bennetch <bennetch@gmail.com>
 
 supported_versions=$(curl -fsSL 'https://www.phpmyadmin.net/home_page/version.json'|jq -r '.releases|.[]|.version')
@@ -14,11 +13,11 @@ supported_versions=$(curl -fsSL 'https://www.phpmyadmin.net/home_page/version.js
 if [ "$1" == "-h" ] || [ "$1" == "--help" ]
 then
   echo "Checks whether the docker builds are current to the versions presented in the version.json file from phpmyadmin.net"
-  echo 
+  echo ""
   echo "Possible arguments:"
   echo "  -v --verbose    Prints some progress output (usually runs silently)"
   echo "  -h --help       Prints this help message"
-  exit
+  exit ""
 fi
 
 if [ "$1" == "-v" ] || [ "$1" == "--verbose" ]
