@@ -25,15 +25,21 @@ git pull --ff-only
 # Destroy any possible local changes
 git reset --hard
 git checkout -
+git checkout QA_5_2
+# Destroy any possible local changes
+git reset --hard
+# Force an update
+git pull --ff-only
+./scripts/create-release.sh --daily 5.2+snapshot QA_5_2
+# Destroy any possible local changes
+git reset --hard
+git checkout -
 git checkout master
 # Destroy any possible local changes
 git reset --hard
 # Force an update
 git pull --ff-only
-./scripts/create-release.sh --daily 5.2+snapshot master
-# Destroy any possible local changes
-git reset --hard
-git checkout -
+./scripts/create-release.sh --daily 5.3+snapshot master
 
 # Storage directory
 mkdir -p /mnt/storage/files/snapshots/
