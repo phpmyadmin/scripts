@@ -1,0 +1,25 @@
+name: "Monitoring"
+
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 18 * * *"
+
+jobs:
+  daily_snapshots:
+    name: "Daily snapshots"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout code"
+        uses: "actions/checkout@v2"
+
+      - name: "Set up Python"
+        uses: "actions/setup-python@v2"
+        with:
+          python-version: "3.x"
+
+      - name: "Check daily snapshots"
+        run: |
+          ./monitoring/check_phpmyadmin_daily_snapshots.py
