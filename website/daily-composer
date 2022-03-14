@@ -74,7 +74,7 @@ generate_js() {
 
 reset_not_allowed_to_change_source_files() {
     # Source: https://stackoverflow.com/a/68019875/5155484
-    CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!js/dist/*.js' ':!locale/*.mo' ':!themes/*.css' ':!themes/*.css.map')"
+    CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!js/dist/*.js' ':!js/dist/*.js.map' ':!locale/*.mo' ':!themes/*.css' ':!themes/*.css.map')"
 
     if [ -z "$CHANGED_FILES" ]; then
         echo "No files did change"
