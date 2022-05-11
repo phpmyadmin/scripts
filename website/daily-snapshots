@@ -16,15 +16,6 @@ rm -rf release
 
 # Create snapshots
 # Change branch to be sure to have a working release script
-git checkout QA_5_1
-# Destroy any possible local changes
-git reset --hard
-# Force an update
-git pull --ff-only
-./scripts/create-release.sh --daily 5.1+snapshot QA_5_1
-# Destroy any possible local changes
-git reset --hard
-git checkout -
 git checkout QA_5_2
 # Destroy any possible local changes
 git reset --hard
