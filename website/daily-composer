@@ -42,17 +42,6 @@ generate_mo() {
     fi
 }
 
-line_counts() {
-    if [ ! -x ./scripts/line-counts.sh ] ; then
-        return
-    fi
-    ./scripts/line-counts.sh
-    git add -f js/line_counts.php
-    if ! git diff --quiet --cached ; then
-        git commit -m 'Updated line counts' js/line_counts.php
-    fi
-}
-
 generate_css() {
     # You can not use --production because it creates the error "[BABEL]: Cannot find module 'browserslist'"
     yarn install --frozen-lockfile --non-interactive --silent
@@ -140,7 +129,6 @@ for branch in $BRANCHES ; do
     # Update content
     generate_readme
     generate_mo
-    line_counts
     generate_css
     generate_js
 
@@ -166,7 +154,6 @@ for tag in $(git branch -r | grep 'phpmyadmin/tags/\(RELEASE_[4]_[7-9]_[0-9]\+\(
     # Update content
     generate_readme
     generate_mo
-    line_counts
     generate_css
     generate_js
 
