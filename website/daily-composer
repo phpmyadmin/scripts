@@ -61,6 +61,26 @@ generate_js() {
     fi
 }
 
+# Keep in sync with phpmyadmin/phpmyadmin:scripts/create-release.sh
+fetchReleaseFromFile() {
+    php -r "define('VERSION_SUFFIX', ''); require_once('libraries/classes/Version.php'); echo \PhpMyAdmin\Version::VERSION;"
+}
+
+set_version_in_composer() {
+    if [ ! -f libraries/classes/Version.php ]; then
+        echo "The version file does not exist for this version"
+        return
+    fi
+
+    # The reason the version is added to the composer.json file is because of:
+    # - https://github.com/phpmyadmin/phpmyadmin/issues/17570
+    # - https://github.com/Roave/SecurityAdvisories/issues/76
+
+    echo "Detected version: $(fetchReleaseFromFile)"
+    composer config version "$(fetchReleaseFromFile)"
+    echo "Saved version: $(composer config version)"
+}
+
 reset_not_allowed_to_change_source_files() {
     # Source: https://stackoverflow.com/a/68019875/5155484
     CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!js/dist/*.js' ':!js/dist/*.js.map' ':!locale/*.mo' ':!themes/*.css' ':!themes/*.css.map')"
@@ -131,6 +151,7 @@ for branch in $BRANCHES ; do
     generate_mo
     generate_css
     generate_js
+    set_version_in_composer
 
     # Push
     git push origin $newbranch
@@ -156,6 +177,7 @@ for tag in $(git branch -r | grep 'phpmyadmin/tags/\(RELEASE_[4]_[7-9]_[0-9]\+\(
     generate_mo
     generate_css
     generate_js
+    set_version_in_composer
 
     # Create tag
     git tag -a -m "Composer tag for $tag" $newtag
