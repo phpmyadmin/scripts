@@ -79,6 +79,10 @@ set_version_in_composer() {
     echo "Detected version: $(fetchReleaseFromFile)"
     composer config version "$(fetchReleaseFromFile)"
     echo "Saved version: $(composer config version)"
+    git add composer.json
+    if ! git diff --quiet --cached ; then
+        git commit -m 'Set version in composer.json' -m "Version: $(composer config version)"
+    fi
 }
 
 reset_not_allowed_to_change_source_files() {
