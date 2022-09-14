@@ -20,7 +20,7 @@ $cfg['Servers'][$i]['column_info'] = 'pma__column_info';
 $cfg['Servers'][$i]['history'] = 'pma__history';
 $cfg['Servers'][$i]['tracking'] = 'pma__tracking';
 $cfg['Servers'][$i]['designer_coords'] = 'pma__designer_coords';
-#$cfg['Servers'][$i]['userconfig'] = 'pma__userconfig';
+// $cfg['Servers'][$i]['userconfig'] = 'pma__userconfig';
 $cfg['Servers'][$i]['recent'] = 'pma__recent';
 $cfg['Servers'][$i]['favorite'] = 'pma__favorite';
 $cfg['Servers'][$i]['users'] = 'pma__users';
@@ -54,7 +54,7 @@ $cfg['Servers'][$i]['history'] = 'pma__history';
 $cfg['Servers'][$i]['table_uiprefs'] = 'pma__table_uiprefs';
 $cfg['Servers'][$i]['tracking'] = 'pma__tracking';
 $cfg['Servers'][$i]['designer_coords'] = 'pma__designer_coords';
-#$cfg['Servers'][$i]['userconfig'] = 'pma__userconfig';
+// $cfg['Servers'][$i]['userconfig'] = 'pma__userconfig';
 $cfg['Servers'][$i]['recent'] = 'pma__recent';
 $cfg['Servers'][$i]['favorite'] = 'pma__favorite';
 $cfg['Servers'][$i]['users'] = 'pma__users';
@@ -78,7 +78,8 @@ $cfg['Servers'][$i]['verbose'] = 'phpMyAdmin demo - MySQL';
 
 /* End of servers configuration */
 
-$cfg['blowfish_secret'] = '1234567890123456789012345678901234567890';
+// Random generated string (should be 32 bytes long)
+$cfg['blowfish_secret'] = 'nH5&L56HLDFbsgHHpP$HChD8hop@4xHn';
 
 $cfg['Error_Handler']['display'] = true;
 $cfg['Error_Handler']['gather'] = false;
@@ -88,6 +89,5 @@ $cfg['PmaNoRelation_DisableWarning'] = true;
 $cfg['TranslationWarningThreshold'] = 95;
 $cfg['ServerDefault'] = 2;
 $cfg['CSPAllow'] = 'www.google-analytics.com ssl.google-analytics.com';
-#$cfg['MaxDbList'] = 3;
+// $cfg['MaxDbList'] = 3;
 $cfg['DBG']['demo'] = true;
-?>
