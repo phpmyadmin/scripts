@@ -56,6 +56,7 @@ class Reports
     private ?string $outputJsonData = null;
     private mixed $outputRender = STDOUT;
     private string $monthMode = 'none';
+    private string $outputMode = 'none';
     // Tilde expansion: https://unix.stackexchange.com/a/151852/155610
     private string $configFile = '~/.config/phpmyadmin';
 
@@ -76,6 +77,7 @@ class Reports
             'last-month',   // No value
             'current-month',// No value
             'next-month',   // No value
+            'by-week',      // No value
         ];
         $options = getopt($shortopts, $longopts);
 
@@ -126,6 +128,10 @@ class Reports
 
             if ($optionName === 'output') {
                 $this->outputRender = $optionValue;
+            }
+
+            if ($optionName === 'by-week') {
+                $this->outputMode = 'by-week';
             }
 
             if ($optionName !== 'output-json') {
@@ -366,7 +372,7 @@ class Reports
                     'sha' => $commit['sha'],
                     'message' => explode("\n", $commit['commit']['message'], 2)[0] ?? $commit['commit']['message'],
                     'html_url' => $commit['html_url'],
-                    'cdate' => $commit['commit']['committer']['date'],
+                    'cdate' => new DateTimeImmutable($commit['commit']['committer']['date']),
                 ];
             }, $commits),
         ];
@@ -382,7 +388,7 @@ class Reports
                     'sha' => $commit['id'],
                     'message' => $commit['title'],
                     'html_url' => $commit['web_url'],
-                    'cdate' => $commit['committed_date'],
+                    'cdate' => new DateTimeImmutable($commit['committed_date']),
                 ];
             }, $commits),
         ];
@@ -415,24 +421,49 @@ class Reports
                 continue;
             }
 
+            if ($this->outputMode === 'by-week') {
+                $commitsGroup = array_reduce($storageEntry['commits'], static function (array $accumulator, array $element) {
+                    $accumulator[$element['cdate']->format('W')][] = $element;
+
+                    return $accumulator;
+                }, []);
+                ksort($commitsGroup);// newer weeks first
+
+                $this->printData(sprintf("\n## %s (%s)\n\n", $storageEntry['slug'], $storageEntry['type']));
+
+                foreach ($commitsGroup as $monthNumber => $commits) {
+                    $this->printData(sprintf("\n### Week %s\n\n", $monthNumber));
+                    foreach ($commits as $commit) {
+                        $this->processCommit($commit);
+                    }
+                }
+
+                continue;
+            }
+
             $this->printData(sprintf("\n## %s (%s)\n\n", $storageEntry['slug'], $storageEntry['type']));
 
             foreach ($storageEntry['commits'] as $commit) {
-                $message = $commit['message'];
-                if (str_contains($message, 'Translated using Weblate')) {
-                    continue;
-                }
-
-                $this->printData(
-                    sprintf(
-                        '- [%s - %s](%s)' . "\n",
-                        substr($commit['sha'], 0, 10),
-                        $message,
-                        $commit['html_url']
-                    )
-                );
+                $this->processCommit($commit);
             }
         }
+    }
+
+    private function processCommit(array $commit): void
+    {
+        $message = $commit['message'];
+        if (str_contains($message, 'Translated using Weblate')) {
+            return;
+        }
+
+        $this->printData(
+            sprintf(
+                '- [%s - %s](%s)' . "\n",
+                substr($commit['sha'], 0, 10),
+                $message,
+                $commit['html_url']
+            )
+        );
     }
 
     private function loadDates(): void
