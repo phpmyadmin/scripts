@@ -43,6 +43,13 @@ class Reports
         ],
     ];
 
+    private const IGNORE_WORDS = [
+        'Translated using Weblate',
+        'Merge branch ',
+        'Merge remote-tracking branch ',
+        'Update d/changelog',// Debian commits for debian/changelog
+    ];
+
     /**
      * @var array{
      * type: "GitHub"|"GitLab", slug: string, data: array[] }
@@ -433,11 +440,13 @@ class Reports
                 continue;
             }
 
-            // remove some commits base on commit body "Translated using Weblate"
-            $storageEntry['commits'] = array_filter(
-                $storageEntry['commits'],
-                fn($commit) => str_contains($commit['message'], 'Translated using Weblate') === false
-            );
+            // remove some commits base on commit body
+            foreach (self::IGNORE_WORDS as $ignoreWord) {
+                $storageEntry['commits'] = array_filter(
+                    $storageEntry['commits'],
+                    static fn ($commit) => str_contains($commit['message'], $ignoreWord) === false
+                );
+            }
 
             if ($storageEntry['commits'] === []) {
                 continue;
