@@ -29,6 +29,8 @@ class Reports
             'phpmyadmin/localized_docs',
             'phpmyadmin/error-reporting-server',
             'phpmyadmin/twig-i18n-extension',
+            'docker-library/docs',
+            'docker-library/official-images',
         ],
         'gitlab.com' => [],
         'salsa.debian.org' => [
