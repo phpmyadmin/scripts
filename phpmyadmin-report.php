@@ -69,6 +69,7 @@ class Reports
             'output:',      // Required value
             'output-json:', // Required value
             'config:',      // Required value
+            'month:',       // Required value
             'optional::',   // Optional value
             'start-date::', // Optional value
             'end-date::',   // Optional value
@@ -108,6 +109,12 @@ class Reports
                 $this->monthMode = 'next';
             }
 
+            if ($optionName === 'month') {
+                $this->monthMode = 'custom';
+                $this->startDate = new DateTimeImmutable('@' . strtotime('first day of ' . $optionValue . ' UTC'));
+                $this->endDate = new DateTimeImmutable('@' . strtotime('last day of ' . $optionValue . ' UTC'));
+            }
+
             if ($optionName === 'start-date') {
                 $this->monthMode = 'custom';
                 $this->startDate = new DateTimeImmutable($optionValue . 'T00:00:00Z');
@@ -139,6 +146,10 @@ class Reports
             }
 
             $this->outputJsonData = $optionValue;
+        }
+
+        if ($this->monthMode === 'none') {
+            $this->quitError('You need to specify a month mode, using cli: --{current,last,next}-month');
         }
 
         $this->configFile = $this->expandTilde($this->configFile);
@@ -177,6 +188,7 @@ class Reports
         fwrite(STDOUT, '  Last month: ./phpmyadmin-report.sh --last-month' . "\n");
         fwrite(STDOUT, '  Current month: ./phpmyadmin-report.sh --current-month' . "\n");
         fwrite(STDOUT, '  Next month: ./phpmyadmin-report.sh --next-month' . "\n");
+        fwrite(STDOUT, '  Specific month: ./phpmyadmin-report.sh --month October' . "\n");
         fwrite(STDOUT, '  Custom dates: ./phpmyadmin-report.sh --start-date 2021-05-03 --end-date 2021-06-27' . "\n");
         exit(0);
     }
@@ -421,6 +433,16 @@ class Reports
                 continue;
             }
 
+            // remove some commits base on commit body "Translated using Weblate"
+            $storageEntry['commits'] = array_filter(
+                $storageEntry['commits'],
+                fn($commit) => str_contains($commit['message'], 'Translated using Weblate') === false
+            );
+
+            if ($storageEntry['commits'] === []) {
+                continue;
+            }
+
             if ($this->outputMode === 'by-week') {
                 $commitsGroup = array_reduce($storageEntry['commits'], static function (array $accumulator, array $element) {
                     $accumulator[$element['cdate']->format('W')][] = $element;
@@ -429,7 +451,7 @@ class Reports
                 }, []);
                 ksort($commitsGroup);// newer weeks first
 
-                $this->printData(sprintf("\n## %s (%s)\n\n", $storageEntry['slug'], $storageEntry['type']));
+                $this->printData(sprintf("\n## %s (%s)\n", $storageEntry['slug'], $storageEntry['type']));
 
                 foreach ($commitsGroup as $monthNumber => $commits) {
                     $this->printData(sprintf("\n### Week %s\n\n", $monthNumber));
@@ -451,16 +473,11 @@ class Reports
 
     private function processCommit(array $commit): void
     {
-        $message = $commit['message'];
-        if (str_contains($message, 'Translated using Weblate')) {
-            return;
-        }
-
         $this->printData(
             sprintf(
                 '- [%s - %s](%s)' . "\n",
                 substr($commit['sha'], 0, 10),
-                $message,
+                $commit['message'],
                 $commit['html_url']
             )
         );
@@ -468,10 +485,6 @@ class Reports
 
     private function loadDates(): void
     {
-        if ($this->monthMode === 'none') {
-            $this->quitError('You need to specify a month mode, using cli: --{current,last,next}-month');
-        }
-
         $this->logDebug('Using month mode: ' . $this->monthMode);
 
         // Source: http://databobjr.blogspot.com/2011/06/get-first-and-last-day-of-month-in-bash.html
@@ -480,27 +493,30 @@ class Reports
 
         if ($this->monthMode === 'last') {
             // Example (current date: 04/july(07)/2021 23:27): 2021-06-01T00:00:00Z
-            $this->startDate = new DateTimeImmutable('@' . strtotime('first day of last month'));
+            $this->startDate = new DateTimeImmutable('@' . strtotime('first day of last month UTC'));
             // Example (current date: 04/july(07)/2021 23:27): 2021-06-30T00:00:00Z
-            $this->endDate = new DateTimeImmutable('@' . strtotime('last day of last month'));
+            $this->endDate = new DateTimeImmutable('@' . strtotime('last day of last month UTC'));
         }
 
         if ($this->monthMode === 'current') {
             // Example (current date: 04/july(07)/2021 23:27): 2021-07-01T00:00:00Z
-            $this->startDate = new DateTimeImmutable('@' . strtotime('first day of this month'));
+            $this->startDate = new DateTimeImmutable('@' . strtotime('first day of this month UTC'));
             // Example (current date: 04/july(07)/2021 23:27): 2021-07-31T00:00:00Z
-            $this->endDate = new DateTimeImmutable('@' . strtotime('last day of this month'));
+            $this->endDate = new DateTimeImmutable('@' . strtotime('last day of this month UTC'));
         }
 
         if ($this->monthMode === 'next') {
             // Example (current date: 04/july(07)/2021 23:27): 2021-08-01T00:00:00Z
-            $this->startDate = new DateTimeImmutable('@' . strtotime('first day of next month'));
+            $this->startDate = new DateTimeImmutable('@' . strtotime('first day of next month UTC'));
             // Example (current date: 04/july(07)/2021 23:27): 2021-08-31T00:00:00Z
-            $this->endDate = new DateTimeImmutable('@' . strtotime('last day of next month'));
+            $this->endDate = new DateTimeImmutable('@' . strtotime('last day of next month UTC'));
         }
 
-        $this->logDebug('Start date (Y-m-d): ' . $this->startDate->format('Y-m-d'));
-        $this->logDebug('End date (Y-m-d): ' . $this->endDate->format('Y-m-d'));
+        $this->startDate = $this->startDate->setTime(00, 00, 00);
+        $this->startDate = $this->startDate->setTime(23, 59, 59);
+
+        $this->logDebug('Start date (Y-m-d H:i:s): ' . $this->startDate->format('Y-m-d H:i:s'));
+        $this->logDebug('End date (Y-m-d H:i:s): ' . $this->endDate->format('Y-m-d H:i:s'));
     }
 }
 
