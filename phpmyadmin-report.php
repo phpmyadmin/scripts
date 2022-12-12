@@ -18,12 +18,10 @@ class Reports
     private const PROJECTS = [
         'github.com' => [
             'phpmyadmin/phpmyadmin',
-            'phpmyadmin/phpmyadmin-security',
             'phpmyadmin/docker',
             'phpmyadmin/website',
             'phpmyadmin/sql-parser',
             'phpmyadmin/motranslator',
-            'phpmyadmin/private',
             'phpmyadmin/shapefile',
             'phpmyadmin/simple-math',
             'phpmyadmin/localized_docs',
@@ -31,6 +29,9 @@ class Reports
             'phpmyadmin/twig-i18n-extension',
             'docker-library/docs',
             'docker-library/official-images',
+            // Disable private repos
+            // 'phpmyadmin/phpmyadmin-security',
+            // 'phpmyadmin/private',
         ],
         'gitlab.com' => [],
         'salsa.debian.org' => [
@@ -58,6 +59,13 @@ class Reports
      * }[]
      */
     private array $commitsStorage = [];
+
+    /**
+     * @var array{
+     * type: "GitHub"|"GitLab", slug: string, data: array[] }
+     * }[]
+     */
+    private array $issuesStorage = [];
 
     private bool $quietMode = false;
     private ?DateTimeImmutable $startDate = null;
@@ -331,13 +339,19 @@ class Reports
     {
         $token = $configBlockIn['token'];
 
-        return $this->callApi(
+        $data = $this->callApi(
             'https://api.github.com/' . $path,
             [
                 'Authorization: token ' . $token,
                 'Accept: application/vnd.github+json',
             ]
         );
+
+        if ($data['message'] ?? false) {
+            $this->quitError('GitHub API error: ' . $issues['message']);
+        }
+
+        return $data;
     }
 
     private function callGitLabApi(array $configBlockIn, string $path): array
@@ -376,11 +390,41 @@ class Reports
             $configBlockIn,
             "repos/${projectSlug}/commits?author=${username}&per_page=100&since=${startDate}&until=${endDate}"
         );
-        if ($commits['message'] ?? false) {
-            $this->quitError('GitHub API error: ' . $commits['message']);
-        }
 
         $this->gitHubCommitsToStorage($commits, $projectSlug);
+
+        $issues = $this->callGitHubApi(
+            $configBlockIn,
+            "repos/${projectSlug}/issues?assignee=${username}&per_page=100&since=${startDate}&sort=updated&direction=asc&state=closed"
+        );
+
+        $this->gitHubIssuesToStorage($issues, $projectSlug);
+    }
+
+    private function gitHubIssuesToStorage(array $issues, string $projectSlug): void
+    {
+        $issues = array_filter($issues, static function (array $issue): bool {
+            return isset($issue['pull_request']) === false;
+        });
+
+        $issues = array_filter($issues, function (array $issue): bool {
+            $cat = new DateTimeImmutable($issue['closed_at']);
+
+            return $cat >= $this->startDate && $cat <= $this->endDate;
+        });
+
+        $this->issuesStorage[] = [
+            'slug' => $projectSlug,
+            'type' => 'GitHub',
+            'issues' => array_map(static function (array $issue): array {
+                return [
+                    'number' => $issue['number'],
+                    'title' => $issue['title'],
+                    'html_url' => $issue['html_url'],
+                    'closed_at' => new DateTimeImmutable($issue['closed_at']),
+                ];
+            }, $issues),
+        ];
     }
 
     private function gitHubCommitsToStorage(array $commits, string $projectSlug): void
@@ -421,10 +465,14 @@ class Reports
             return;
         }
 
-        $this->logDebug('Data count: ' . count($this->commitsStorage));
+        $this->logDebug('Commits data count: ' . count($this->commitsStorage));
+        $this->logDebug('Issues data count: ' . count($this->issuesStorage));
         file_put_contents(
             $this->outputJsonData,
-            json_encode($this->commitsStorage, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+            json_encode([
+                'commits' => $this->commitsStorage,
+                'issues' => $this->issuesStorage,
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
     }
 
@@ -480,6 +528,52 @@ class Reports
                 $this->processCommit($commit);
             }
         }
+
+        $this->printData("\n" . '# Handled issues' . "\n");
+
+        foreach ($this->issuesStorage as $storageEntry) {
+            if ($storageEntry['issues'] === []) {
+                continue;
+            }
+
+            if ($this->outputMode === 'by-week') {
+                $issuesGroup = array_reduce($storageEntry['issues'], static function (array $accumulator, array $element) {
+                    $accumulator[$element['closed_at']->format('W')][] = $element;
+
+                    return $accumulator;
+                }, []);
+                ksort($issuesGroup);// newer weeks first
+
+                $this->printData(sprintf("\n## %s (%s)\n", $storageEntry['slug'], $storageEntry['type']));
+
+                foreach ($issuesGroup as $monthNumber => $issues) {
+                    $this->printData(sprintf("\n### Week %s\n\n", $monthNumber));
+                    foreach ($issues as $commit) {
+                        $this->processIssue($commit);
+                    }
+                }
+
+                continue;
+            }
+
+            $this->printData(sprintf("\n## %s (%s)\n\n", $storageEntry['slug'], $storageEntry['type']));
+
+            foreach ($storageEntry['issues'] as $commit) {
+                $this->processIssue($commit);
+            }
+        }
+    }
+
+    private function processIssue(array $issue): void
+    {
+        $this->printData(
+            sprintf(
+                '- [%s - %s](%s)' . "\n",
+                $issue['number'],
+                $issue['title'],
+                $issue['html_url']
+            )
+        );
     }
 
     private function processCommit(array $commit): void
