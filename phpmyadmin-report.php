@@ -618,7 +618,7 @@ class Reports
         }
 
         $this->startDate = $this->startDate->setTime(00, 00, 00);
-        $this->startDate = $this->startDate->setTime(23, 59, 59);
+        $this->endDate = $this->endDate->setTime(23, 59, 59);
 
         $this->logDebug('Start date (Y-m-d H:i:s): ' . $this->startDate->format('Y-m-d H:i:s'));
         $this->logDebug('End date (Y-m-d H:i:s): ' . $this->endDate->format('Y-m-d H:i:s'));
