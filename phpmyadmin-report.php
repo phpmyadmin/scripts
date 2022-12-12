@@ -367,8 +367,8 @@ class Reports
         $projectSlugUrl = urlencode($projectSlug);
         $authorEmail = $configBlockIn['authorEmail'];
         $this->logDebug('Processing GitLab project: ' . $projectSlug);
-        $startDate = $this->startDate->format('Y-m-d');
-        $endDate = $this->endDate->format('Y-m-d');
+        $startDate = $this->startDate->format('Y-m-d\TH:i:sp');
+        $endDate = $this->endDate->format('Y-m-d\TH:i:sp');
         $commits = $this->callGitLabApi(
             $configBlockIn,
             "v4/projects/${projectSlugUrl}/repository/commits?since=${startDate}&until=${endDate}"
@@ -384,8 +384,8 @@ class Reports
     {
         $username = $configBlockIn['user'];
         $this->logDebug('Processing GitHub project: ' . $projectSlug);
-        $startDate = $this->startDate->format('Y-m-d');
-        $endDate = $this->endDate->format('Y-m-d');
+        $startDate = $this->startDate->format('Y-m-d\TH:i:sp');
+        $endDate = $this->endDate->format('Y-m-d\TH:i:sp');
         $commits = $this->callGitHubApi(
             $configBlockIn,
             "repos/${projectSlug}/commits?author=${username}&per_page=100&since=${startDate}&until=${endDate}"
@@ -617,7 +617,9 @@ class Reports
             $this->endDate = new DateTimeImmutable('@' . strtotime('last day of next month UTC'));
         }
 
+        $this->startDate = $this->startDate->setTimezone(new DateTimeZone('UTC'));
         $this->startDate = $this->startDate->setTime(00, 00, 00);
+        $this->endDate = $this->endDate->setTimezone(new DateTimeZone('UTC'));
         $this->endDate = $this->endDate->setTime(23, 59, 59);
 
         $this->logDebug('Start date (Y-m-d H:i:s): ' . $this->startDate->format('Y-m-d H:i:s'));
