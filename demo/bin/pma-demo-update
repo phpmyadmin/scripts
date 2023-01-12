@@ -172,10 +172,14 @@ for REPONAME in $REPOS ; do
 
     if [ -f package.json ] ; then
         debugLog "Managing JS dependencies"
-        # We still redirect output to /dev/null because even with the --silent flag, yarn still gives sass output such as
-        # $ sass themes/pmahomme/scss:themes/pmahomme/css themes/original/scss:themes/original/css themes/metro/scss:themes/metro/css
-        # Use a subshell method to absorb all the output because "Browserslist: caniuse-lite is outdated." misbehaves
-        (yarn install --production --frozen-lockfile --non-interactive --silent) >/dev/null 2>&1
+        if [ "${QUIET_MODE}" = "1" ]; then
+            # We still redirect output to /dev/null because even with the --silent flag, yarn still gives sass output such as
+            # $ sass themes/pmahomme/scss:themes/pmahomme/css themes/original/scss:themes/original/css themes/metro/scss:themes/metro/css
+            # Use a subshell method to absorb all the output because "Browserslist: caniuse-lite is outdated." misbehaves
+            (yarn install --production --frozen-lockfile --non-interactive --silent) >/dev/null 2>&1
+        else
+            yarn install --production --frozen-lockfile --non-interactive --silent
+        fi
         # They waste too much space, clear them out
         rm -rf ./node_modules
     fi
