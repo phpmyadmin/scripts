@@ -60,6 +60,16 @@ REMOTE_THEMES=https://github.com/phpmyadmin/themes.git
 REPOS=`awk '/^branches/ {print $3}' ~/scripts/demo/php/versions.ini`
 THEMES=`awk '/^themes/ {print $3}' ~/scripts/demo/php/versions.ini`
 
+debugLog "Updating themes"
+
+# Clone / update themes
+if [ -d $BASEDIR/themes/.git ] ; then
+    cd $BASEDIR/themes
+    git pull -q
+else
+    git clone $REMOTE_THEMES $BASEDIR/themes
+fi
+
 # Update all repositories
 for REPONAME in $REPOS ; do
     DIRNAME=$BASEDIR/$REPONAME
@@ -143,7 +153,16 @@ for REPONAME in $REPOS ; do
     fi
 
     # Cleanup all themes
+    debugLog "Removing previous themes"
     find ./themes/ -maxdepth 1 -type l -exec unlink {} \;
+
+    # Link themes
+    for THEME in $THEMES ; do
+        if [ ! -e themes/$THEME ] ; then
+            debugLog "Linking theme: $THEME"
+            ln -s ../../themes/$THEME themes/$THEME
+        fi
+    done
 
     if [ -f package.json ] ; then
         debugLog "Managing JS dependencies"
@@ -155,13 +174,6 @@ for REPONAME in $REPOS ; do
         rm -rf ./node_modules
     fi
 
-    # Link themes
-    for THEME in $THEMES ; do
-        if [ ! -e themes/$THEME ] ; then
-            ln -s ../../themes/$THEME themes/$THEME
-        fi
-    done
-
     # Generate locales
     if [ -f ./scripts/generate-mo ] ; then
         ./scripts/generate-mo --quiet
@@ -172,16 +184,6 @@ for REPONAME in $REPOS ; do
         ./scripts/remove-incomplete-mo 0
     fi
 done
-
-debugLog "Updating themes"
-
-# Clone / update themes
-if [ -d $BASEDIR/themes/.git ] ; then
-    cd $BASEDIR/themes
-    git pull -q
-else
-    git clone $REMOTE_THEMES $BASEDIR/themes
-fi
 
 debugLog "Deleting stale directories"
 
