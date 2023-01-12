@@ -7,6 +7,7 @@ set -e
 
 FORCE_MODE="0"
 QUIET_MODE="0"
+LOG_FILE="/dev/null"
 
 # Source: https://stackoverflow.com/a/31024664/5155484
 while [[ $# > 0 ]]
@@ -21,6 +22,10 @@ do
             -q)
                 QUIET_MODE="1"
                 ;;
+            --log-file)
+                LOG_FILE="$2"
+                shift # option has parameter
+                ;;
             *)
                 # unknown option
                 echo "Unknown option: $key" #1>&2
@@ -34,6 +39,7 @@ do
 done
 
 debugLog() {
+    echo "$1" > $LOG_FILE
     if [ "${QUIET_MODE}" = "1" ]; then
         return
     fi
