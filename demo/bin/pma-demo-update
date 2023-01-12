@@ -39,7 +39,7 @@ do
 done
 
 debugLog() {
-    echo "$1" > $LOG_FILE
+    echo "$1" >> $LOG_FILE
     if [ "${QUIET_MODE}" = "1" ]; then
         return
     fi
