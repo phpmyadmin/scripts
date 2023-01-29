@@ -71,6 +71,8 @@ debugLog "Updating themes"
 # Clone / update themes
 if [ -d $BASEDIR/themes/.git ] ; then
     cd $BASEDIR/themes
+    # Remove local theme changes
+    git reset --hard -q
     git pull -q
 else
     git clone $REMOTE_THEMES $BASEDIR/themes
