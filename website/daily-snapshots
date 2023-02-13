@@ -30,7 +30,7 @@ git checkout master
 git reset --hard
 # Force an update
 git pull --ff-only
-./scripts/create-release.sh --daily 5.3+snapshot master
+./scripts/create-release.sh --daily 6.0+snapshot master
 
 # Storage directory
 mkdir -p /mnt/storage/files/snapshots/
