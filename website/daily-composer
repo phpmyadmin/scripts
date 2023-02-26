@@ -45,8 +45,13 @@ generate_mo() {
 generate_css() {
     # You can not use --production because it creates the error "[BABEL]: Cannot find module 'browserslist'"
     yarn install --frozen-lockfile --non-interactive --silent
-    git add --force themes/*/css/*.css || echo "No css file found, not adding to git repository"
-    git add --force themes/*/css/*.css.map || echo "No css.map files found, not adding to git repository"
+    if [ -d ./public/ ]; then
+        git add --force public/themes/*/css/*.css || echo "No css file found, not adding to git repository"
+        git add --force public/themes/*/css/*.css.map || echo "No css.map files found, not adding to git repository"
+    else
+        git add --force themes/*/css/*.css || echo "No css file found, not adding to git repository"
+        git add --force themes/*/css/*.css.map || echo "No css.map files found, not adding to git repository"
+    fi
     if ! git diff --quiet --cached ; then
         git commit -m 'Update generated CSS files'
     fi
@@ -87,7 +92,11 @@ set_version_in_composer() {
 
 reset_not_allowed_to_change_source_files() {
     # Source: https://stackoverflow.com/a/68019875/5155484
-    CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!js/dist/*.js' ':!js/dist/*.js.map' ':!locale/*.mo' ':!themes/*.css' ':!themes/*.css.map')"
+    if [ -d ./public/ ]; then
+        CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!public/js/dist/*.js' ':!public/js/dist/*.js.map' ':!locale/*.mo' ':!public/themes/*.css' ':!public/themes/*.css.map')"
+    else
+        CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!js/dist/*.js' ':!js/dist/*.js.map' ':!locale/*.mo' ':!themes/*.css' ':!themes/*.css.map')"
+    fi
 
     if [ -z "$CHANGED_FILES" ]; then
         echo "No files did change"
