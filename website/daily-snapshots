@@ -45,5 +45,4 @@ mv release/*.* /mnt/storage/files/snapshots/
 rsync -va /mnt/storage/files/ cdn:/www/
 
 # trigger website scan
-cd /home/builder/website/
-./manage.py import_files
+sudo -u builder /home/builder/website/manage.py import_files
