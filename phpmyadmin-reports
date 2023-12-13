@@ -17,7 +17,7 @@ Requirements:
 from configparser import RawConfigParser, NoOptionError, NoSectionError
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import dateutil.parser
 try:
@@ -267,8 +267,8 @@ def main(params):
         end = args.end_date
         weekly = args.weekly
 
-    start = datetime(start.year, start.month, start.day)
-    end = datetime(end.year, end.month, end.day, 23, 59, 59)
+    start = datetime(start.year, start.month, start.day, tzinfo=timezone.utc)
+    end = datetime(end.year, end.month, end.day, 23, 59, 59, tzinfo=timezone.utc)
 
     issues, commits = get_data(user, token, start, end, weekly)
 
