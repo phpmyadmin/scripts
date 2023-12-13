@@ -24,7 +24,7 @@ git fetch -q origin
 newrev=`git log -n 1 --format=format:%H origin/master`
 
 # Is there some diff?
-if git diff --stat --exit-code $oldrev..$newrev -- doc/ ; then
+if git diff --stat --exit-code $oldrev..$newrev -- docs/ ; then
     exit 0
 fi
 
