@@ -35,7 +35,12 @@ EOT
 
 generate_mo() {
     rm -rf locale
-    ./scripts/generate-mo
+    # TODO: This can be cleaned up and removed when no release exists with ./scripts/
+    if [ -f ./scripts/generate-mo ]; then
+      ./scripts/generate-mo
+    else
+      ./bin/generate-mo
+    fi
     git add -f locale
     if ! git diff --quiet --cached ; then
         git commit -m 'Update mo files'

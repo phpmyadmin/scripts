@@ -127,6 +127,16 @@ for REPONAME in $REPOS ; do
     chmod 770 tmp/
     chgrp www-data tmp/
 
+    # TODO: This can be cleaned up and removed when no release exists with ./scripts/
+    # Find the console binary
+    if [ -d ./scripts/ ]; then
+      bin_path=scripts
+    elif [ -d ./bin/ ]; then
+      bin_path=bin
+    else
+      bin_path=""
+    fi
+
     # Update composer deps
     if [ -f composer.json ] ; then
         debugLog "Managing php dependencies"
@@ -137,13 +147,13 @@ for REPONAME in $REPOS ; do
             rm -f libraries/cache/routes.cache.php
         fi
 
-        if [ -f ./scripts/console ]; then
+        if [ -f ./$bin_path/console ]; then
             CLI_VERBOSE="-v"
             if [ "${QUIET_MODE}" = "1" ]; then
                 CLI_VERBOSE="-q"
             fi
             # Write new routing cache
-            ./scripts/console cache:warmup --routing --no-interaction ${CLI_VERBOSE}
+            ./$bin_path/console cache:warmup --routing --no-interaction ${CLI_VERBOSE}
             # Write the revision-info.php file
             # Use the CLI or fallback
             # TODO: remove fallback when no demo server is below 5.2
@@ -152,7 +162,7 @@ for REPONAME in $REPOS ; do
                 ~/scripts/demo/bin/pma-revision-info
             else
                 debugLog "Using the new revision script"
-                ./scripts/console write-revision-info --no-interaction ${CLI_VERBOSE}
+                ./$bin_path/console write-revision-info --no-interaction ${CLI_VERBOSE}
             fi
         fi
 
@@ -187,13 +197,13 @@ for REPONAME in $REPOS ; do
     fi
 
     # Generate locales
-    if [ -f ./scripts/generate-mo ] ; then
-        ./scripts/generate-mo --quiet
+    if [ -f ./$bin_path/generate-mo ] ; then
+        ./$bin_path/generate-mo --quiet
     fi
 
     # Calculate locales percentages to get warnings for missing translations
-    if [ -f ./scripts/remove-incomplete-mo ] ; then
-        ./scripts/remove-incomplete-mo 0
+    if [ -f ./$bin_path/remove-incomplete-mo ] ; then
+        ./$bin_path/remove-incomplete-mo 0
     fi
 done
 
