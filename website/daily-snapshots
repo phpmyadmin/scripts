@@ -21,6 +21,7 @@ git checkout QA_5_2
 git reset --hard
 # Force an update
 git pull --ff-only
+#TODO: When changing to QA_6_0, update from ./scripts/ to ./bin/internal/
 ./scripts/create-release.sh --daily 5.2+snapshot QA_5_2
 # Destroy any possible local changes
 git reset --hard
@@ -30,7 +31,7 @@ git checkout master
 git reset --hard
 # Force an update
 git pull --ff-only
-./scripts/create-release.sh --daily 6.0+snapshot master
+./bin/internal/create-release.sh --daily 6.0+snapshot master
 
 # Storage directory
 mkdir -p /mnt/storage/files/snapshots/
