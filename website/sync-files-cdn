@@ -12,8 +12,8 @@
 #        HostName example.cdn77.com
 #
 
-# rsync to CDN
-rsync -va /mnt/storage/files/ cdn:/www/
+# sync to CDN
+rclone sync -q /mnt/storage/files/ cdn77:/download-object/
 
 # trigger website scan
 cd /home/builder/website/
