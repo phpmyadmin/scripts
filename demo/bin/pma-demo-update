@@ -143,8 +143,10 @@ for REPONAME in $REPOS ; do
         # Dev modules are needed to use the CLI
         composer update --quiet
 
-        if [ -f libraries/cache/routes.cache.php ] ; then
+        if [ -f libraries/cache/routes.cache.php ]; then
             rm -f libraries/cache/routes.cache.php
+        elif [ -f app/cache/routes.cache.php ]; then
+            rm -f app/cache/routes.cache.php
         fi
 
         if [ -f ./$bin_path/console ]; then
