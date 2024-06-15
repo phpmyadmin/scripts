@@ -172,15 +172,20 @@ for REPONAME in $REPOS ; do
         composer update --quiet --no-dev
     fi
 
+    THEMES_DIR='themes'
+    if [ "$(fetchReleaseSeriesFromFile)" = "6.0" ]; then
+        THEMES_DIR='public/themes'
+    fi
+
     # Cleanup all themes
     debugLog "Removing previous themes"
-    find ./themes/ -maxdepth 1 -type l -exec unlink {} \;
+    find ./$THEMES_DIR/ -maxdepth 1 -type l -exec unlink {} \;
 
     # Link themes
     for THEME in $THEMES ; do
-        if [ ! -e themes/$THEME ] ; then
+        if [ ! -e $THEMES_DIR/$THEME ] ; then
             debugLog "Linking theme: $THEME"
-            ln -s ../../themes/$THEME themes/$THEME
+            ln -s ../../themes/$THEME $THEMES_DIR/$THEME
         fi
     done
 
