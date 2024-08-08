@@ -34,14 +34,16 @@ EOT
 }
 
 generate_mo() {
-    rm -rf locale
     # TODO: This can be cleaned up and removed when no release exists with ./scripts/
     if [ -f ./scripts/generate-mo ]; then
+      rm -rf locale
       ./scripts/generate-mo
+      git add -f locale
     else
+      rm -rf resources/locale
       ./bin/generate-mo
+      git add -f resources/locale
     fi
-    git add -f locale
     if ! git diff --quiet --cached ; then
         git commit -m 'Update mo files'
     fi
@@ -65,7 +67,11 @@ generate_css() {
 generate_js() {
     # You can not use --production because it creates the error "[BABEL]: Cannot find module 'browserslist'"
     yarn install --frozen-lockfile --non-interactive --silent
-    git add --force js/dist/ || echo "No JS files found, not adding to git repository"
+    if [ -d ./public/ ]; then
+        git add --force public/js/dist/ || echo "No JS files found, not adding to git repository"
+    else
+        git add --force js/dist/ || echo "No JS files found, not adding to git repository"
+    fi
     if ! git diff --quiet --cached ; then
         git commit -m 'Update generated JS files'
     fi
@@ -98,7 +104,7 @@ set_version_in_composer() {
 reset_not_allowed_to_change_source_files() {
     # Source: https://stackoverflow.com/a/68019875/5155484
     if [ -d ./public/ ]; then
-        CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!public/js/dist/*.js' ':!public/js/dist/*.js.map' ':!locale/*.mo' ':!public/themes/*.css' ':!public/themes/*.css.map')"
+        CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!public/js/dist/*.js' ':!public/js/dist/*.js.map' ':!resources/locale/*.mo' ':!public/themes/*.css' ':!public/themes/*.css.map')"
     else
         CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!js/dist/*.js' ':!js/dist/*.js.map' ':!locale/*.mo' ':!themes/*.css' ':!themes/*.css.map')"
     fi
@@ -159,7 +165,7 @@ for branch in $BRANCHES ; do
     # Destroy any possible changes
     git reset --hard
     # Force an update just in case
-    git pull --ff
+    git pull --ff --rebase=false
 
     # Reset content that could have changed by mistake
     reset_not_allowed_to_change_source_files
