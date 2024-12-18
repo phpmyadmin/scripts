@@ -3,7 +3,12 @@
 # Script to update repositories for the demo server
 # Requires $HOME/scripts to be a checkout of the scripts repository
 
+# Fail on undefined variables
+set -u
+# Fail on failure
 set -e
+# If a script fails, stop before the next pipe
+set -o pipefail
 
 FORCE_MODE="0"
 QUIET_MODE="0"
