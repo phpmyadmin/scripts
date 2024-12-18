@@ -63,7 +63,7 @@ GIT_STORAGE="${GIT_STORAGE:-$HOME/.pma-demo}"
 # Directory where built folders are stored
 WEB_STORAGE="${WEB_STORAGE:-$HOME/.pma-demo-web}"
 # The user group to own the files
-WEB_GROUP="${WEB_GROUP:-demo}"
+WEB_GROUP="${WEB_GROUP:-www-data}"
 
 # Remote URL of repository to checkout
 REMOTE="${REMOTE:-https://github.com/phpmyadmin/phpmyadmin.git}"
