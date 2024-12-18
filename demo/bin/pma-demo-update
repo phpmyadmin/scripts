@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script to update repositories for the demo server
-# Requires ~/scripts to be checkout of scripts repository
+# Requires $HOME/scripts to be a checkout of the scripts repository
 
 set -e
 
@@ -50,13 +50,13 @@ debugLog() {
     echo "$1"
 }
 
-SCRIPTS_FOLDER="${SCRIPTS_FOLDER:-~/scripts}"
+SCRIPTS_FOLDER="${SCRIPTS_FOLDER:-$HOME/scripts}"
 
 # Directory where repositories are stored
-GIT_STORAGE="${GIT_STORAGE:-~/.pma-demo}"
+GIT_STORAGE="${GIT_STORAGE:-$HOME/.pma-demo}"
 
 # Directory where built folders are stored
-WEB_STORAGE="${WEB_STORAGE:-~/.pma-demo-web}"
+WEB_STORAGE="${WEB_STORAGE:-$HOME/.pma-demo-web}"
 # The user group to own the files
 WEB_GROUP="${WEB_GROUP:-demo}"
 
