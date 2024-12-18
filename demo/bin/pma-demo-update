@@ -7,15 +7,19 @@ set -e
 
 FORCE_MODE="0"
 QUIET_MODE="0"
+OFFLINE_MODE="0"
 LOG_FILE="/dev/null"
 
 # Source: https://stackoverflow.com/a/31024664/5155484
-while [[ $# > 0 ]]
+while [[ $# -gt 0 ]]
 do
     key="$1"
     while [[ ${key+x} ]]
     do
         case $key in
+            --offline)
+                OFFLINE_MODE="1"
+                ;;
             --force)
                 FORCE_MODE="1"
                 ;;
@@ -39,196 +43,258 @@ do
 done
 
 debugLog() {
-    echo "$1" >> $LOG_FILE
-    if [ "${QUIET_MODE}" = "1" ]; then
+    echo "$1" >> "$LOG_FILE"
+    if [ "${QUIET_MODE}" = "1" ] ; then
         return
     fi
     echo "$1"
 }
 
-fetchReleaseSeriesFromFile() {
-    # version<5.1 do not have the file
-    if [ ! -f libraries/classes/Version.php ] || [ ! -f src/Version.php ]; then
-        echo "old";
-        return;
-    fi
-    php -r "define('VERSION_SUFFIX', ''); require_once('libraries/classes/Version.php'); echo \PhpMyAdmin\Version::SERIES;"
-}
+SCRIPTS_FOLDER="${SCRIPTS_FOLDER:-~/scripts}"
 
 # Directory where repositories are stored
-BASEDIR=~/.pma-demo
+GIT_STORAGE="${GIT_STORAGE:-~/.pma-demo}"
+
+# Directory where built folders are stored
+WEB_STORAGE="${WEB_STORAGE:-~/.pma-demo-web}"
+# The user group to own the files
+WEB_GROUP="${WEB_GROUP:-demo}"
 
 # Remote URL of repository to checkout
-REMOTE=https://github.com/phpmyadmin/phpmyadmin.git
-REMOTE_THEMES=https://github.com/phpmyadmin/themes.git
+REMOTE="${REMOTE:-https://github.com/phpmyadmin/phpmyadmin.git}"
+REMOTE_THEMES="${REMOTE_THEMES:-https://github.com/phpmyadmin/themes.git}"
 
 # List of repositories to checkout
-REPOS=`awk '/^branches/ {print $3}' ~/scripts/demo/php/versions.ini`
-THEMES=`awk '/^themes/ {print $3}' ~/scripts/demo/php/versions.ini`
+VARIANTS=$(awk '/^variants/ {print $3}' "$SCRIPTS_FOLDER/demo/php/versions.ini")
+THEMES=$(awk '/^themes/ {print $3}' "$SCRIPTS_FOLDER/demo/php/versions.ini")
 
 debugLog "Updating themes"
 
 # Clone / update themes
-if [ -d $BASEDIR/themes/.git ] ; then
-    cd $BASEDIR/themes
+if [ -d "$GIT_STORAGE/themes/.git" ] ; then
+    cd "$GIT_STORAGE/themes"
     # Remove local theme changes
     git reset --hard -q
-    git pull -q
+    if [ $OFFLINE_MODE = 0 ] ; then
+        git pull -q
+    fi
 else
-    git clone $REMOTE_THEMES $BASEDIR/themes
+    git clone "$REMOTE_THEMES" "$GIT_STORAGE/themes"
 fi
 
-# Update all repositories
-for REPONAME in $REPOS ; do
-    DIRNAME=$BASEDIR/$REPONAME
-    mkdir -p $DIRNAME
-    debugLog "Working on repository: $REPONAME"
+# Clone / update phpMyAdmin
+if [ -d "$GIT_STORAGE/phpMyAdmin/.git" ] ; then
+    cd "$GIT_STORAGE/phpMyAdmin"
+    # Remove local changes
+    git reset --hard -q
+    if [ $OFFLINE_MODE = 0 ] ; then
+        git fetch --all -p
+    fi
+    git checkout temp 2> /dev/null 1> /dev/null
+else
+    git clone "$REMOTE" "$GIT_STORAGE/phpMyAdmin"
+    git checkout -b temp 2> /dev/null 1> /dev/null
+fi
 
-    if [ ! -d $DIRNAME/.git ] ; then
-        cd $BASEDIR
+debugLog "Deleting stale worktrees"
+cd "$GIT_STORAGE/phpMyAdmin"
 
-        # Clone the repository
-        if [ $REPONAME != 'master' ] ; then
-            # Use master as reference repository to share objects database
-            git clone --reference $BASEDIR/master $REMOTE $REPONAME
-        else
-            git clone $REMOTE $REPONAME
+WORKTREES="$(git worktree list --porcelain | grep -F "worktree" | cut -d ' ' -f 2)"
+
+# Delete stale worktrees
+for WORKTREE_PATH in $WORKTREES ; do
+    if [ "$WORKTREE_PATH" = "$GIT_STORAGE/phpMyAdmin" ] ; then
+        # Skip the current path
+        continue
+    fi
+
+    debugLog "Checking worktree $WORKTREE_PATH"
+    WORKTREE_NAME=${WORKTREE_PATH##*/}
+    for VARIANT_DATA in $VARIANTS ; do
+        VARIANT_NAME=${VARIANT_DATA%%:*}
+        if [ -z "$VARIANT_NAME" ] ; then
+            debugLog "Invalid variant data: $VARIANT_DATA"
+            continue
         fi
 
-        # Checkout correct branch
-        cd $DIRNAME
-        git checkout ${REPONAME%%-*}
-
-        # Symlink configuration
-        FLAVOUR=${REPONAME#*-}
-        if [ -f ~/scripts/demo/php/config-$FLAVOUR.inc.php ] ; then
-            ln -sf ~/scripts/demo/php/config-$FLAVOUR.inc.php config.inc.php
-        else
-            ln -sf ~/scripts/demo/php/config.inc.php config.inc.php
+        if [ "$VARIANT_NAME" = "$WORKTREE_NAME" ] ; then
+            # Skip the item
+            continue 2
         fi
-        ln -sf ~/scripts/demo/php/config.*.inc.php .
+    done
+    debugLog "Deleting stale worktree $WORKTREE_PATH"
+    git worktree remove "$WORKTREE_PATH"
+done
+
+unset WORKTREES
+cd - > /dev/null
+
+# Build worktrees
+for VARIANT_DATA in $VARIANTS ; do
+    VARIANT_NAME=${VARIANT_DATA%%:*}
+    VARIANT_BRANCH=${VARIANT_DATA##*:}
+    if [ -z "$VARIANT_NAME" ] || [ -z "$VARIANT_BRANCH" ] ; then
+        debugLog "Invalid variant data: $VARIANT_DATA"
+        continue
+    fi
+
+    # Only one worktree per branch is possible
+    WORKTREE_PATH="$GIT_STORAGE/$VARIANT_BRANCH"
+
+    if [ -d "$WORKTREE_PATH" ] ; then
+        debugLog "Updating worktree $VARIANT_BRANCH for $VARIANT_NAME at $WORKTREE_PATH"
+        cd "$WORKTREE_PATH"
+        # Remove local changes
+        git reset --hard -q
+        if [ $OFFLINE_MODE = 0 ] ; then
+            git pull -q
+        fi
+        cd - > /dev/null
     else
-        # Check for updates
-        cd $DIRNAME
-        orig_head=$(git log -n 1 --format=format:'%H')
-        git checkout -- yarn.lock
-        git pull -q
-        new_head=$(git log -n 1 --format=format:'%H')
+        debugLog "Creating worktree $VARIANT_BRANCH for $VARIANT_NAME at $WORKTREE_PATH"
+        git worktree add "$WORKTREE_PATH" "$VARIANT_BRANCH"
+    fi
+done
 
-        # Check if there has been an update
-        if [ $orig_head = $new_head -a "${FORCE_MODE}" = "0" ] ; then
-            debugLog "Skipping repository: $REPONAME, no update found"
+# Cleanup worktree folders
+for VARIANT_DATA in $VARIANTS ; do
+    VARIANT_NAME=${VARIANT_DATA%%:*}
+    VARIANT_BRANCH=${VARIANT_DATA##*:}
+    if [ -z "$VARIANT_NAME" ] || [ -z "$VARIANT_BRANCH" ] ; then
+        debugLog "Invalid variant data: $VARIANT_DATA"
+        continue
+    fi
+
+    WORKTREE_PATH="$GIT_STORAGE/$VARIANT_BRANCH"
+
+    #if [ -d "$WORKTREE_PATH/release" ] ; then
+        #debugLog "Cleaning old release files"
+        #rm -rf "$WORKTREE_PATH/release"
+    #fi
+done
+
+# Build web folders
+for VARIANT_DATA in $VARIANTS ; do
+    VARIANT_NAME=${VARIANT_DATA%%:*}
+    VARIANT_BRANCH=${VARIANT_DATA##*:}
+    if [ -z "$VARIANT_NAME" ] || [ -z "$VARIANT_BRANCH" ] ; then
+        debugLog "Invalid variant data: $VARIANT_DATA"
+        continue
+    fi
+
+    WORKTREE_PATH="$GIT_STORAGE/$VARIANT_BRANCH"
+
+    debugLog "Building from $WORKTREE_PATH"
+    cd "$WORKTREE_PATH"
+    VERSION="$(grep -F "version" package.json | cut -d '"' -f 4)"
+    debugLog "Building version $VERSION from branch $VARIANT_BRANCH"
+
+    SKIP_BUILD=0
+    if [ -f "$WORKTREE_PATH/release/phpMyAdmin-$VERSION.json" ] ; then
+        BUILT_COMMIT="$(grep -F "commit" "$WORKTREE_PATH/release/phpMyAdmin-$VERSION.json" |cut -d '"' -f 4)"
+        debugLog "Already built at commit $BUILT_COMMIT"
+
+        CURRENT_COMMIT=$(git log -n 1 --format=format:'%H')
+        if [ "$CURRENT_COMMIT" = "$BUILT_COMMIT" ] && [ $FORCE_MODE = 0 ] ; then
+            debugLog "Skipping building version $VERSION from branch $VARIANT_BRANCH"
+            SKIP_BUILD=1
             continue
         fi
     fi
 
-    # Create temp dir
-    mkdir -p tmp/
-    chmod 770 tmp/
-    chgrp www-data tmp/
+    RELEASE_SCRIPT="$WORKTREE_PATH/scripts/create-release.sh"
+    THEMES_FOLDER="themes"
+    if [ -f "$WORKTREE_PATH/bin/internal/create-release.sh" ] ; then
+        RELEASE_SCRIPT="$WORKTREE_PATH/bin/internal/create-release.sh"
+        THEMES_FOLDER="public/themes"
+    fi
 
-    # TODO: This can be cleaned up and removed when no release exists with ./scripts/
-    # Find the console binary
-    if [ -d ./scripts/ ]; then
-      bin_path=scripts
-    elif [ -d ./bin/ ]; then
-      bin_path=bin
+    if [ $SKIP_BUILD = 0 ] ; then
+        SCRIPT_OPTIONS="--daily --no-sign --revision-info --compressions tgz --kits all-languages"
+        if [ "$VARIANT_BRANCH" = "STABLE" ] ; then
+            # Remove this when 5.2.2 is out
+            SCRIPT_OPTIONS="--daily"
+            debugLog "Skipping, the build is broken anyway"
+            continue
+        fi
+        debugLog "Building the release"
+        #  > $LOG_FILE
+        COMPOSER_DISABLE_NETWORK="$OFFLINE_MODE" "$RELEASE_SCRIPT" "$VERSION" "$VARIANT_BRANCH" $SCRIPT_OPTIONS
+    fi
+
+    TARBALL_TO_INSTALL="$WORKTREE_PATH/release/phpMyAdmin-$VERSION-all-languages.tar.gz"
+    if [ ! -f "$TARBALL_TO_INSTALL" ] ; then
+        debugLog "Unable to find $TARBALL_TO_INSTALL"
+        continue
+    fi
+
+    WEB_FOLDER="$WEB_STORAGE/$VARIANT_NAME"
+    if [ -d "$WEB_FOLDER" ] ; then
+        debugLog "Cleaning up $WEB_FOLDER"
+        rm -rf "$WEB_FOLDER"
+    fi
+
+    debugLog "Creating $WEB_FOLDER"
+    mkdir "$WEB_FOLDER"
+    chgrp "$WEB_GROUP" "$WEB_FOLDER"
+
+    debugLog "Extracting $TARBALL_TO_INSTALL to $WEB_FOLDER"
+    tar -xz --strip-components=1 --directory="${WEB_FOLDER}" -f "${TARBALL_TO_INSTALL}"
+
+    # Symlink configuration
+    FLAVOUR=${VARIANT_NAME#*-}
+    debugLog "Flavour $FLAVOUR, copying configs"
+    if [ -f "$SCRIPTS_FOLDER/demo/php/config-$FLAVOUR.inc.php" ] ; then
+        cp "$SCRIPTS_FOLDER/demo/php/config-$FLAVOUR.inc.php" "$WEB_FOLDER/config.inc.php"
     else
-      bin_path=""
+        cp "$SCRIPTS_FOLDER/demo/php/config.inc.php" "$WEB_FOLDER/config.inc.php"
     fi
-
-    # Update composer deps
-    if [ -f composer.json ] ; then
-        debugLog "Managing php dependencies"
-        # Dev modules are needed to use the CLI
-        composer update --quiet
-
-        if [ -f libraries/cache/routes.cache.php ]; then
-            rm -f libraries/cache/routes.cache.php
-        elif [ -f app/cache/routes.cache.php ]; then
-            rm -f app/cache/routes.cache.php
-        fi
-
-        if [ -f ./$bin_path/console ]; then
-            CLI_VERBOSE="-v"
-            if [ "${QUIET_MODE}" = "1" ]; then
-                CLI_VERBOSE="-q"
-            fi
-            # Write new routing cache
-            ./$bin_path/console cache:warmup --routing --no-interaction ${CLI_VERBOSE}
-            # Write the revision-info.php file
-            # Use the CLI or fallback
-            # TODO: remove fallback when no demo server is below 5.2
-            if [ "$(fetchReleaseSeriesFromFile)" = "5.1" ] || [ "$(fetchReleaseSeriesFromFile)" = "old" ]; then
-                debugLog "Using the old revision script"
-                ~/scripts/demo/bin/pma-revision-info
-            else
-                debugLog "Using the new revision script"
-                ./$bin_path/console write-revision-info --no-interaction ${CLI_VERBOSE}
-            fi
-        fi
-
-        # Remove dev vendors
-        composer update --quiet --no-dev
-    fi
-
-    THEMES_DIR='themes'
-    if [ "$(fetchReleaseSeriesFromFile)" = "6.0" ]; then
-        THEMES_DIR='public/themes'
-    fi
-
-    # Cleanup all themes
-    debugLog "Removing previous themes"
-    find ./$THEMES_DIR/ -maxdepth 1 -type l -exec unlink {} \;
+    cp "$SCRIPTS_FOLDER/demo/php/"config.*.inc.php "$WEB_FOLDER/"
 
     # Link themes
     for THEME in $THEMES ; do
-        if [ ! -e $THEMES_DIR/$THEME ] ; then
-            debugLog "Linking theme: $THEME"
-            ln -s ../../themes/$THEME $THEMES_DIR/$THEME
+        if [ ! -e "$WEB_FOLDER/$THEMES_FOLDER/$THEME" ] ; then
+            debugLog "Copying theme: $THEME"
+            cp -rp "$GIT_STORAGE/themes/$THEME" "$WEB_FOLDER/$THEMES_FOLDER/$THEME"
         fi
     done
 
-    if [ -f package.json ] ; then
-        debugLog "Managing JS dependencies"
-        if [ "${QUIET_MODE}" = "1" ]; then
-            # We still redirect output to /dev/null because even with the --silent flag, yarn still gives sass output such as
-            # $ sass themes/pmahomme/scss:themes/pmahomme/css themes/original/scss:themes/original/css themes/metro/scss:themes/metro/css
-            # Use a subshell method to absorb all the output because "Browserslist: caniuse-lite is outdated." misbehaves
-            (yarn install --production --frozen-lockfile --non-interactive --silent) >/dev/null 2>&1
-        else
-            yarn install --production --frozen-lockfile --non-interactive --silent
-        fi
-        # They waste too much space, clear them out
-        rm -rf ./node_modules
-    fi
+    # Apply permissions globally
+    chgrp -R "$WEB_GROUP" "$WEB_FOLDER"
 
-    # Generate locales
-    if [ -f ./$bin_path/generate-mo ] ; then
-        ./$bin_path/generate-mo --quiet
-    fi
+    # Apply permissions to files and folders
+    find "$WEB_FOLDER" -type d -exec chmod 0755 {} \;
+    find "$WEB_FOLDER" -type f -exec chmod 0644 {} \;
 
-    # Calculate locales percentages to get warnings for missing translations
-    if [ -f ./$bin_path/remove-incomplete-mo ] ; then
-        ./$bin_path/remove-incomplete-mo 0
-    fi
+    # Create temp dir
+    mkdir -p "$WEB_FOLDER/tmp/"
+    chmod 770 "$WEB_FOLDER/tmp/"
+    chgrp "$WEB_GROUP" "$WEB_FOLDER/tmp/"
 done
 
 debugLog "Deleting stale directories"
 
 # Delete stale directories
-find $BASEDIR -maxdepth 1 -mindepth 1 -type d | while read DIRNAME ; do
-    REPO=${DIRNAME##*/}
-    if [ $REPO = themes ] ; then
-        continue
-    fi
-    for TESTREPO in $REPOS ; do
-        if [ $TESTREPO = $REPO ] ; then
+find "$WEB_STORAGE" -maxdepth 1 -mindepth 1 -type d | while read DIRNAME ; do
+    FOLDER_NAME=${DIRNAME##*/}
+
+    # Build web folders
+    for VARIANT_DATA in $VARIANTS ; do
+        VARIANT_NAME=${VARIANT_DATA%%:*}
+        VARIANT_BRANCH=${VARIANT_DATA##*:}
+        if [ -z "$VARIANT_NAME" ] || [ -z "$VARIANT_BRANCH" ] ; then
+            debugLog "Invalid variant data: $VARIANT_DATA"
+            continue
+        fi
+
+        if [ "$FOLDER_NAME" = "$VARIANT_NAME" ] ; then
+            debugLog "Known variant: $FOLDER_NAME"
             continue 2
         fi
     done
-    debugLog "Deleting stale repository $DIRNAME"
-    rm -rf "$DIRNAME"
+
+    debugLog "Deleting stale variant $FOLDER_NAME"
+    #rm -rf "$DIRNAME"
 done
 
 debugLog "All done"
