@@ -223,8 +223,7 @@ for VARIANT_DATA in $VARIANTS ; do
             continue
         fi
         debugLog "Building the release"
-        #  > $LOG_FILE
-        COMPOSER_DISABLE_NETWORK="$OFFLINE_MODE" "$RELEASE_SCRIPT" "$VERSION" "$VARIANT_BRANCH" $SCRIPT_OPTIONS
+        COMPOSER_DISABLE_NETWORK="$OFFLINE_MODE" "$RELEASE_SCRIPT" "$VERSION" "$VARIANT_BRANCH" $SCRIPT_OPTIONS > $LOG_FILE
     fi
 
     TARBALL_TO_INSTALL="$WORKTREE_PATH/release/phpMyAdmin-$VERSION-all-languages.tar.gz"
