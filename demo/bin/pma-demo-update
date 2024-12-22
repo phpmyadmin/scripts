@@ -128,7 +128,7 @@ for WORKTREE_PATH in $WORKTREES ; do
         fi
     done
     debugLog "Deleting stale worktree $WORKTREE_PATH"
-    if [ -d "$WORKTREE_PATH" ] ; then
+    if [ -d "$WORKTREE_PATH/.git" ] ; then
         git worktree remove "$WORKTREE_PATH"
     else
         rm -r "$WORKTREE_PATH/.git"
