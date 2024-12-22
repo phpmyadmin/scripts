@@ -131,7 +131,7 @@ for WORKTREE_PATH in $WORKTREES ; do
     if [ -d "$WORKTREE_PATH/.git" ] ; then
         git worktree remove "$WORKTREE_PATH"
     else
-        rm -r "$WORKTREE_PATH/.git"
+        rm -r "$WORKTREE_PATH"
     fi
 done
 
