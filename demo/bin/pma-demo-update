@@ -128,7 +128,11 @@ for WORKTREE_PATH in $WORKTREES ; do
         fi
     done
     debugLog "Deleting stale worktree $WORKTREE_PATH"
-    git worktree remove "$WORKTREE_PATH"
+    if [ -d "$WORKTREE_PATH" ] ; then
+        git worktree remove "$WORKTREE_PATH"
+    else
+        rm -r "$WORKTREE_PATH/.git"
+    fi
 done
 
 unset WORKTREES
@@ -223,7 +227,7 @@ for VARIANT_DATA in $VARIANTS ; do
             continue
         fi
         debugLog "Building the release"
-        COMPOSER_DISABLE_NETWORK="$OFFLINE_MODE" "$RELEASE_SCRIPT" "$VERSION" "$VARIANT_BRANCH" $SCRIPT_OPTIONS > $LOG_FILE
+        COMPOSER_DISABLE_NETWORK="$OFFLINE_MODE" "$RELEASE_SCRIPT" "$VERSION" "$VARIANT_BRANCH" $SCRIPT_OPTIONS 2> $LOG_FILE 1> $LOG_FILE
     fi
 
     TARBALL_TO_INSTALL="$WORKTREE_PATH/release/phpMyAdmin-$VERSION-all-languages.tar.gz"
