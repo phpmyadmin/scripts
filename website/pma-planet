@@ -1,9 +1,0 @@
-#!/bin/sh
-
-# Script to generate Planet phpMyAdmin content
-
-set -e
-
-cd /home/builder/planet/
-git pull -q
-planet planet.ini
