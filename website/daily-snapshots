@@ -43,7 +43,7 @@ rm -f /mnt/storage/files/snapshots/*
 mv release/*.* /mnt/storage/files/snapshots/
 
 # Rsync to CDN
-rsync -va /mnt/storage/files/ cdn:/www/
+rsync --delete-before -va /mnt/storage/files/ cdn:/www/
 
 # trigger website scan
 sudo -u builder /home/builder/website/manage.py import_files

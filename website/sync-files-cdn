@@ -13,7 +13,7 @@
 #
 
 # rsync to CDN
-rsync -va /mnt/storage/files/ cdn:/www/
+rsync --delete-before -va /mnt/storage/files/ cdn:/www/
 
 # trigger website scan
 cd /home/builder/website/
