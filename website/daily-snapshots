@@ -42,8 +42,8 @@ rm -f /mnt/storage/files/snapshots/*
 # Move new files
 mv release/*.* /mnt/storage/files/snapshots/
 
-# sync to CDN
-rclone sync -q /mnt/storage/files/ cdn77:/download-object/
+# Rsync to CDN
+rsync -va /mnt/storage/files/ cdn:/www/
 
 # trigger website scan
 sudo -u builder /home/builder/website/manage.py import_files
