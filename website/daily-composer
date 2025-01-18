@@ -52,7 +52,7 @@ generate_mo() {
 generate_css() {
     # You can not use --production because it creates the error "[BABEL]: Cannot find module 'browserslist'"
     yarn install --frozen-lockfile --non-interactive --silent
-    if [ -d ./public/ ]; then
+    if [ -f ./bin/console ]; then
         git add --force public/themes/*/css/*.css || echo "No css file found, not adding to git repository"
         git add --force public/themes/*/css/*.css.map || echo "No css.map files found, not adding to git repository"
     else
@@ -67,7 +67,7 @@ generate_css() {
 generate_js() {
     # You can not use --production because it creates the error "[BABEL]: Cannot find module 'browserslist'"
     yarn install --frozen-lockfile --non-interactive --silent
-    if [ -d ./public/ ]; then
+    if [ -f ./bin/console ]; then
         git add --force public/js/dist/ || echo "No JS files found, not adding to git repository"
     else
         git add --force js/dist/ || echo "No JS files found, not adding to git repository"
@@ -103,7 +103,16 @@ set_version_in_composer() {
 
 reset_not_allowed_to_change_source_files() {
     # Source: https://stackoverflow.com/a/68019875/5155484
-    if [ -d ./public/ ]; then
+
+    if [ -f yarn-error.log ]; then
+        rm -v yarn-error.log
+    fi
+
+    # Source: https://stackoverflow.com/a/2196755/5155484
+    echo "Cleaning ignored files"
+    git clean -fdX
+
+    if [ -f ./bin/console ]; then
         CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!public/js/dist/*.js' ':!public/js/dist/*.js.map' ':!resources/locale/*.mo' ':!public/themes/*.css' ':!public/themes/*.css.map')"
     else
         CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!js/dist/*.js' ':!js/dist/*.js.map' ':!locale/*.mo' ':!themes/*.css' ':!themes/*.css.map')"
