@@ -195,18 +195,18 @@ class Reports
     private function printHelp(): void
     {
         fwrite(STDOUT, 'Usage:' . "\n");
-        fwrite(STDOUT, '  Help: ./phpmyadmin-report.sh -h' . "\n");
-        fwrite(STDOUT, '  Help: ./phpmyadmin-report.sh --help' . "\n");
-        fwrite(STDOUT, '  Turn off debug: ./phpmyadmin-report.sh --quiet' . "\n");
-        fwrite(STDOUT, '  Turn off debug: ./phpmyadmin-report.sh -q' . "\n");
-        fwrite(STDOUT, '  Custom config: ./phpmyadmin-report.sh --config /home/user/report-config.conf' . "\n");
-        fwrite(STDOUT, '  Custom output: ./phpmyadmin-report.sh --output /home/user/report-output.md' . "\n");
-        fwrite(STDOUT, '  Store json data: ./phpmyadmin-report.sh --output-json /home/user/report-data.json' . "\n");
-        fwrite(STDOUT, '  Last month: ./phpmyadmin-report.sh --last-month' . "\n");
-        fwrite(STDOUT, '  Current month: ./phpmyadmin-report.sh --current-month' . "\n");
-        fwrite(STDOUT, '  Next month: ./phpmyadmin-report.sh --next-month' . "\n");
-        fwrite(STDOUT, '  Specific month: ./phpmyadmin-report.sh --month October' . "\n");
-        fwrite(STDOUT, '  Custom dates: ./phpmyadmin-report.sh --start-date 2021-05-03 --end-date 2021-06-27' . "\n");
+        fwrite(STDOUT, '  Help: ./phpmyadmin-report.php -h' . "\n");
+        fwrite(STDOUT, '  Help: ./phpmyadmin-report.php --help' . "\n");
+        fwrite(STDOUT, '  Turn off debug: ./phpmyadmin-report.php --quiet' . "\n");
+        fwrite(STDOUT, '  Turn off debug: ./phpmyadmin-report.php -q' . "\n");
+        fwrite(STDOUT, '  Custom config: ./phpmyadmin-report.php --config /home/user/report-config.conf' . "\n");
+        fwrite(STDOUT, '  Custom output: ./phpmyadmin-report.php --output /home/user/report-output.md' . "\n");
+        fwrite(STDOUT, '  Store json data: ./phpmyadmin-report.php --output-json /home/user/report-data.json' . "\n");
+        fwrite(STDOUT, '  Last month: ./phpmyadmin-report.php --last-month' . "\n");
+        fwrite(STDOUT, '  Current month: ./phpmyadmin-report.php --current-month' . "\n");
+        fwrite(STDOUT, '  Next month: ./phpmyadmin-report.php --next-month' . "\n");
+        fwrite(STDOUT, '  Specific month: ./phpmyadmin-report.php --month October' . "\n");
+        fwrite(STDOUT, '  Custom dates: ./phpmyadmin-report.php --start-date 2021-05-03 --end-date 2021-06-27' . "\n");
         exit(0);
     }
 
@@ -348,7 +348,7 @@ class Reports
         );
 
         if ($data['message'] ?? false) {
-            $this->quitError('GitHub API error: ' . $issues['message']);
+            $this->quitError('GitHub API (' . $path . ') error: ' . $data['message']);
         }
 
         return $data;
