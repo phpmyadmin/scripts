@@ -134,11 +134,17 @@ class Reports
 
             if ($optionName === 'start-date') {
                 $this->monthMode = 'custom';
+                if ($optionValue === false) {
+                    $this->quitError('The option --start-date needs a value, use the equal sign.');
+                }
                 $this->startDate = new DateTimeImmutable($optionValue . 'T00:00:00Z');
             }
 
             if ($optionName === 'end-date') {
                 $this->monthMode = 'custom';
+                if ($optionValue === false) {
+                    $this->quitError('The option --end-date needs a value, use the equal sign.');
+                }
                 $this->endDate = new DateTimeImmutable($optionValue . 'T23:59:59Z');
             }
 
@@ -204,9 +210,10 @@ class Reports
         fwrite(STDOUT, '  Store json data: ./phpmyadmin-report.php --output-json /home/user/report-data.json' . "\n");
         fwrite(STDOUT, '  Last month: ./phpmyadmin-report.php --last-month' . "\n");
         fwrite(STDOUT, '  Current month: ./phpmyadmin-report.php --current-month' . "\n");
+        fwrite(STDOUT, '  Current month (by week): ./phpmyadmin-report.sh --current-month --by-week' . "\n");
         fwrite(STDOUT, '  Next month: ./phpmyadmin-report.php --next-month' . "\n");
         fwrite(STDOUT, '  Specific month: ./phpmyadmin-report.php --month October' . "\n");
-        fwrite(STDOUT, '  Custom dates: ./phpmyadmin-report.php --start-date 2021-05-03 --end-date 2021-06-27' . "\n");
+        fwrite(STDOUT, '  Custom dates: ./phpmyadmin-report.php --start-date=2021-05-03 --end-date=2021-06-27' . "\n");
         exit(0);
     }
 
