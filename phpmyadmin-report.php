@@ -366,7 +366,13 @@ class Reports
         $token = $configBlockIn['token'];
         $host = $configBlockIn['host'];
 
-        return $this->callApi('https://' . $host . '/api/' . $path, ['Authorization: Bearer ' . $token]);
+        $data = $this->callApi('https://' . $host . '/api/' . $path, ['Authorization: Bearer ' . $token]);
+
+        if ($data['error'] ?? false) {
+            $this->quitError('GitLab API (' . $path . ') error (' . $data['error'] . ') : ' . $data['error_description']);
+        }
+
+        return $data;
     }
 
     private function processGitLabProject(array $configBlockIn, string $projectSlug): void
