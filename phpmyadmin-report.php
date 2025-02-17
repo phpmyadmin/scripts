@@ -33,12 +33,13 @@ class Reports
             // 'phpmyadmin/phpmyadmin-security',
             // 'phpmyadmin/private',
         ],
+        // Token scopes: read_api
+        // See: https://salsa.debian.org/phpmyadmin-team/phpmyadmin/-/settings/access_tokens
         'gitlab.com' => [],
         'salsa.debian.org' => [
             'phpmyadmin-team/phpmyadmin',
             'phpmyadmin-team/twig-i18n-extension',
             'phpmyadmin-team/mariadb-mysql-kbs',
-            'phpmyadmin-team/google-recaptcha',
             'phpmyadmin-team/motranslator',
             'phpmyadmin-team/sql-parser',
             'phpmyadmin-team/shapefile',
@@ -337,9 +338,24 @@ class Reports
             );
         }
 
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
         curl_close($ch);
 
-        return json_decode($data, true);
+        if (! in_array($httpCode, [200, 201, 202])) {
+            $this->quitError(
+                'Error code (' . $httpCode . ') from: ' . $url . ' -> ' . $data
+            );
+        }
+
+        $jsonData = json_decode($data, true);
+        if (! is_array($jsonData)) {
+            $this->quitError(
+                'Error data from: ' . $url . ' -> ' . $data
+            );
+        }
+
+        return $jsonData;
     }
 
     private function callGitHubApi(array $configBlockIn, string $path): array
@@ -369,7 +385,7 @@ class Reports
         $data = $this->callApi('https://' . $host . '/api/' . $path, ['Authorization: Bearer ' . $token]);
 
         if ($data['error'] ?? false) {
-            $this->quitError('GitLab API (' . $path . ') error (' . $data['error'] . ') : ' . $data['error_description']);
+            $this->quitError('GitLab (' . $host . ') API (' . $path . ') error (' . $data['error'] . ') : ' . $data['error_description']);
         }
 
         return $data;
