@@ -1,9 +1,14 @@
 #!/bin/sh
 # Script to generate daily snapshots
-set -ex
+set -eux
+
+if [ -z "${1:-}" ] || [ ! -d "${1:-}" ]; then
+    echo "Usage daily-snapshots ~/phpmyadmin.git"
+    exit 1
+fi
 
 # phpMyAdmin working copy
-cd ~/phpmyadmin
+cd "${1}"
 
 # Delete any local changes
 git reset --hard
