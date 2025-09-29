@@ -8,8 +8,13 @@
 set -e
 set -u
 
+if [ -z "${1:-}" ] || [ ! -d "${1:-}" ]; then
+    echo "Usage daily-composer ~/composer"
+    exit 1
+fi
+
 # Working directory
-DIR=~/composer
+DIR="${1}"
 
 # Branches we process
 BRANCHES="QA_5_2 QA_4_9 master"
