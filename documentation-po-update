@@ -1,10 +1,17 @@
 #!/bin/sh
 
+# Fail on error or undefined variable
 set -e
+set -u
 
 # Updates phpMyAdmin documentation
 
-WORKDIR=~/localized_docs/
+if [ -z "${1:-}" ] || [ ! -d "${1:-}" ]; then
+    echo "Usage documentation-po-update ~/localized_docs/"
+    exit 1
+fi
+
+WORKDIR="${1}"
 
 if [ ! -d "$WORKDIR" ] ; then
     git clone git@github.com:phpmyadmin/localized_docs.git "$WORKDIR"
@@ -51,6 +58,3 @@ git push
 
 # Unlock Weblate
 wlc unlock
-
-
-
