@@ -156,6 +156,9 @@ git fetch phpmyadmin '+refs/tags/*:refs/remotes/phpmyadmin/tags/*'
 # Destroy local changes
 git reset --hard
 
+# Disable renames detection (it breaks merges)
+git config merge.renames false
+
 # Process branches
 for branch in $BRANCHES ; do
     if [ $branch = master ] ; then
