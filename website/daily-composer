@@ -61,9 +61,13 @@ generate_css() {
     if [ -f ./bin/console ]; then
         git add --force public/themes/*/css/*.css || echo "No css file found, not adding to git repository"
         git add --force public/themes/*/css/*.css.map || echo "No css.map files found, not adding to git repository"
+        git add --force public/setup/*.css || echo "No css.map files found, not adding to git repository"
+        git add --force public/setup/*.css.map || echo "No css.map files found, not adding to git repository"
     else
         git add --force themes/*/css/*.css || echo "No css file found, not adding to git repository"
         git add --force themes/*/css/*.css.map || echo "No css.map files found, not adding to git repository"
+        git add --force setup/*.css || echo "No css.map files found, not adding to git repository"
+        git add --force setup/*.css.map || echo "No css.map files found, not adding to git repository"
     fi
     if ! git diff --quiet --cached ; then
         git commit -m 'Update generated CSS files'
