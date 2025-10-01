@@ -123,9 +123,9 @@ reset_not_allowed_to_change_source_files() {
     git clean -fdX
 
     if [ -f ./bin/console ]; then
-        CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!public/js/*.js' ':!public/js/*.js.map' ':!resources/locale/*.mo' ':!public/themes/*.css' ':!public/themes/*.css.map')"
+        CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!public/js/*.js' ':!public/js/*.js.map' ':!resources/locale/*.mo' ':!public/themes/*.css' ':!public/themes/*.css.map' ':!public/setup/*.css' ':!public/setup/*.css.map')"
     else
-        CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!js/dist/*.js' ':!js/dist/*.js.map' ':!locale/*.mo' ':!themes/*.css' ':!themes/*.css.map')"
+        CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!js/dist/*.js' ':!js/dist/*.js.map' ':!locale/*.mo' ':!themes/*.css' ':!themes/*.css.map' ':!setup/*.css' ':!setup/*.css.map')"
     fi
 
     if [ -z "$CHANGED_FILES" ]; then
