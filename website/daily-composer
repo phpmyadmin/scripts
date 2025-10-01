@@ -194,6 +194,9 @@ for branch in $BRANCHES ; do
     generate_js
     set_version_in_composer
 
+    # Display ignored files
+    git status --ignored
+
     # Push
     git push origin $newbranch
 done
@@ -219,6 +222,9 @@ for tag in $(git branch -r | grep 'phpmyadmin/tags/\(RELEASE_[4]_[7-9]_[0-9]\+\(
     generate_css
     generate_js
     set_version_in_composer
+
+    # Display ignored files
+    git status --ignored
 
     # Create tag
     git tag -a -m "Composer tag for $tag" $newtag
