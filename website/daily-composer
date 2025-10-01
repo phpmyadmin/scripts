@@ -10,6 +10,7 @@ set -u
 
 if [ -z "${1:-}" ] || [ ! -d "${1:-}" ]; then
     echo "Usage daily-composer ~/composer"
+    echo "Usage daily-composer ~/composer --force"
     exit 1
 fi
 
@@ -172,7 +173,10 @@ for branch in $BRANCHES ; do
     if git rev-parse --verify --quiet $newbranch ; then
         git checkout $newbranch
         if [ `git log --oneline ..phpmyadmin/$branch | wc -l` -eq 0 ] ; then
-            continue
+            if [ -z "${2:-}" ] || [ "${2:-}" != "--force" ]; then
+                echo "No changes for $newbranch ($branch)"
+                continue
+            fi
         fi
         git merge --no-edit --strategy=recursive --strategy-option=theirs phpmyadmin/$branch
     else
