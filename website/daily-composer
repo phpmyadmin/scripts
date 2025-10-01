@@ -73,7 +73,7 @@ generate_js() {
     # You can not use --production because it creates the error "[BABEL]: Cannot find module 'browserslist'"
     yarn install --frozen-lockfile --non-interactive --silent
     if [ -f ./bin/console ]; then
-        git add --force public/js/dist/ || echo "No JS files found, not adding to git repository"
+        git add --force public/js/ || echo "No JS files found, not adding to git repository"
     else
         git add --force js/dist/ || echo "No JS files found, not adding to git repository"
     fi
@@ -118,7 +118,7 @@ reset_not_allowed_to_change_source_files() {
     git clean -fdX
 
     if [ -f ./bin/console ]; then
-        CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!public/js/dist/*.js' ':!public/js/dist/*.js.map' ':!resources/locale/*.mo' ':!public/themes/*.css' ':!public/themes/*.css.map')"
+        CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!public/js/*.js' ':!public/js/*.js.map' ':!resources/locale/*.mo' ':!public/themes/*.css' ':!public/themes/*.css.map')"
     else
         CHANGED_FILES="$(git diff phpmyadmin/$branch..$newbranch --name-only -- './*' ':!README.rst' ':!js/dist/*.js' ':!js/dist/*.js.map' ':!locale/*.mo' ':!themes/*.css' ':!themes/*.css.map')"
     fi
