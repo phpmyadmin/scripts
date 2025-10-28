@@ -9,3 +9,10 @@ borg create ssh://borgbackup/./backups/`hostname`::'{now:%Y-%m-%d_%H:%M}' `cat /
 # - weekly backups for 8 weeks
 # - monthly backups for 12 months
 borg prune --keep-weekly 8 --keep-monthly 12 --keep-daily 14 ssh://borgbackup/./backups/`hostname`
+
+# Compact repository to free up disk space that is still in use after being de-allocated by prune.
+# This is needed since Borg 1.2.0
+# Since it doesn't exist prior to 1.2.0, we test so as to avoid failing
+if borg help compact  >/dev/null 2>&1; then
+  borg compact ssh://borgbackup/./backups/`hostname`
+fi
