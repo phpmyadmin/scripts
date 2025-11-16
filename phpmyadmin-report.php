@@ -29,6 +29,11 @@ class Reports
             'phpmyadmin/twig-i18n-extension',
             'docker-library/docs',
             'docker-library/official-images',
+            'gentoo/gentoo',
+            'macports/macports-ports',
+            'termux/termux-packages',
+            'SlackBuildsOrg/slackbuilds',
+            'void-linux/void-packages',
             // Disable private repos
             // 'phpmyadmin/phpmyadmin-security',
             // 'phpmyadmin/private',
@@ -45,6 +50,11 @@ class Reports
             'phpmyadmin-team/shapefile',
             'phpmyadmin-team/tcpdf',
         ],
+	// Token scopes: read_api
+	// https://gitlab.alpinelinux.org/-/user_settings/personal_access_tokens?page=1&state=active&sort=expires_asc
+        'gitlab.alpinelinux.org' => [
+	    'alpine/aports',
+	],
     ];
 
     private const IGNORE_WORDS = [
