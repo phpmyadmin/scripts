@@ -135,7 +135,7 @@ reset_not_allowed_to_change_source_files() {
 
     echo "Files changed: $CHANGED_FILES"
 
-    echo "$CHANGED_FILES" | xargs git checkout phpmyadmin/$branch --theirs
+    echo "$CHANGED_FILES" | xargs git checkout phpmyadmin/$branch
     echo "$CHANGED_FILES" | xargs git add --force
     unset CHANGED_FILES
 
