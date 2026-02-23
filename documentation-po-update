@@ -19,6 +19,9 @@ fi
 
 cd "$WORKDIR"
 
+# Remove any possible changes
+git reset --hard -q
+
 # Update localized_docs repo
 git pull -q
 git submodule update --init -q
