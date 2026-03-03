@@ -81,7 +81,7 @@ function github_webhook_push(stdClass $inputData): stdClass
 /**
  * Verifies signature from GitHub
  */
-function github_verify_post()
+function github_verify_post(): void
 {
     if (empty(GITHUB_HOOK_SECRET)) {
         fail('Missing hook secret configuration!');
@@ -111,7 +111,7 @@ function github_verify_post()
 /**
  * Creates a GitHub release
  */
-function github_make_release($repo, $tag, $version, $description)
+function github_make_release(string $repo, string $tag, string $version, string $description): array
 {
     global $curlBaseOpts;
 
@@ -140,7 +140,7 @@ function github_make_release($repo, $tag, $version, $description)
     //close connection
     curl_close($ch);
 
-    $result['response'] = json_decode($response);
+    $result['response'] = json_decode(json: $response, flags: JSON_THROW_ON_ERROR);
 
     return $result;
 }
@@ -148,7 +148,7 @@ function github_make_release($repo, $tag, $version, $description)
 /**
  * Posts a comment on GitHub pull request
  */
-function github_comment_pull($repo, $pullid, $comment)
+function github_comment_pull(string $repo, int $pullid, string $comment): array
 {
     global $curlBaseOpts;
 
@@ -168,13 +168,13 @@ function github_comment_pull($repo, $pullid, $comment)
     //close connection
     curl_close($ch);
 
-    return json_decode($result, true);
+    return json_decode(json: $result, associative: true, flags: JSON_THROW_ON_ERROR);
 }
 
 /**
  * Posts a comment on GitHub commit request
  */
-function github_comment_commit($repo, $sha, $comment)
+function github_comment_commit(string $repo, string $sha, string $comment): array
 {
     global $curlBaseOpts;
 
@@ -194,13 +194,13 @@ function github_comment_commit($repo, $sha, $comment)
     //close connection
     curl_close($ch);
 
-    return json_decode($result, true);
+    return json_decode(json: $result, associative: true, flags: JSON_THROW_ON_ERROR);
 }
 
 /**
  * Returns list of pull request commits.
  */
-function github_pull_commits($repo, $pullid)
+function github_pull_commits(string $repo, int $pullid): array
 {
     global $curlBaseOpts;
 
@@ -216,13 +216,13 @@ function github_pull_commits($repo, $pullid)
     //close connection
     curl_close($ch);
 
-    return json_decode($result, true);
+    return json_decode(json: $result, associative: true, flags: JSON_THROW_ON_ERROR);
 }
 
 /**
  * Returns diff of pull request commit detail.
  */
-function github_commit_detail($repo, $commit)
+function github_commit_detail(string $repo, string $commit): array
 {
     global $curlBaseOpts;
 
@@ -238,13 +238,35 @@ function github_commit_detail($repo, $commit)
     //close connection
     curl_close($ch);
 
-    return json_decode($result, true);
+    return json_decode(json: $result, associative: true, flags: JSON_THROW_ON_ERROR);
 }
 
 /**
- * Returns diff of pull request commit detail.
+ * Returns github issue/pull-request comments
  */
-function github_commit_comments($repo, $sha)
+function github_issue_comments(string $repo, int $issueNumber): array
+{
+    global $curlBaseOpts;
+
+    $ch = curl_init();
+    curl_setopt_array($ch, $curlBaseOpts);
+    curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/' . $repo . '/issues/' . $issueNumber . '/comments');
+
+    //execute post
+    $result = curl_exec($ch);
+
+    continueOrFailOnHttpCode(curl_getinfo($ch, CURLINFO_HTTP_CODE));
+
+    //close connection
+    curl_close($ch);
+
+    return json_decode(json: $result, associative: true, flags: JSON_THROW_ON_ERROR);
+}
+
+/**
+ * Returns github commit comments
+ */
+function github_commit_comments(string $repo, string $sha): array
 {
     global $curlBaseOpts;
 
@@ -260,35 +282,13 @@ function github_commit_comments($repo, $sha)
     //close connection
     curl_close($ch);
 
-    return json_decode($result, true);
-}
-
-/**
- * Returns diff of pull request commits.
- */
-function github_pull_diff($repo, $pullid)
-{
-    global $curlBaseOpts;
-
-    $ch = curl_init();
-    curl_setopt_array($ch, $curlBaseOpts);
-    curl_setopt($ch, CURLOPT_URL, 'https://github.com/' . $repo . '/pull/' . $pullid . '.patch');
-
-    //execute post
-    $result = curl_exec($ch);
-
-    continueOrFailOnHttpCode(curl_getinfo($ch, CURLINFO_HTTP_CODE));
-
-    //close connection
-    curl_close($ch);
-
-    return $result;
+    return json_decode(json: $result, associative: true, flags: JSON_THROW_ON_ERROR);
 }
 
 /**
  * Trigger website rendering.
  */
-function trigger_website_render()
+function trigger_website_render(): void
 {
     $file = fopen(WEBSITE_HOOK, 'w');
     fclose($file);
@@ -297,7 +297,7 @@ function trigger_website_render()
 /**
  * Trigger website rendering.
  */
-function trigger_docs_render()
+function trigger_docs_render(): void
 {
     $file = fopen(DOCS_HOOK, 'w');
     fclose($file);
@@ -306,18 +306,18 @@ function trigger_docs_render()
 /**
  * Issues JSON response
  *
- * @param mixed $data JSON data to print
+ * @param array|null $data JSON data to print
  */
-function json_response($data, $status = 'success', $message = null)
+function json_response(array|null $data, string $status = 'success', string|null $message = null): void
 {
     header('Content-Type: application/json; charset=UTF-8');
     header('X-Content-Type-Options: nosniff');
 
     $response = ['status' => $status];
-    if (isset($data)) {
+    if ($data !== null) {
         $response['data'] = $data;
     }
-    if (isset($message)) {
+    if ($message !== null) {
         $response['message'] = $message;
     }
 
@@ -334,7 +334,7 @@ function continueOrFailOnHttpCode(int $httpCode): void
 /**
  * Terminates request with error
  */
-function fail($message, $code = 500)
+function fail(string $message, int $code = 500): never
 {
     http_response_code($code);
     json_response(null, 'error', $message);
