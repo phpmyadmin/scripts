@@ -15,7 +15,7 @@ $curlBaseOpts = [
     CURLOPT_HTTPHEADER => [
         'Content-Type: application/json',
         'Authorization: token ' . GITHUB_TOKEN,
-
+        'Accept: application/vnd.github+json',
     ],
 ];
 
