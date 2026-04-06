@@ -1,5 +1,7 @@
 <?php
-require('/home/demo/scripts/demo/php/config-common.inc.php');
+
+require_once '%CONF_PATH%/config-common.inc.php';
+
 $cfg['ZeroConf'] = false;
 
 $cfg['Servers'][1]['extension'] = 'mysqli';

@@ -102,6 +102,9 @@ STATE_STORAGE="${STATE_STORAGE:-$HOME/.pma-demo-state}"
 mkdir -p "$STATE_STORAGE"
 mkdir -p "$WEB_STORAGE"
 
+debugLog "Sync config-common.inc.php into $WEB_STORAGE"
+cp "$SCRIPTS_FOLDER/demo/php/config-common.inc.php" "$WEB_STORAGE/config-common.inc.php"
+
 # Read variants from versions.ini
 VARIANTS=$(awk '/^variants/ {print $3}' "$SCRIPTS_FOLDER/demo/php/versions.ini")
 
@@ -173,6 +176,8 @@ for VARIANT_DATA in $VARIANTS ; do
         cp "$SCRIPTS_FOLDER/demo/php/config.inc.php" "$WEB_FOLDER/config.inc.php"
     fi
     cp "$SCRIPTS_FOLDER/demo/php/"config.*.inc.php "$WEB_FOLDER/"
+
+    sed -i "s,%CONF_PATH%,$WEB_STORAGE,g" "$WEB_FOLDER/config.inc.php"
 
     debugLog "Changing group owner"
     # Apply permissions
