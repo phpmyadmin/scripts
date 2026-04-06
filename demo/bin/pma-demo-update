@@ -179,10 +179,10 @@ for VARIANT_DATA in $VARIANTS ; do
     chgrp -R "$WEB_GROUP" "$WEB_FOLDER"
 
     # Apply permissions to files and folders
-    debugLog "Changing folder permissions"
-    find "$WEB_FOLDER" -type d -exec chmod 0755 {} \;
-    debugLog "Changing file permissions"
-    find "$WEB_FOLDER" -type f -exec chmod 0644 {} \;
+    debugLog "Changing permissions"
+    # X applies execute/traverse only to directories,
+    # so files get 0644 and directories get 0755.
+    chmod -R "u=rwX,g=rX,o=rX" "$WEB_FOLDER"
 
     debugLog "Making a temp directory"
     # Create writable tmp dir
