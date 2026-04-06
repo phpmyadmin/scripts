@@ -74,7 +74,7 @@ debugLog() {
     echo "$1"
 }
 
-SCRIPTS_FOLDER="$(dirname "$(realpath "$0/../../")")"
+SCRIPTS_FOLDER="$(realpath "$(dirname "$(realpath "$0")")/../../")"
 
 debugLog "Running in $SCRIPTS_FOLDER"
 
