@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Script to update repositories for the demo server
+# Script to install pre-built demo variants on the demo server
+# Fetches tarballs from a build server over HTTP instead of building locally.
 # Requires $HOME/scripts to be a checkout of the scripts repository
 
 # Fail on undefined variables
@@ -12,8 +13,8 @@ set -o pipefail
 
 FORCE_MODE="0"
 QUIET_MODE="0"
-OFFLINE_MODE="0"
 LOG_FILE="/dev/null"
+BUILD_URL=""
 
 # Source: https://stackoverflow.com/a/31024664/5155484
 while [[ $# -gt 0 ]]
@@ -22,8 +23,22 @@ do
     while [[ ${key+x} ]]
     do
         case $key in
-            --offline)
-                OFFLINE_MODE="1"
+            --help)
+                echo "  Options:"
+                echo "    --build-url  URL or local folder path where built tarballs are served from"
+                echo "    --force      Install even if there are no new changes"
+                echo "    --log-file   Where to log the debug log, defaults to /dev/null (but logs are still printed to the screen)"
+                echo "    -q           Quiet mode, no logs are printed to the screen"
+                echo "    "
+                echo "  You can define the following ENV variables:"
+                echo "    WEB_STORAGE    Defaults to ~/.pma-demo-web"
+                echo "    STATE_STORAGE  Defaults to ~/.pma-demo-state"
+                echo "    WEB_GROUP      Defaults to www-data"
+                exit 0
+                ;;
+            --build-url)
+                BUILD_URL="$2"
+                shift # option has parameter
                 ;;
             --force)
                 FORCE_MODE="1"
@@ -37,7 +52,8 @@ do
                 ;;
             *)
                 # unknown option
-                echo "Unknown option: $key" #1>&2
+                echo "Unknown option: $key"
+                echo "Use --help for the list of available options."
                 exit 10
                 ;;
         esac
@@ -47,6 +63,23 @@ do
     shift # option(s) fully processed, proceed to next input argument
 done
 
+if [ -z "$BUILD_URL" ] ; then
+    echo "Missing required argument: --build-url <url>"
+    exit 1
+fi
+
+# Strip trailing slash
+BUILD_URL="${BUILD_URL%/}"
+
+# Allow passing a local directory path instead of an URL
+if [[ "$BUILD_URL" = /* ]] ; then
+    if [ ! -d "$BUILD_URL" ] ; then
+        echo "ERROR: $BUILD_URL is not a directory"
+        exit 1
+    fi
+    BUILD_URL="file://$BUILD_URL"
+fi
+
 debugLog() {
     echo "$1" >> "$LOG_FILE"
     if [ "${QUIET_MODE}" = "1" ] ; then
@@ -55,203 +88,85 @@ debugLog() {
     echo "$1"
 }
 
-SCRIPTS_FOLDER="${SCRIPTS_FOLDER:-$HOME/scripts}"
+SCRIPTS_FOLDER="$(dirname "$(realpath "$0/../../")")"
 
-# Directory where repositories are stored
-GIT_STORAGE="${GIT_STORAGE:-$HOME/.pma-demo}"
+debugLog "Running in $SCRIPTS_FOLDER"
 
-# Directory where built folders are stored
+# Directory where web folders are installed
 WEB_STORAGE="${WEB_STORAGE:-$HOME/.pma-demo-web}"
-# The user group to own the files
+# The user group to own the installed files
 WEB_GROUP="${WEB_GROUP:-www-data}"
+# Directory where the last-installed commit hashes are tracked
+STATE_STORAGE="${STATE_STORAGE:-$HOME/.pma-demo-state}"
 
-# Remote URL of repository to checkout
-REMOTE="${REMOTE:-https://github.com/phpmyadmin/phpmyadmin.git}"
-REMOTE_THEMES="${REMOTE_THEMES:-https://github.com/phpmyadmin/themes.git}"
+mkdir -p "$STATE_STORAGE"
+mkdir -p "$WEB_STORAGE"
 
-# List of repositories to checkout
+# Read variants from versions.ini
 VARIANTS=$(awk '/^variants/ {print $3}' "$SCRIPTS_FOLDER/demo/php/versions.ini")
-THEMES=$(awk '/^themes/ {print $3}' "$SCRIPTS_FOLDER/demo/php/versions.ini")
 
-debugLog "Updating themes"
-
-# Clone / update themes
-if [ -d "$GIT_STORAGE/themes/.git" ] ; then
-    cd "$GIT_STORAGE/themes"
-    # Remove local theme changes
-    git reset --hard -q
-    if [ $OFFLINE_MODE = 0 ] ; then
-        git pull -q
-    fi
-else
-    git clone "$REMOTE_THEMES" "$GIT_STORAGE/themes"
-fi
-
-# Clone / update phpMyAdmin
-if [ -d "$GIT_STORAGE/phpMyAdmin/.git" ] ; then
-    cd "$GIT_STORAGE/phpMyAdmin"
-    # Remove local changes
-    git reset --hard -q
-    if [ $OFFLINE_MODE = 0 ] ; then
-        git fetch --all -p
-    fi
-    git checkout temp 2> /dev/null 1> /dev/null
-else
-    git clone "$REMOTE" "$GIT_STORAGE/phpMyAdmin"
-    git checkout -b temp 2> /dev/null 1> /dev/null
-fi
-
-debugLog "Deleting stale worktrees"
-cd "$GIT_STORAGE/phpMyAdmin"
-
-WORKTREES="$(git worktree list --porcelain | grep -F "worktree" | cut -d ' ' -f 2)"
-
-# Delete stale worktrees
-for WORKTREE_PATH in $WORKTREES ; do
-    if [ "$WORKTREE_PATH" = "$GIT_STORAGE/phpMyAdmin" ] ; then
-        # Skip the current path
-        continue
-    fi
-
-    debugLog "Checking worktree $WORKTREE_PATH"
-    WORKTREE_NAME=${WORKTREE_PATH##*/}
-    for VARIANT_DATA in $VARIANTS ; do
-        VARIANT_NAME=${VARIANT_DATA%%:*}
-        if [ -z "$VARIANT_NAME" ] ; then
-            debugLog "Invalid variant data: $VARIANT_DATA"
-            continue
-        fi
-
-        if [ "$VARIANT_NAME" = "$WORKTREE_NAME" ] ; then
-            # Skip the item
-            continue 2
-        fi
-    done
-    debugLog "Deleting stale worktree $WORKTREE_PATH"
-    if [ -d "$WORKTREE_PATH/.git" ] ; then
-        git worktree remove "$WORKTREE_PATH"
-    else
-        rm -r "$WORKTREE_PATH"
-    fi
-done
-
-unset WORKTREES
-cd - > /dev/null
-
-# Build worktrees
 for VARIANT_DATA in $VARIANTS ; do
-    VARIANT_NAME=${VARIANT_DATA%%:*}
-    VARIANT_BRANCH=${VARIANT_DATA##*:}
+    VARIANT_NAME="${VARIANT_DATA%%:*}"
+    VARIANT_BRANCH="${VARIANT_DATA##*:}"
     if [ -z "$VARIANT_NAME" ] || [ -z "$VARIANT_BRANCH" ] ; then
         debugLog "Invalid variant data: $VARIANT_DATA"
         continue
     fi
 
-    # Only one worktree per branch is possible
-    WORKTREE_PATH="$GIT_STORAGE/$VARIANT_BRANCH"
+    STATE_FILE="$STATE_STORAGE/demo-$VARIANT_NAME.txt"
+    STATE_FILE_TMP="$STATE_FILE.tmp"
+    REMOTE_STATE_URL="$BUILD_URL/demo-$VARIANT_NAME.txt"
 
-    if [ -d "$WORKTREE_PATH" ] ; then
-        debugLog "Updating worktree $VARIANT_BRANCH for $VARIANT_NAME at $WORKTREE_PATH"
-        cd "$WORKTREE_PATH"
-        # Remove local changes
-        git reset --hard -q
-        if [ $OFFLINE_MODE = 0 ] ; then
-            git pull -q
-        fi
-        cd - > /dev/null
-    else
-        debugLog "Creating worktree $VARIANT_BRANCH for $VARIANT_NAME at $WORKTREE_PATH"
-        git worktree add "$WORKTREE_PATH" "$VARIANT_BRANCH"
+    debugLog "Fetching commit from $REMOTE_STATE_URL"
+    if ! curl -sf -o "$STATE_FILE_TMP" "$REMOTE_STATE_URL" ; then
+        debugLog "ERROR: could not fetch $REMOTE_STATE_URL"
+        continue
     fi
-done
+    REMOTE_COMMIT="$(grep -F "commit" "$STATE_FILE_TMP" | cut -f 2)"
 
-# Cleanup worktree folders
-for VARIANT_DATA in $VARIANTS ; do
-    VARIANT_NAME=${VARIANT_DATA%%:*}
-    VARIANT_BRANCH=${VARIANT_DATA##*:}
-    if [ -z "$VARIANT_NAME" ] || [ -z "$VARIANT_BRANCH" ] ; then
-        debugLog "Invalid variant data: $VARIANT_DATA"
+    if [ -z "$REMOTE_COMMIT" ] ; then
+        debugLog "ERROR: no commit found in $REMOTE_STATE_URL"
+        rm "$STATE_FILE_TMP"
         continue
     fi
 
-    WORKTREE_PATH="$GIT_STORAGE/$VARIANT_BRANCH"
-
-    #if [ -d "$WORKTREE_PATH/release" ] ; then
-        #debugLog "Cleaning old release files"
-        #rm -rf "$WORKTREE_PATH/release"
-    #fi
-done
-
-# Build web folders
-for VARIANT_DATA in $VARIANTS ; do
-    VARIANT_NAME=${VARIANT_DATA%%:*}
-    VARIANT_BRANCH=${VARIANT_DATA##*:}
-    if [ -z "$VARIANT_NAME" ] || [ -z "$VARIANT_BRANCH" ] ; then
-        debugLog "Invalid variant data: $VARIANT_DATA"
-        continue
-    fi
-
-    WORKTREE_PATH="$GIT_STORAGE/$VARIANT_BRANCH"
-
-    debugLog "Building from $WORKTREE_PATH"
-    cd "$WORKTREE_PATH"
-    VERSION="$(grep -F "version" package.json | cut -d '"' -f 4)"
-    debugLog "Building version $VERSION from branch $VARIANT_BRANCH"
-
-    SKIP_BUILD=0
-    if [ -f "$WORKTREE_PATH/release/phpMyAdmin-$VERSION.json" ] ; then
-        BUILT_COMMIT="$(grep -F "commit" "$WORKTREE_PATH/release/phpMyAdmin-$VERSION.json" |cut -d '"' -f 4)"
-        debugLog "Already built at commit $BUILT_COMMIT"
-
-        CURRENT_COMMIT=$(git log -n 1 --format=format:'%H')
-        if [ "$CURRENT_COMMIT" = "$BUILT_COMMIT" ] && [ $FORCE_MODE = 0 ] ; then
-            debugLog "Skipping building version $VERSION from branch $VARIANT_BRANCH"
-            SKIP_BUILD=1
+    # Skip if already at this commit
+    if [ -f "$STATE_FILE" ] && [ "$FORCE_MODE" = "0" ] ; then
+        LOCAL_COMMIT="$(grep -F "commit" "$STATE_FILE" | cut -f 2)"
+        if [ "$REMOTE_COMMIT" = "$LOCAL_COMMIT" ] ; then
+            debugLog "Skipping $VARIANT_NAME: already at $REMOTE_COMMIT"
+            rm "$STATE_FILE_TMP"
             continue
         fi
     fi
 
-    RELEASE_SCRIPT="$WORKTREE_PATH/scripts/create-release.sh"
-    THEMES_FOLDER="themes"
-    if [ -f "$WORKTREE_PATH/bin/internal/create-release.sh" ] ; then
-        RELEASE_SCRIPT="$WORKTREE_PATH/bin/internal/create-release.sh"
-        THEMES_FOLDER="public/themes"
-    fi
+    debugLog "Installing $VARIANT_NAME at $REMOTE_COMMIT"
 
-    if [ $SKIP_BUILD = 0 ] ; then
-        SCRIPT_OPTIONS="--daily --no-sign --revision-info --compressions tgz --kits all-languages"
-        if [ "$VARIANT_BRANCH" = "STABLE" ] ; then
-            # Remove this when 5.2.2 is out
-            SCRIPT_OPTIONS="--daily"
-            debugLog "Skipping, the build is broken anyway"
-            continue
-        fi
-        debugLog "Building the release"
-        COMPOSER_DISABLE_NETWORK="$OFFLINE_MODE" "$RELEASE_SCRIPT" "$VERSION" "$VARIANT_BRANCH" $SCRIPT_OPTIONS 2> $LOG_FILE 1> $LOG_FILE
-    fi
-
-    TARBALL_TO_INSTALL="$WORKTREE_PATH/release/phpMyAdmin-$VERSION-all-languages.tar.gz"
-    if [ ! -f "$TARBALL_TO_INSTALL" ] ; then
-        debugLog "Unable to find $TARBALL_TO_INSTALL"
-        continue
-    fi
+    TARBALL_URL="$BUILD_URL/$VARIANT_NAME.tar.gz"
 
     WEB_FOLDER="$WEB_STORAGE/$VARIANT_NAME"
     if [ -d "$WEB_FOLDER" ] ; then
         debugLog "Cleaning up $WEB_FOLDER"
-        rm -rf "$WEB_FOLDER"
+        rm -r "$WEB_FOLDER"
     fi
 
     debugLog "Creating $WEB_FOLDER"
     mkdir "$WEB_FOLDER"
     chgrp "$WEB_GROUP" "$WEB_FOLDER"
 
-    debugLog "Extracting $TARBALL_TO_INSTALL to $WEB_FOLDER"
-    tar -xz --strip-components=1 --directory="${WEB_FOLDER}" -f "${TARBALL_TO_INSTALL}"
+    debugLog "Downloading and extracting $TARBALL_URL into $WEB_FOLDER"
+    if ! curl -sf "$TARBALL_URL" | tar -xz --strip-components=1 --directory="$WEB_FOLDER" ; then
+        debugLog "ERROR: could not download or extract $TARBALL_URL"
+        if [ -d "$WEB_FOLDER" ] ; then
+            rm -r "$WEB_FOLDER"
+        fi
+        rm "$STATE_FILE_TMP"
+        continue
+    fi
 
-    # Symlink configuration
-    FLAVOUR=${VARIANT_NAME#*-}
-    debugLog "Flavour $FLAVOUR, copying configs"
+    # Copy configuration files
+    FLAVOUR="${VARIANT_NAME#*-}"
+    debugLog "Copying config for flavour: $FLAVOUR"
     if [ -f "$SCRIPTS_FOLDER/demo/php/config-$FLAVOUR.inc.php" ] ; then
         cp "$SCRIPTS_FOLDER/demo/php/config-$FLAVOUR.inc.php" "$WEB_FOLDER/config.inc.php"
     else
@@ -259,42 +174,35 @@ for VARIANT_DATA in $VARIANTS ; do
     fi
     cp "$SCRIPTS_FOLDER/demo/php/"config.*.inc.php "$WEB_FOLDER/"
 
-    # Link themes
-    for THEME in $THEMES ; do
-        if [ ! -e "$WEB_FOLDER/$THEMES_FOLDER/$THEME" ] ; then
-            debugLog "Copying theme: $THEME"
-            cp -rp "$GIT_STORAGE/themes/$THEME" "$WEB_FOLDER/$THEMES_FOLDER/$THEME"
-        fi
-    done
-
-    # Apply permissions globally
+    debugLog "Changing group owner"
+    # Apply permissions
     chgrp -R "$WEB_GROUP" "$WEB_FOLDER"
 
     # Apply permissions to files and folders
+    debugLog "Changing folder permissions"
     find "$WEB_FOLDER" -type d -exec chmod 0755 {} \;
+    debugLog "Changing file permissions"
     find "$WEB_FOLDER" -type f -exec chmod 0644 {} \;
 
-    # Create temp dir
+    debugLog "Making a temp directory"
+    # Create writable tmp dir
     mkdir -p "$WEB_FOLDER/tmp/"
     chmod 770 "$WEB_FOLDER/tmp/"
     chgrp "$WEB_GROUP" "$WEB_FOLDER/tmp/"
+
+    # Atomically record the new state only once everything succeeded
+    mv "$STATE_FILE_TMP" "$STATE_FILE"
+
+    debugLog "Installed $VARIANT_NAME"
 done
 
 debugLog "Deleting stale directories"
 
-# Delete stale directories
-find "$WEB_STORAGE" -maxdepth 1 -mindepth 1 -type d | while read DIRNAME ; do
-    FOLDER_NAME=${DIRNAME##*/}
+find "$WEB_STORAGE" -maxdepth 1 -mindepth 1 -type d | while read -r DIRNAME ; do
+    FOLDER_NAME="${DIRNAME##*/}"
 
-    # Build web folders
     for VARIANT_DATA in $VARIANTS ; do
-        VARIANT_NAME=${VARIANT_DATA%%:*}
-        VARIANT_BRANCH=${VARIANT_DATA##*:}
-        if [ -z "$VARIANT_NAME" ] || [ -z "$VARIANT_BRANCH" ] ; then
-            debugLog "Invalid variant data: $VARIANT_DATA"
-            continue
-        fi
-
+        VARIANT_NAME="${VARIANT_DATA%%:*}"
         if [ "$FOLDER_NAME" = "$VARIANT_NAME" ] ; then
             debugLog "Known variant: $FOLDER_NAME"
             continue 2
@@ -302,7 +210,9 @@ find "$WEB_STORAGE" -maxdepth 1 -mindepth 1 -type d | while read DIRNAME ; do
     done
 
     debugLog "Deleting stale variant $FOLDER_NAME"
-    #rm -rf "$DIRNAME"
+    if [ -d "$DIRNAME" ] ; then
+        rm -r "$DIRNAME"
+    fi
 done
 
 debugLog "All done"

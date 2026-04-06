@@ -1,0 +1,297 @@
+#!/bin/bash
+
+# Script to build release tarballs for each demo variant
+# Requires $HOME/scripts to be a checkout of the scripts repository
+# The resulting tarballs and state files are stored in WEB_STORAGE, which
+# should be served over HTTP so that pma-demo-update can consume them.
+
+# Fail on undefined variables
+set -u
+# Fail on failure
+set -e
+# If a script fails, stop before the next pipe
+set -o pipefail
+
+FORCE_MODE="0"
+QUIET_MODE="0"
+OFFLINE_MODE="0"
+LOG_FILE="/dev/null"
+
+# Source: https://stackoverflow.com/a/31024664/5155484
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    while [[ ${key+x} ]]
+    do
+        case $key in
+            --help)
+                echo "  Options:"
+                echo "    --offline  This mode will avoid updating the git repositories"
+                echo "    --force    Build even if there is no new changes"
+                echo "    --log-file Where to log the debug log, defaults to /dev/null (but logs are still printed to the screen)"
+                echo "    -q         Quiet mode, no logs are printed to the screen"
+                echo "    "
+                echo "  You can define the following ENV variables:"
+                echo "    GIT_STORAGE Defaults to ~/.pma-demo-git"
+                echo "    WEB_STORAGE Defaults to ~/.pma-demo-builds"
+                echo "    "
+                echo "  Only used for the first start:"
+                echo "    REMOTE The repository to clone, defaults to https://github.com/phpmyadmin/phpmyadmin.git"
+                echo "    REMOTE_THEMES The themes repository to clone, defaults to https://github.com/phpmyadmin/themes.git"
+                exit 0
+                ;;
+            --offline)
+                OFFLINE_MODE="1"
+                ;;
+            --force)
+                FORCE_MODE="1"
+                ;;
+            -q)
+                QUIET_MODE="1"
+                ;;
+            --log-file)
+                LOG_FILE="$2"
+                shift # option has parameter
+                ;;
+            *)
+                # unknown option
+                echo "Unknown option: $key"
+                echo "Use --help for the list of available options."
+                exit 10
+                ;;
+        esac
+        # prepare for next option in this key, if any
+        [[ "$key" = -? || "$key" == --* ]] && unset key || key="${key/#-?/-}"
+    done
+    shift # option(s) fully processed, proceed to next input argument
+done
+
+debugLog() {
+    echo "$1" >> "$LOG_FILE"
+    if [ "${QUIET_MODE}" = "1" ] ; then
+        return
+    fi
+    echo "$1"
+}
+
+SCRIPTS_FOLDER="$(dirname "$(realpath "$0/../../")")"
+
+debugLog "Running in $SCRIPTS_FOLDER"
+
+# Directory where git repositories and worktrees are stored
+GIT_STORAGE="${GIT_STORAGE:-$HOME/.pma-demo-git}"
+
+# Directory where built tarballs and state files are stored, served over HTTP
+WEB_STORAGE="${WEB_STORAGE:-$HOME/.pma-demo-builds}"
+
+# Remote URLs
+REMOTE="${REMOTE:-https://github.com/phpmyadmin/phpmyadmin.git}"
+REMOTE_THEMES="${REMOTE_THEMES:-https://github.com/phpmyadmin/themes.git}"
+
+# Read variants and themes from versions.ini
+VARIANTS=$(awk '/^variants/ {print $3}' "$SCRIPTS_FOLDER/demo/php/versions.ini")
+THEMES=$(awk '/^themes/ {print $3}' "$SCRIPTS_FOLDER/demo/php/versions.ini")
+
+mkdir -p "$WEB_STORAGE"
+
+# Clone / update themes
+debugLog "Updating themes"
+if [ -d "$GIT_STORAGE/themes/.git" ] ; then
+    cd "$GIT_STORAGE/themes"
+    git reset --hard -q
+    if [ "$OFFLINE_MODE" = "0" ] ; then
+        git pull -q
+    fi
+    cd - > /dev/null
+else
+    git clone "$REMOTE_THEMES" "$GIT_STORAGE/themes"
+fi
+
+# Clone / update phpMyAdmin
+if [ -d "$GIT_STORAGE/phpMyAdmin/.git" ] ; then
+    cd "$GIT_STORAGE/phpMyAdmin"
+    git reset --hard -q
+    if [ "$OFFLINE_MODE" = "0" ] ; then
+        git fetch --all -p
+    fi
+else
+    git clone "$REMOTE" "$GIT_STORAGE/phpMyAdmin"
+    cd "$GIT_STORAGE/phpMyAdmin"
+fi
+# Detach HEAD so no branch is held by the main worktree, leaving all branches free for worktrees
+git checkout --detach -q
+
+debugLog "Deleting stale worktrees"
+cd "$GIT_STORAGE/phpMyAdmin"
+
+WORKTREES="$(git worktree list --porcelain | grep -F "worktree" | cut -d ' ' -f 2)"
+
+# Delete worktrees whose branch is no longer referenced by any variant
+for WORKTREE_PATH in $WORKTREES ; do
+    if [ "$WORKTREE_PATH" = "$GIT_STORAGE/phpMyAdmin" ] ; then
+        continue
+    fi
+
+    WORKTREE_BRANCH="${WORKTREE_PATH##*/}"
+    for VARIANT_DATA in $VARIANTS ; do
+        VARIANT_BRANCH="${VARIANT_DATA##*:}"
+        if [ "$VARIANT_BRANCH" = "$WORKTREE_BRANCH" ] ; then
+            continue 2
+        fi
+    done
+
+    debugLog "Deleting stale worktree $WORKTREE_PATH"
+    if [ -d "$WORKTREE_PATH/.git" ] ; then
+        git worktree remove "$WORKTREE_PATH"
+    else
+        rm -r "$WORKTREE_PATH"
+    fi
+done
+
+unset WORKTREES
+cd - > /dev/null
+
+# Create / update one worktree per branch (deduplicated)
+PROCESSED_BRANCHES=""
+for VARIANT_DATA in $VARIANTS ; do
+    VARIANT_NAME="${VARIANT_DATA%%:*}"
+    VARIANT_BRANCH="${VARIANT_DATA##*:}"
+    if [ -z "$VARIANT_NAME" ] || [ -z "$VARIANT_BRANCH" ] ; then
+        debugLog "Invalid variant data: $VARIANT_DATA"
+        continue
+    fi
+
+    if echo "$PROCESSED_BRANCHES" | grep -qF ":$VARIANT_BRANCH:" ; then
+        continue
+    fi
+    PROCESSED_BRANCHES="$PROCESSED_BRANCHES:$VARIANT_BRANCH:"
+
+    WORKTREE_PATH="$GIT_STORAGE/$VARIANT_BRANCH"
+
+    if [ -d "$WORKTREE_PATH" ] ; then
+        debugLog "Updating worktree $VARIANT_BRANCH at $WORKTREE_PATH"
+        cd "$WORKTREE_PATH"
+        # Remove local changes
+        git reset --hard -q
+        if [ "$OFFLINE_MODE" = "0" ] ; then
+            git pull -q
+        fi
+        cd - > /dev/null
+    else
+        debugLog "Creating worktree $VARIANT_BRANCH at $WORKTREE_PATH"
+        cd "$GIT_STORAGE/phpMyAdmin"
+        git worktree add "$WORKTREE_PATH" "$VARIANT_BRANCH"
+        cd - > /dev/null
+    fi
+done
+unset PROCESSED_BRANCHES
+
+# Build once per branch, publish per variant
+PROCESSED_BRANCHES=""
+for VARIANT_DATA in $VARIANTS ; do
+    VARIANT_NAME="${VARIANT_DATA%%:*}"
+    VARIANT_BRANCH="${VARIANT_DATA##*:}"
+    if [ -z "$VARIANT_NAME" ] || [ -z "$VARIANT_BRANCH" ] ; then
+        debugLog "Invalid variant data: $VARIANT_DATA"
+        continue
+    fi
+
+    WORKTREE_PATH="$GIT_STORAGE/$VARIANT_BRANCH"
+    BRANCH_TARBALL="$WEB_STORAGE/.branch-$VARIANT_BRANCH.tar.gz"
+    BRANCH_STATE_FILE="$WEB_STORAGE/.branch-$VARIANT_BRANCH.txt"
+    STATE_FILE="$WEB_STORAGE/demo-$VARIANT_NAME.txt"
+
+    cd "$WORKTREE_PATH"
+    CURRENT_COMMIT="$(git log -n 1 --format=format:'%H')"
+
+    if ! echo "$PROCESSED_BRANCHES" | grep -qF ":$VARIANT_BRANCH:" ; then
+        PROCESSED_BRANCHES="$PROCESSED_BRANCHES:$VARIANT_BRANCH:"
+
+        SKIP_BRANCH_BUILD="0"
+        # Skip build if the commit has not changed since last build
+        if [ -f "$BRANCH_STATE_FILE" ] && [ "$FORCE_MODE" = "0" ] ; then
+            BUILT_COMMIT="$(grep -F "commit" "$BRANCH_STATE_FILE" | cut -f 2)"
+            if [ "$CURRENT_COMMIT" = "$BUILT_COMMIT" ] ; then
+                debugLog "Skipping build for branch $VARIANT_BRANCH: already built at $CURRENT_COMMIT ($BRANCH_TARBALL)"
+                SKIP_BRANCH_BUILD="1"
+            fi
+        fi
+
+        if [ "$SKIP_BRANCH_BUILD" = "0" ] ; then
+            VERSION="$(grep -F '"version"' package.json | cut -d '"' -f 4)"
+            debugLog "Building $VARIANT_BRANCH (version $VERSION, commit $CURRENT_COMMIT)"
+
+            RELEASE_SCRIPT="$WORKTREE_PATH/bin/internal/create-release.sh"
+
+            if [ ! -f "$RELEASE_SCRIPT" ]; then
+                # 5.2 versions and before
+                RELEASE_SCRIPT="$WORKTREE_PATH/scripts/create-release.sh"
+            fi
+
+            RELEASE_OPTIONS="--daily --no-sign --revision-info --compressions tgz --kits all-languages"
+
+            "$RELEASE_SCRIPT" "$VERSION" "$VARIANT_BRANCH" $RELEASE_OPTIONS 2>&1 | while IFS= read -r line ; do
+                debugLog "[build][$VERSION/$VARIANT_BRANCH] $line"
+            done
+
+            RELEASE_TARBALL="$WORKTREE_PATH/release/phpMyAdmin-$VERSION-all-languages.tar.gz"
+            if [ ! -f "$RELEASE_TARBALL" ] ; then
+                debugLog "ERROR: expected tarball not found at $RELEASE_TARBALL"
+                cd - > /dev/null
+                continue
+            fi
+
+            # Inject extra themes into the tarball
+            TEMP_DIR="$WEB_STORAGE/.tmp-$VARIANT_BRANCH"
+            EXTRACTED_DIRNAME="phpMyAdmin-$VERSION-all-languages"
+
+            if [ -d "$TEMP_DIR" ] ; then
+                rm -r "$TEMP_DIR"
+            fi
+            mkdir "$TEMP_DIR"
+
+            debugLog "Injecting themes into tarball for $VARIANT_BRANCH"
+            tar -xz --directory="$TEMP_DIR" -f "$RELEASE_TARBALL"
+
+            if [ -d "$TEMP_DIR/$EXTRACTED_DIRNAME/public/themes" ] ; then
+                THEMES_FOLDER="$TEMP_DIR/$EXTRACTED_DIRNAME/public/themes"
+            else
+                THEMES_FOLDER="$TEMP_DIR/$EXTRACTED_DIRNAME/themes"
+            fi
+
+            for THEME in $THEMES ; do
+                if [ ! -e "$THEMES_FOLDER/$THEME" ] ; then
+                    debugLog "Adding theme: $THEME"
+                    cp -rp "$GIT_STORAGE/themes/$THEME" "$THEMES_FOLDER/$THEME"
+                fi
+            done
+
+            tar -czf "$BRANCH_TARBALL" -C "$TEMP_DIR" "$EXTRACTED_DIRNAME"
+            if [ -d "$TEMP_DIR" ] ; then
+                rm -r "$TEMP_DIR"
+            fi
+
+            printf "commit\t%s\n" "$CURRENT_COMMIT" > "$BRANCH_STATE_FILE"
+
+            debugLog "Built $VARIANT_BRANCH at $BRANCH_TARBALL"
+        fi
+    fi
+
+    # Copy branch tarball and state to the variant's public slot
+    if [ -f "$STATE_FILE" ] && [ "$FORCE_MODE" = "0" ] ; then
+        VARIANT_COMMIT="$(grep -F "commit" "$STATE_FILE" | cut -f 2)"
+        if [ "$CURRENT_COMMIT" = "$VARIANT_COMMIT" ] ; then
+            debugLog "Skipping $VARIANT_NAME: already at $CURRENT_COMMIT"
+            cd - > /dev/null
+            continue
+        fi
+    fi
+    ln -sfr "$BRANCH_TARBALL" "$WEB_STORAGE/$VARIANT_NAME.tar.gz"
+    ln -sfr "$BRANCH_STATE_FILE" "$STATE_FILE"
+    debugLog "Published $VARIANT_NAME at $WEB_STORAGE/$VARIANT_NAME.tar.gz ($CURRENT_COMMIT)"
+
+    cd - > /dev/null
+done
+unset PROCESSED_BRANCHES
+
+debugLog "All done"
