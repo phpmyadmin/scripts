@@ -169,6 +169,12 @@ for VARIANT_DATA in $VARIANTS ; do
 
     WORKTREE_PATH="$GIT_STORAGE/$VARIANT_BRANCH"
 
+    # If the directory exists but git no longer recognises it (e.g. after worktree prune), remove it
+    if [ -d "$WORKTREE_PATH" ] && ! git -C "$WORKTREE_PATH" rev-parse --git-dir > /dev/null 2>&1 ; then
+        debugLog "Removing stale worktree directory $WORKTREE_PATH"
+        rm -r "$WORKTREE_PATH"
+    fi
+
     if [ -d "$WORKTREE_PATH" ] ; then
         debugLog "Updating worktree $VARIANT_BRANCH at $WORKTREE_PATH"
         cd "$WORKTREE_PATH"
