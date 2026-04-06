@@ -125,10 +125,11 @@ debugLog "Deleting stale worktrees"
 cd "$GIT_STORAGE/phpMyAdmin"
 
 WORKTREES="$(git worktree list --porcelain | grep -F "worktree" | cut -d ' ' -f 2)"
+MAIN_WORKTREE="$(echo "$WORKTREES" | head -n 1)"
 
 # Delete worktrees whose branch is no longer referenced by any variant
 for WORKTREE_PATH in $WORKTREES ; do
-    if [ "$WORKTREE_PATH" = "$GIT_STORAGE/phpMyAdmin" ] ; then
+    if [ "$WORKTREE_PATH" = "$MAIN_WORKTREE" ] ; then
         continue
     fi
 
