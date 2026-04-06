@@ -4,6 +4,18 @@
 set -e
 set -u
 
+if ! [ -x "$(command -v wlc)" ]; then
+    echo "Please install the Weblate client. Debian/Ubuntu package: wlc"
+    echo "Or using PIP: https://github.com/WeblateOrg/wlc#pip-installation"
+    exit 1
+fi
+
+if [ ! -f ~/.config/weblate ]; then
+    echo "Please add a Weblate client API key to a file located at ~/.config/weblate"
+    echo "See: https://github.com/WeblateOrg/wlc#usage"
+    exit 1
+fi
+
 # Updates phpMyAdmin documentation
 
 if [ -z "${1:-}" ] || [ ! -d "${1:-}" ]; then
