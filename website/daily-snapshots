@@ -13,8 +13,8 @@ cd "${1}"
 # Delete any local changes
 git reset --hard
 
-# Update to have latest create-release.sh
-git pull -q
+# Fetch the repository
+git fetch --all -p
 
 # Remove current release files
 rm -rf release
@@ -37,6 +37,7 @@ git reset --hard
 # Force an update
 git pull --ff-only
 ./bin/internal/create-release.sh --daily 6.0+snapshot master
+git checkout -
 
 # Storage directory
 mkdir -p /mnt/storage/files/snapshots/
