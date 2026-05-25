@@ -10,6 +10,7 @@ define('PMAHOOKS', true);
 
 require_once __DIR__ . '/lib/github.php';
 require_once __DIR__ . '/lib/github_client.php';
+require_once __DIR__ . '/lib/commits_handler.php';
 
 github_verify_post();
 
@@ -84,13 +85,7 @@ if ($data['action'] == 'closed') {
 
 /* Check number of commits */
 if ($data['pull_request']['commits'] > 50) {
-    $comments = $client->issueComments($data['repository']['full_name'], $data['pull_request']['number']);
-    foreach ($comments as $comment) {
-        if (strpos($comment['body'], '<!-- PMABOT:COMMITS -->') !== false) {
-            die;
-        }
-    }
-    $client->commentPull($data['repository']['full_name'], $data['pull_request']['number'], $message_commits);
+    maybe_post_commits_warning($data, $message_commits, $client);
     die;
 }
 
