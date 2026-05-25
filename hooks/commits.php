@@ -9,8 +9,11 @@ error_reporting(E_ALL);
 define('PMAHOOKS', true);
 
 require_once __DIR__ . '/lib/github.php';
+require_once __DIR__ . '/lib/github_client.php';
 
 github_verify_post();
+
+$client = new GithubApiClient();
 
 $contributing_url = 'https://github.com/phpmyadmin/phpmyadmin/blob/master/CONTRIBUTING.md';
 $guidelines_url = 'https://github.com/phpmyadmin/phpmyadmin/wiki/Developer_guidelines';
@@ -81,13 +84,13 @@ if ($data['action'] == 'closed') {
 
 /* Check number of commits */
 if ($data['pull_request']['commits'] > 50) {
-    $comments = github_issue_comments($data['repository']['full_name'], $data['pull_request']['number']);
+    $comments = $client->issueComments($data['repository']['full_name'], $data['pull_request']['number']);
     foreach ($comments as $comment) {
         if (strpos($comment['body'], '<!-- PMABOT:COMMITS -->') !== false) {
             die;
         }
     }
-    github_comment_pull($data['repository']['full_name'], $data['pull_request']['number'], $message_commits);
+    $client->commentPull($data['repository']['full_name'], $data['pull_request']['number'], $message_commits);
     die;
 }
 
@@ -95,7 +98,7 @@ if ($data['pull_request']['commits'] > 50) {
 $repo_name = $data['pull_request']['head']['repo']['full_name'];
 
 /* List commits in the pull request */
-$commits = github_pull_commits($data['repository']['full_name'], $data['pull_request']['number']);
+$commits = $client->pullCommits($data['repository']['full_name'], $data['pull_request']['number']);
 
 $comments = [];
 
@@ -107,7 +110,7 @@ foreach ($commits as $commit) {
     }
 
     /* Fetch current comments */
-    $current_comments = github_commit_comments($repo_name, $commit['sha']);
+    $current_comments = $client->commitComments($repo_name, $commit['sha']);
     $comments_text = '';
     foreach ($current_comments as $comment) {
         $comments_text .= $comment['body'];
@@ -116,7 +119,7 @@ foreach ($commits as $commit) {
     /* Check for missing SOB */
     if (! preg_match("@\nSigned-off-by:@i", $commit['commit']['message'])) {
         if (strpos($comments_text, '<!-- PMABOT:SOB -->') === false) {
-            github_comment_commit($repo_name, $commit['sha'], $message_sob);
+            $client->commentCommit($repo_name, $commit['sha'], $message_sob);
             $comments[] = [
                 'type' => 'SOB',
                 'commit' => $commit['sha'],
@@ -127,7 +130,7 @@ foreach ($commits as $commit) {
         /* Check for invalid SOB */
         if (! preg_match("@\nSigned-off-by: +(?:[\p{L}\-\.]+\s){2,}<.*>@iu", $commit['commit']['message'])) {
             if (strpos($comments_text, '<!-- PMABOT:SOB:INVALID -->') === false) {
-                github_comment_commit($repo_name, $commit['sha'], $message_sob_invalid);
+                $client->commentCommit($repo_name, $commit['sha'], $message_sob_invalid);
                 $comments[] = [
                     'type' => 'SOB',
                     'commit' => $commit['sha'],
@@ -138,7 +141,7 @@ foreach ($commits as $commit) {
     }
 
     /* Check for tab or trailing whitespace in diff */
-    $detail = github_commit_detail($data['repository']['full_name'], $commit['sha']);
+    $detail = $client->commitDetail($data['repository']['full_name'], $commit['sha']);
     $files_tab = [];
     $files_space = [];
     $files_eol = [];
@@ -164,7 +167,7 @@ foreach ($commits as $commit) {
         $files_eol[] = $file['filename'];
     }
     if (count($files_tab) && strpos($comments_text, 'PMABOT:TAB') === false) {
-        github_comment_commit($repo_name, $commit['sha'], $message_tab . implode(', ', $files_tab));
+        $client->commentCommit($repo_name, $commit['sha'], $message_tab . implode(', ', $files_tab));
         $comments[] = [
             'type' => 'TAB',
             'commit' => $commit['sha'],
@@ -172,7 +175,7 @@ foreach ($commits as $commit) {
         ];
     }
     if (count($files_space) && strpos($comments_text, 'PMABOT:SPACE') === false) {
-        github_comment_commit($repo_name, $commit['sha'], $message_space . implode(', ', $files_space));
+        $client->commentCommit($repo_name, $commit['sha'], $message_space . implode(', ', $files_space));
         $comments[] = [
             'type' => 'SPACE',
             'commit' => $commit['sha'],
@@ -183,7 +186,7 @@ foreach ($commits as $commit) {
         continue;
     }
 
-    github_comment_commit($repo_name, $commit['sha'], $message_eol . implode(', ', $files_eol));
+    $client->commentCommit($repo_name, $commit['sha'], $message_eol . implode(', ', $files_eol));
     $comments[] = [
         'type' => 'EOL',
         'commit' => $commit['sha'],
