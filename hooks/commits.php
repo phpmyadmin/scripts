@@ -81,6 +81,12 @@ if ($data['action'] == 'closed') {
 
 /* Check number of commits */
 if ($data['pull_request']['commits'] > 50) {
+    $comments = github_issue_comments($data['repository']['full_name'], $data['pull_request']['number']);
+    foreach ($comments as $comment) {
+        if (strpos($comment['body'], '<!-- PMABOT:COMMITS -->') !== false) {
+            die;
+        }
+    }
     github_comment_pull($data['repository']['full_name'], $data['pull_request']['number'], $message_commits);
     die;
 }
