@@ -1,4 +1,8 @@
 #!/bin/sh
+
+# Symlinked in /etc/cron.daily/
+# Use: ln -s /home/<USER>/scripts/backup/backup /etc/cron.daily/
+
 export BORG_PASSPHRASE=`cat /etc/borg-key`
 
 # Create new backup
