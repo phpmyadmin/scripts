@@ -12,6 +12,7 @@ error_reporting(E_ALL);
 define('PMAHOOKS', true);
 
 require_once __DIR__ . '/lib/github.php';
+require_once __DIR__ . '/lib/push_handler.php';
 
 if ( !is_file(__DIR__ . '/vendor/autoload.php')) {
     fail('Run composer install');
@@ -33,6 +34,13 @@ if (json_last_error() !== 0) {
 
 if (isset($inputData->zen) && isset($inputData->hook) && isset($inputData->hook_id)) {
     json_response(array('pong' => true));
+    die();
+}
+
+/* Members are allowed to push their own branches, they are not announced */
+$pusherUsername = $inputData->sender->login ?? $inputData->pusher->name ?? null;
+if (is_member_branch($inputData->ref ?? '', $pusherUsername)) {
+    json_response(null, 'success', 'Ignored the push on the member branch: ' . $inputData->ref);
     die();
 }
 

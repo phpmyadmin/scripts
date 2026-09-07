@@ -38,3 +38,12 @@ are in a good shape:
     * tab indentation
     * DOS end of lines
     * trailing whitespace
+
+Push notifier
+-------------
+
+The ``push.php`` is a GitHub hook sending an email for every push.
+
+Pushes on member branches are ignored: a branch named ``<pusher>/<topic>``
+(for example ``williamdes/fix-tests`` pushed by ``williamdes``) is considered
+a personal work in progress branch and triggers no email.
