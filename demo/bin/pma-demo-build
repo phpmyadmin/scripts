@@ -124,7 +124,11 @@ git checkout --detach -q
 debugLog "Deleting stale worktrees"
 cd "$GIT_STORAGE/phpMyAdmin"
 
-WORKTREES="$(git worktree list --porcelain | grep -F "worktree" | cut -d ' ' -f 2)"
+# Forget the worktrees whose directory is gone, git keeps listing them
+# otherwise and we would try to remove a path that does not exist anymore
+git worktree prune
+
+WORKTREES="$(git worktree list --porcelain | awk '/^worktree / {print $2}')"
 MAIN_WORKTREE="$(echo "$WORKTREES" | head -n 1)"
 
 # Delete worktrees whose branch is no longer referenced by any variant
@@ -142,11 +146,15 @@ for WORKTREE_PATH in $WORKTREES ; do
     done
 
     debugLog "Deleting stale worktree $WORKTREE_PATH"
-    if [ -d "$WORKTREE_PATH/.git" ] ; then
-        git worktree remove "$WORKTREE_PATH"
-    else
+    # A linked worktree has a .git file, only the main one has a .git directory
+    if [ -e "$WORKTREE_PATH/.git" ] ; then
+        git worktree remove --force "$WORKTREE_PATH"
+    elif [ -d "$WORKTREE_PATH" ] ; then
         rm -r "$WORKTREE_PATH"
     fi
+    # Drop the registration, otherwise the next run tries to remove a
+    # directory that does not exist anymore
+    git worktree prune
 done
 
 unset WORKTREES
@@ -173,6 +181,8 @@ for VARIANT_DATA in $VARIANTS ; do
     if [ -d "$WORKTREE_PATH" ] && ! git -C "$WORKTREE_PATH" rev-parse --git-dir > /dev/null 2>&1 ; then
         debugLog "Removing stale worktree directory $WORKTREE_PATH"
         rm -r "$WORKTREE_PATH"
+        # Drop the leftover registration, see the stale worktrees loop above
+        git worktree prune
     fi
 
     if [ -d "$WORKTREE_PATH" ] ; then
