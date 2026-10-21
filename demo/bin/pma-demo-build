@@ -249,9 +249,24 @@ for VARIANT_DATA in $VARIANTS ; do
 
             RELEASE_OPTIONS="--daily --no-sign --revision-info --compressions tgz --kits all-languages"
 
-            "$RELEASE_SCRIPT" "$VERSION" "$VARIANT_BRANCH" $RELEASE_OPTIONS 2>&1 | while IFS= read -r line ; do
+            # The release script builds in release/ inside the worktree and
+            # refuses to start when a previous run left it behind. It is only
+            # build output, and the worktree registration it leaves may be
+            # gone already, so wipe it instead of asking to move it away.
+            if [ -d "$WORKTREE_PATH/release" ] ; then
+                debugLog "Removing the release directory left by a previous run: $WORKTREE_PATH/release"
+                rm -r "$WORKTREE_PATH/release"
+                git -C "$WORKTREE_PATH" worktree prune
+            fi
+
+            # One failing branch must not stop the others from being published
+            if ! "$RELEASE_SCRIPT" "$VERSION" "$VARIANT_BRANCH" $RELEASE_OPTIONS 2>&1 | while IFS= read -r line ; do
                 debugLog "[build][$VERSION/$VARIANT_BRANCH] $line"
-            done
+            done ; then
+                debugLog "ERROR: the release script failed for $VARIANT_BRANCH, skipping that build"
+                cd - > /dev/null
+                continue
+            fi
 
             RELEASE_TARBALL="$WORKTREE_PATH/release/phpMyAdmin-$VERSION-all-languages.tar.gz"
             if [ ! -f "$RELEASE_TARBALL" ] ; then
