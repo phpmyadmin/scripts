@@ -29,8 +29,6 @@ fi
 
 test_version() {
 	ver=$1
-  nodots=${ver//[-.]/}
-  container=ptest-$nodots
   for flavor in "$ver" "$ver-fpm" "$ver-fpm-alpine"
   do
     if [ "$verbose" == true ]
@@ -38,11 +36,7 @@ test_version() {
       echo "Processing $flavor"
     fi
 
-    docker pull -q phpmyadmin/phpmyadmin:"$flavor" > /dev/null
-    docker run --name "$container" -d phpmyadmin/phpmyadmin:"$flavor" > /dev/null
-    docker exec -t "$container" grep "$ver" ChangeLog > /dev/null || echo "Failed to find version $ver in $container"
-    docker container stop "$container" > /dev/null
-    docker container rm "$container" > /dev/null
+    docker run --quiet --pull always --entrypoint /bin/cat --rm phpmyadmin:$flavor ChangeLog > /dev/null || echo "Failed to find version $ver in $flavor"
   done
 }
 
