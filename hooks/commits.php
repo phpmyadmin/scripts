@@ -80,13 +80,13 @@ if (! isset($data['pull_request']) || ! isset($data['action'])) {
 
 /* We don't care about closed requests */
 if ($data['action'] == 'closed') {
-    die;
+    no_content_response();
 }
 
 /* Check number of commits */
 if ($data['pull_request']['commits'] > 50) {
     maybe_post_commits_warning($data, $message_commits, $client);
-    die;
+    no_content_response();
 }
 
 /* Parse repository name */

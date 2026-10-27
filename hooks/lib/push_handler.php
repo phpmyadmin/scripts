@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/http.php';
+
 if (! defined('PMAHOOKS')) {
     fail('Invalid invocation!');
 }

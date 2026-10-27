@@ -3,6 +3,8 @@
  * GitHub operations layer.
  */
 
+require_once __DIR__ . '/http.php';
+
 if (! defined('PMAHOOKS')) {
     fail('Invalid invocation!');
 }
@@ -301,43 +303,4 @@ function trigger_docs_render(): void
 {
     $file = fopen(DOCS_HOOK, 'w');
     fclose($file);
-}
-
-/**
- * Issues JSON response
- *
- * @param array|null $data JSON data to print
- */
-function json_response(array|null $data, string $status = 'success', string|null $message = null): void
-{
-    header('Content-Type: application/json; charset=UTF-8');
-    header('X-Content-Type-Options: nosniff');
-
-    $response = ['status' => $status];
-    if ($data !== null) {
-        $response['data'] = $data;
-    }
-    if ($message !== null) {
-        $response['message'] = $message;
-    }
-
-    echo json_encode($response, JSON_PRETTY_PRINT);
-}
-
-function continueOrFailOnHttpCode(int $httpCode): void
-{
-    if ($httpCode > 204) {
-        fail('Request failed with a code ' . $httpCode);
-    }
-}
-
-/**
- * Terminates request with error
- */
-function fail(string $message, int $code = 500): never
-{
-    http_response_code($code);
-    json_response(null, 'error', $message);
-
-    die;
 }

@@ -10,3 +10,5 @@ define('PMAHOOKS', true);
 require_once __DIR__ . '/lib/github.php';
 
 trigger_docs_render();
+
+no_content_response();

@@ -12,3 +12,5 @@ require_once __DIR__ . '/lib/github.php';
 github_verify_post();
 
 trigger_website_render();
+
+no_content_response();
