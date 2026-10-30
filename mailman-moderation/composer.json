@@ -1,0 +1,16 @@
+{
+    "name": "phpmyadmin/scripts",
+    "description": "Various scripts used to administer phpMyAdmin infrastructure",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "directorytree/imapengine": "^1.25",
+        "ext-ctype": "*",
+        "ext-curl": "*",
+        "ext-mbstring": "*",
+        "php": "^8.4"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
