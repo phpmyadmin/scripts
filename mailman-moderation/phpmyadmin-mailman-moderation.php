@@ -247,6 +247,15 @@ class MailmanModeration
     /** @var list<int> */
     private array $requestIds = [];
     /**
+     * Ids that came from a range such as 260-348.
+     *
+     * A range covers whatever happens to be held; the gaps are not a mistake. An
+     * id typed on its own is a specific request, so its absence is an error.
+     *
+     * @var array<int, true>
+     */
+    private array $rangeIds = [];
+    /**
      * Verdicts --action names, e.g. "ban,accept".
      *
      * Naming a whole class is a deliberate, explicit choice: it is never implied by
@@ -446,6 +455,7 @@ class MailmanModeration
                         }
                         for ($id = $from; $id <= $to; $id++) {
                             $this->requestIds[] = $id;
+                            $this->rangeIds[$id] = true;
                         }
                         continue;
                     }
@@ -2567,14 +2577,25 @@ class MailmanModeration
                 fn (array $entry): bool => in_array($entry['id'], $this->requestIds, true)
             ));
 
-        // A named id that is not in the queue would otherwise produce an empty
-        // table and exit 0: the operator asked for a specific message, was given
-        // success, and nothing happened. Say which ids were not found.
+        // Gaps inside a range are normal: 260-348 covers whatever is held. Gaps in
+        // an id typed on its own are a mistake, because the operator asked for one
+        // specific message. Only the second aborts.
         $missing = array_values(array_diff($this->requestIds, array_column($wanted, 'id')));
-        if ($missing !== []) {
-            $ids = implode(', ', array_map(static fn (int $id): string => (string) $id, $missing));
+        $missingExplicit = array_values(array_filter(
+            $missing,
+            fn (int $id): bool => ! isset($this->rangeIds[$id])
+        ));
+        $missingInRange = count($missing) - count($missingExplicit);
+        if ($missingInRange > 0) {
+            fwrite(STDERR, $missingInRange . ' id(s) in the range are not held; skipped' . PHP_EOL);
+        }
+        if ($missingExplicit !== []) {
+            $ids = implode(', ', array_map(static fn (int $id): string => (string) $id, $missingExplicit));
             $this->quitError('Not in the held queue: ' . $ids
                 . PHP_EOL . 'Nothing was read. Run without --request-id to list what is held.');
+        }
+        if ($wanted === []) {
+            $this->quitError('None of the requested ids are held. Nothing was read.');
         }
         $step('fetching ' . count($wanted) . ' message body/bodies and scoring ...');
 
