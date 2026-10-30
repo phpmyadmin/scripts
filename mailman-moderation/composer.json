@@ -12,5 +12,11 @@
     },
     "config": {
         "sort-packages": true
+    },
+    "autoload": {
+        "classmap": [
+            "HttpFailure.php",
+            "BanRefused.php"
+        ]
     }
 }

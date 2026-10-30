@@ -3,6 +3,20 @@
 
 declare(strict_types=1);
 
+// A standalone CLI script, like every other script in this repository: the file
+// name follows the repository convention (lowercase, hyphenated) rather than the
+// class name, and the script is not namespaced so PHP_EOL stays readable. Those
+// rules are disabled here rather than satisfied by renaming the command that every
+// caller types.
+// phpcs:disable PSR1.Classes.ClassDeclaration.MultipleClasses
+// phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+// phpcs:disable PSR1.Classes.ClassDeclaration.ShortName
+// phpcs:disable PHPCompatibility.Constants.FallbackNamespace
+// phpcs:disable PSR1.Files.SideEffects.FoundWithSymbols
+use DirectoryTree\ImapEngine\FileMessage;
+use PhpMyAdmin\Scripts\MailmanModeration\BanRefused;
+use PhpMyAdmin\Scripts\MailmanModeration\HttpFailure;
+
 if (PHP_SAPI !== 'cli') {
     exit;
 }
@@ -18,9 +32,8 @@ if (! is_file($autoload)) {
     fwrite(STDERR, 'Missing dependencies, run "composer install" in this directory.' . PHP_EOL);
     exit(1);
 }
-require $autoload;
 
-use DirectoryTree\ImapEngine\FileMessage;
+require $autoload;
 
 /**
  * Triage and moderate the phpMyAdmin mailing-list moderation queues.
@@ -48,28 +61,7 @@ use DirectoryTree\ImapEngine\FileMessage;
  *   ledger = path/to/mailman-moderation-ledger.jsonl
  */
 
-/**
- * A request that never produced an HTTP answer.
- *
- * Distinct from a 4xx/5xx, which IS an answer. This is thrown rather than exiting
- * so that act() can record the failure and continue with the remaining messages;
- * outside act() it propagates and ends the run, which is the same outcome as
- * before.
- */
-class HttpFailure extends RuntimeException
-{
-}
-
-/**
- * A ban value the tool refuses to issue.
- *
- * Thrown rather than exiting so that a single unusable address cannot abandon a
- * batch; outside a batch it ends the run with the same message as before.
- */
-class BanRefused extends RuntimeException
-{
-}
-
+// phpcs:ignore Squiz.Classes.ClassFileName.NoMatch
 class MailmanModeration
 {
     private const DEFAULT_BASE = 'https://lists.phpmyadmin.net/mailman3';
@@ -77,10 +69,12 @@ class MailmanModeration
 
     /** Verdicts used in the plan and in --json; see verdictLabel() for output. */
     private const VERDICT_BAN = 'BAN';
+
     /** Phishing: no judgement needed, so it is acted on rather than reviewed. */
     private const VERDICT_DISCARD = 'DISCARD';
     private const VERDICT_REVIEW = 'REVIEW';
     private const VERDICT_BANNED = 'ALREADY-BANNED';
+
     /** A trusted domain with nothing found against it: let it through. */
     private const VERDICT_ACCEPT = 'ACCEPT';
 
@@ -101,6 +95,7 @@ class MailmanModeration
     /** Site-wide bans are read page by page, independent of --limit. */
     private const BANS_PER_PAGE = 200;
     private const BANS_MAX_PAGES = 20;
+
     /** Held queue is read in full: the per-domain counts depend on it. */
     private const HELD_MAX = 1000;
     private const PRIVATE_DIR = __DIR__ . '/../../private';
@@ -134,8 +129,10 @@ class MailmanModeration
     private const DISPOSABLE_URL = 'https://raw.githubusercontent.com/crowdsecurity/sec-lists/master/appsec/disposable_email_domains.data';
     private const FIREHOL_URL = 'https://iplists.firehol.org/files/firehol_level1.netset';
     private const FEED_MAX_AGE = 86400;
+
     /** Transport retries per request; a dropped connection is not an answer. */
     private const HTTP_ATTEMPTS = 4;
+
     /**
      * Gap between requests. The server starts dropping connections when its
      * moderation queue is polled quickly, and this runs a request per message.
@@ -167,6 +164,7 @@ class MailmanModeration
 
     /** How wide a line of REASON text may get before it wraps. */
     private const REASON_WIDTH = 38;
+
     /**
      * Display columns before the REASON column.
      *
@@ -303,6 +301,7 @@ class MailmanModeration
         foreach (['curl', 'mbstring', 'ctype', 'json'] as $extension) {
             $this->checkExt($extension);
         }
+
         $this->readConfig();
         $this->ledger = $this->expandTilde($this->ledger);
         $this->loadReputation();
@@ -311,6 +310,7 @@ class MailmanModeration
         if ($banChange !== null) {
             $this->refuseIfBanningTrustedDomain($banChange[0]);
         }
+
         $this->disposableSet = $this->loadDisposableSet();
         $this->blockedRanges = $this->loadBlockedRanges();
         $this->login();
@@ -320,6 +320,7 @@ class MailmanModeration
 
             return;
         }
+
         if ($banChange !== null) {
             exit($this->applyBanChange($banChange[0], $banChange[1]) ? 0 : 1);
         }
@@ -336,6 +337,7 @@ class MailmanModeration
         if ($this->applyChanges) {
             return $target;
         }
+
         echo 'DRY-RUN: would ' . $what . ' ' . $target . ' on ' . $this->list . PHP_EOL;
         echo 'nothing was changed; add --apply to perform it.' . PHP_EOL;
         // 0: nothing is wrong, there is simply nothing to commit to. Exit 2 means
@@ -343,17 +345,12 @@ class MailmanModeration
         exit(0);
     }
 
-    /**
-     * @source https://compwright.com/2013-09-03/tilde-expansion-in-php/
-     */
+    /** @source https://compwright.com/2013-09-03/tilde-expansion-in-php/ */
     private function expandTilde(string $path): string
     {
         // Only a LEADING tilde is a home reference. str_replace() would rewrite
         // "~" anywhere in the path, quietly mangling it.
-        if (
-            function_exists('posix_getuid')
-            && ($path === '~' || str_starts_with($path, '~/'))
-        ) {
+        if (function_exists('posix_getuid') && ($path === '~' || str_starts_with($path, '~/'))) {
             /** @var array{dir: string} $info */
             $info = posix_getpwuid(posix_getuid());
 
@@ -405,6 +402,7 @@ class MailmanModeration
                     if (! isset($map[$name])) {
                         $this->quitError('--action takes ban, already-banned, discard or accept; got "' . $name . '".');
                     }
+
                     $this->actions[] = $map[$name];
                 }
             } elseif ($arg === '--silent') {
@@ -419,6 +417,7 @@ class MailmanModeration
                 if (! in_array($scope, ['list', 'global', 'all'], true)) {
                     $this->quitError('--show-bans takes list, global or all; got "' . $scope . '".');
                 }
+
                 $this->showBans = $scope;
             } elseif (str_starts_with($arg, '--config=')) {
                 $this->configFile = substr($arg, 9);
@@ -427,6 +426,7 @@ class MailmanModeration
                 if ($name === '' || str_contains($name, '@') !== true) {
                     $this->quitError('--list takes a list address, got "' . $name . '".');
                 }
+
                 $this->list = $name;
                 $this->listGiven = true;
             } elseif (str_starts_with($arg, '--limit=')) {
@@ -434,6 +434,7 @@ class MailmanModeration
                 if (preg_match('/^[1-9]\d*$/', $raw) !== 1) {
                     $this->quitError('--limit takes a positive integer, got "' . $raw . '".');
                 }
+
                 $this->limit = (int) $raw;
             } elseif (str_starts_with($arg, '--request-id=') || str_starts_with($arg, '--request-ids=')) {
                 $value = str_starts_with($arg, '--request-id=')
@@ -444,27 +445,33 @@ class MailmanModeration
                     if ($token === '') {
                         continue;
                     }
+
                     // A range keeps a long list readable: 412-415 is four messages.
                     if (preg_match('/^(\d+)-(\d+)$/', $token, $range) === 1) {
                         [$from, $to] = [(int) $range[1], (int) $range[2]];
                         if ($to < $from) {
                             $this->quitError('--request-id range is backwards: ' . $token);
                         }
+
                         if ($to - $from > 500) {
                             $this->quitError('--request-id range is too wide: ' . $token);
                         }
+
                         for ($id = $from; $id <= $to; $id++) {
                             $this->requestIds[] = $id;
                             $this->rangeIds[$id] = true;
                         }
+
                         continue;
                     }
+
                     // Silently dropping "12x" would act on a different set than the
                     // operator typed.
                     if (ctype_digit($token) !== true) {
-                        $this->quitError('--request-id takes ids and ranges such as 412,415-418; got "'
-                            . $token . '".');
+                        $this->quitError('--request-id takes ids and ranges,'
+                            . ' such as 412,415-418; got "' . $token . '".');
                     }
+
                     $this->requestIds[] = (int) $token;
                 }
             } elseif (str_starts_with($arg, '--review-action=')) {
@@ -473,9 +480,11 @@ class MailmanModeration
                     if ($decision === '') {
                         continue;
                     }
+
                     if (! in_array($decision, ['accept', 'discard'], true)) {
                         $this->quitError('--review-action takes accept or discard; got "' . $decision . '".');
                     }
+
                     $this->reviewActions[] = $decision;
                 }
             } elseif (str_starts_with($arg, '--ban=')) {
@@ -508,6 +517,7 @@ class MailmanModeration
         if ($this->requestIds === []) {
             $this->quitError('--review-action needs --request-id=<ids> naming the rows to decide.');
         }
+
         if (count($this->reviewActions) <= 1) {
             return;
         }
@@ -562,6 +572,7 @@ class MailmanModeration
 
             $hits++;
         }
+
         if ($hits >= 2) {
             throw new BanRefused('Ban pattern matches unrelated senders: ' . $pattern);
         }
@@ -617,22 +628,24 @@ class MailmanModeration
     {
         if (! file_exists($this->configFile)) {
             $this->quitError('Missing config file: ' . $this->configFile . PHP_EOL
-                . 'It needs a [' . (string) parse_url(self::DEFAULT_BASE, PHP_URL_HOST) . '] section'
+                . 'It needs a [' . parse_url(self::DEFAULT_BASE, PHP_URL_HOST) . '] section'
                 . ' with "user" and "password".');
         }
+
         $config = parse_ini_file($this->configFile, true, INI_SCANNER_RAW);
         if ($config === false) {
             $this->quitError('Could not parse the INI file ' . $this->configFile
                 . PHP_EOL . ini_get('error_log'));
         }
 
-        $host = (string) parse_url(self::DEFAULT_BASE, PHP_URL_HOST);
+        $host = parse_url(self::DEFAULT_BASE, PHP_URL_HOST);
         $section = $host;
         /** @var array<string, string>|null $block */
         $block = $config[$host] ?? $config['mailman'] ?? null;
         if ($block === null) {
             $this->quitError('No [' . $host . '] (or [mailman]) section in ' . $this->configFile);
         }
+
         if (isset($config['mailman']) && ! isset($config[$host])) {
             $section = 'mailman';
         }
@@ -647,37 +660,43 @@ class MailmanModeration
 
             return $v;
         };
-        $this->user = $unquote((string) ($block['user'] ?? ''));
-        $this->password = $unquote((string) ($block['password'] ?? ''));
+        $this->user = $unquote(($block['user'] ?? ''));
+        $this->password = $unquote(($block['password'] ?? ''));
         $missing = [];
         if ($this->user === '') {
             $missing[] = 'user';
         }
+
         if ($this->password === '') {
             $missing[] = 'password';
         }
+
         if ($missing !== []) {
             $this->quitError('Missing "' . implode('" and "', $missing) . '" in the [' . $section
                 . '] section of ' . $this->configFile . PHP_EOL
                 . 'user and password are the Postorius login used to read the moderation queue.');
         }
+
         if (isset($block['url']) && $block['url'] !== '') {
-            $this->base = rtrim((string) $block['url'], '/');
+            $this->base = rtrim($block['url'], '/');
         }
+
         // --list wins: the config only supplies a default. Overwriting the
         // command-line value retargets every URL, so ids would be acted on in a
         // different list than the operator named.
         if (isset($block['list']) && $block['list'] !== '' && ! $this->listGiven) {
-            $this->list = (string) $block['list'];
+            $this->list = $block['list'];
         }
+
         if (isset($block['ledger']) && $block['ledger'] !== '') {
-            $this->ledger = (string) $block['ledger'];
+            $this->ledger = $block['ledger'];
         }
+
         if (! isset($block['reputation']) || $block['reputation'] === '') {
             return;
         }
 
-        $this->reputationFile = $this->expandTilde((string) $block['reputation']);
+        $this->reputationFile = $this->expandTilde($block['reputation']);
     }
 
     /**
@@ -719,30 +738,37 @@ class MailmanModeration
                     $section = strtolower(trim(preg_replace('/\s+/', '_', $heading[1]) ?? $heading[1]));
                     $verdict = $this->verdictFromHeading(trim($heading[2] ?? ''), $where);
                 }
+
                 continue;
             }
+
             if (! $isItem) {
                 continue; // prose or an indented example
             }
+
             if ($section === 'messages') {
                 continue; // parsed as blocks, above
             }
+
             $item = trim(substr($line, 2));
 
             if ($section === 'thresholds') {
                 if (preg_match('/^([a-z_]+)\s*:\s*(\d+)$/', $item, $parts) !== 1) {
                     $this->quitError('Cannot read threshold "' . $item . '" at ' . $where);
                 }
+
                 // ban_score and domain_ban_score are gone: a verdict comes from
                 // the section a policy line is written in, not from a tally.
                 if ($parts[1] === 'ban_score' || $parts[1] === 'domain_ban_score') {
                     continue;
                 }
+
                 if ($parts[1] === 'domain_ban_min_messages') {
                     $this->domainBanMinMessages = (int) $parts[2];
                 } else {
                     $this->quitError('Unknown threshold "' . $parts[1] . '" at ' . $where);
                 }
+
                 continue;
             }
 
@@ -768,14 +794,18 @@ class MailmanModeration
         if ($this->termGroups === []) {
             $this->quitError('Reputation file defines no patterns: ' . $path);
         }
+
         foreach (['discard', 'banned', 'already_banned', 'foreign', 'void'] as $name) {
             if (isset($this->messages[$name]) && $this->messages[$name] !== '') {
                 continue;
             }
 
-            $this->quitError('Reputation file is missing the "' . $name
-                . '" message in its Messages section: ' . $path);
+            $this->quitError(
+                'Reputation file is missing the "' . $name . '" message in its Messages'
+                . ' section: ' . $path
+            );
         }
+
         if ($this->vetoGroups !== []) {
             return;
         }
@@ -808,11 +838,12 @@ class MailmanModeration
         }
 
         foreach ($blocks as $block) {
-            $name = (string) $block[1];
-            $text = (string) $block[2];
+            $name = $block[1];
+            $text = $block[2];
             if (trim($text) === '') {
                 continue;
             }
+
             // Line breaks are kept exactly as written: they are paragraphs.
             $this->messages[$name] = trim($text);
         }
@@ -824,6 +855,7 @@ class MailmanModeration
         if ($text === '') {
             return '';
         }
+
         $key = strtolower(preg_replace('/\s+/', ' ', $text) ?? $text);
         $map = [
             'ban' => self::VERDICT_BAN,
@@ -856,18 +888,19 @@ class MailmanModeration
             $this->quitError('At most five terms per line, got ' . count($terms) . ' at ' . $where
                 . PHP_EOL . 'Split the line instead of making it hard to read.');
         }
+
         if ($terms === []) {
             // An empty list compiles to "/(?:)/i", which matches every string. One
             // such line under a Ban heading would ban the whole queue.
             $this->quitError('A term line needs at least one term, at ' . $where);
         }
+
         foreach ($terms as $term) {
             if (preg_match('/^[\x20-\x3a\x3c-\x7e]+$/', $term) === 1) {
                 continue;
             }
 
-            $this->quitError('Term must be printable ASCII without a colon: "'
-                . $term . '" at ' . $where);
+            $this->quitError('Term must be printable ASCII without a colon: "' . $term . '" at ' . $where);
         }
 
         return $terms;
@@ -879,17 +912,19 @@ class MailmanModeration
         if (preg_match('/^([^:]{1,28}):\s*(.+)$/', $item, $parts) !== 1) {
             $this->quitError('Expected "reason: brand, brand" at ' . $where);
         }
+
         // Every entry must name the domain that owns the brand. Without it the
         // rule cannot tell impersonation from the brand's own mail.
         $brands = [];
         foreach ($this->cleanTerms($parts[2], $where) as $term) {
             $bits = explode('=', $term, 2);
             if (count($bits) !== 2 || $bits[1] === '') {
-                $this->quitError('Display-name entry must be "brand=owned.domain", got "'
-                    . $term . '" at ' . $where);
+                $this->quitError('Display-name entry must be "brand=owned.domain", got "' . $term . '" at ' . $where);
             }
+
             $brands[] = ['brand' => trim($bits[0]), 'owned' => [strtolower(trim($bits[1]))]];
         }
+
         $this->displayNameGroups[] = ['label' => trim($parts[1]), 'brands' => $brands];
     }
 
@@ -900,6 +935,7 @@ class MailmanModeration
             $this->quitError('Expected "reason: term, term" with a reason of at most 28'
                 . ' characters, got "' . $item . '" at ' . $where);
         }
+
         $label = trim($parts[1]);
         $terms = $this->cleanTerms($parts[2], $where);
 
@@ -923,6 +959,7 @@ class MailmanModeration
         } else {
             $this->labelFlags[$label] = 'BAN-RULE';
         }
+
         $this->termGroups[] = [
             'section' => $section,
             'label' => $label,
@@ -943,17 +980,20 @@ class MailmanModeration
             // "/(?:)/i" matches every string. Never let an empty list mean "all".
             $this->quitError('Internal error: a term group with no terms.');
         }
+
         $parts = [];
         foreach ($terms as $term) {
             $quoted = preg_quote($term, '/');
             if (preg_match('/^\w/', $term) === 1) {
                 $quoted = '\b' . $quoted;
             }
+
             if (preg_match('/\w$/', $term) === 1) {
                 // Tolerate the plural: "failed login attempt" must also catch
                 // "failed login attempts", which is how most of them are phrased.
                 $quoted .= '(?:s|es)?\b';
             }
+
             $parts[] = $quoted;
         }
 
@@ -1123,28 +1163,33 @@ class MailmanModeration
         $found = [];
         foreach ($brands as $brand => $owned) {
             // Brand, then a dot and a TLD somewhere ahead in the same token.
-            $pattern = '/\b' . preg_quote((string) $brand, '/') . '(?:[.\-][a-z0-9\-]+)*\.[a-z]{2,12}\b/i';
+            $pattern = '/\b' . preg_quote($brand, '/') . '(?:[.\-][a-z0-9\-]+)*\.[a-z]{2,12}\b/i';
             preg_match_all($pattern, $haystack, $matches);
             foreach (array_unique($matches[0] ?? []) as $candidate) {
                 $candidate = strtolower(rtrim($candidate, '.'));
                 if ($this->matchesDomain($candidate, $owned)) {
                     continue; // the real thing
                 }
+
                 // Not a host: a file name. Reports routinely name attachments and
                 // tickets this way ("phpmyadmin-pma-01-08-....tar.gz"), and those
                 // are the senders we least want to ban.
-                if (preg_match(
-                    '/\.(?:tar|gz|tgz|bz2|xz|zip|7z|rar|pgp|gpg|sig|asc|p7s|pem|'
-                    . 'png|jpe?g|gif|svg|webp|ico|css|js|mjs|json|xml|php|py|sh|rb|pl|'
-                    . 'html?|txt|md|pdf|docx?|xlsx?|pptx?|csv|log|patch|diff|eml)$/i',
-                    $candidate
-                ) === 1) {
+                if (
+                    preg_match(
+                        '/\.(?:tar|gz|tgz|bz2|xz|zip|7z|rar|pgp|gpg|sig|asc|p7s|pem|'
+                        . 'png|jpe?g|gif|svg|webp|ico|css|js|mjs|json|xml|php|py|sh|rb|pl|'
+                        . 'html?|txt|md|pdf|docx?|xlsx?|pptx?|csv|log|patch|diff|eml)$/i',
+                        $candidate
+                    ) === 1
+                ) {
                     continue;
                 }
-                if (strlen($candidate) <= strlen((string) $brand) + 2) {
+
+                if (strlen($candidate) <= strlen($brand) + 2) {
                     continue; // no TLD to speak of
                 }
-                $found[$candidate] = (string) $brand;
+
+                $found[$candidate] = $brand;
             }
         }
 
@@ -1181,8 +1226,7 @@ class MailmanModeration
         $cached = is_file($cache) ? (string) file_get_contents($cache) : '';
         if ($this->offline) {
             if ($cached === '') {
-                $this->quitError('--offline was given but there is no cached ' . $label
-                    . ' at ' . $cache);
+                $this->quitError('--offline was given but there is no cached ' . $label . ' at ' . $cache);
             }
 
             return $cached;
@@ -1206,6 +1250,7 @@ class MailmanModeration
             if (! $usable) {
                 $this->quitError('No ' . $label . ': download failed and no cache exists at ' . $cache);
             }
+
             fwrite(STDERR, 'warning: could not refresh the ' . $label . ', using the cache' . PHP_EOL);
 
             return $cached;
@@ -1215,10 +1260,12 @@ class MailmanModeration
             fwrite(STDERR, $label . ' updated: ' . $this->countEntries($cached) . ' -> '
                 . $this->countEntries($fresh) . ' entries' . PHP_EOL);
         }
+
         $dir = dirname($cache);
         if (! is_dir($dir)) {
             mkdir($dir, 0775, true);
         }
+
         file_put_contents($cache, $fresh);
 
         return $fresh;
@@ -1237,6 +1284,7 @@ class MailmanModeration
             if ($line === '' || str_starts_with($line, '#')) {
                 continue;
             }
+
             $out[] = $line;
         }
 
@@ -1283,13 +1331,16 @@ class MailmanModeration
             if ($first === false) {
                 continue; // IPv6 or malformed: the level1 set is IPv4 only.
             }
+
             $bits = isset($parts[1]) ? (int) $parts[1] : 32;
             if ($bits < 0 || $bits > 32) {
                 continue;
             }
+
             $size = 1 << 32 - $bits;
             $ranges[] = [$first, $first + $size - 1];
         }
+
         sort($ranges);
 
         return $ranges;
@@ -1302,12 +1353,14 @@ class MailmanModeration
         if ($long === false || $this->blockedRanges === []) {
             return false;
         }
+
         // Ranges are sorted and non-overlapping enough for a linear scan; a run
         // checks a handful of addresses, not thousands.
         foreach ($this->blockedRanges as [$first, $last]) {
             if ($long < $first) {
                 return false; // sorted: nothing further can match
             }
+
             if ($long <= $last) {
                 return true;
             }
@@ -1321,12 +1374,14 @@ class MailmanModeration
         if ($this->disposableSet === []) {
             return false;
         }
+
         // Exact match, then walk parent labels so a.b.example.com hits example.com.
         $candidate = $domain;
         while (str_contains($candidate, '.')) {
             if (isset($this->disposableSet[$candidate])) {
                 return true;
             }
+
             $candidate = substr($candidate, (int) strpos($candidate, '.') + 1);
         }
 
@@ -1362,6 +1417,7 @@ class MailmanModeration
         // was added or the message moderated, so retrying could double-submit.
         // Only GETs retry, unless the caller says the request is safe to repeat.
         $attempts = $method === 'GET' || $idempotent ? self::HTTP_ATTEMPTS : 1;
+        $result = ['http' => 0, 'body' => '', 'url' => '', 'error' => '', 'location' => ''];
         for ($attempt = 1; $attempt <= $attempts; $attempt++) {
             $this->throttle();
             $result = $this->attempt($method, $url, $form, $withSession);
@@ -1374,9 +1430,11 @@ class MailmanModeration
             if ($result['error'] === '' && ! $truncated) {
                 return $result;
             }
+
             if ($attempt === $attempts) {
                 return $result;
             }
+
             usleep(500_000 * $attempt);
         }
 
@@ -1407,6 +1465,7 @@ class MailmanModeration
         if (function_exists('stream_isatty')) {
             return @stream_isatty(STDERR);
         }
+
         if (function_exists('posix_isatty')) {
             return @posix_isatty(STDERR);
         }
@@ -1447,6 +1506,7 @@ class MailmanModeration
                 usleep($wait);
             }
         }
+
         $this->lastRequestAt = microtime(true);
     }
 
@@ -1463,6 +1523,7 @@ class MailmanModeration
         if ($ch === false) {
             $this->quitError('Could not initialise curl.');
         }
+
         $headers = $this->browserHeaders();
         $options = [
             CURLOPT_RETURNTRANSFER => true,
@@ -1480,19 +1541,21 @@ class MailmanModeration
             $options[CURLOPT_COOKIEJAR] = $this->cookieJar;
             $options[CURLOPT_COOKIEFILE] = $this->cookieJar;
         }
+
         if ($form !== null) {
             $headers[] = 'Content-Type: application/x-www-form-urlencoded';
             $headers[] = 'Referer: ' . $url;
             $options[CURLOPT_POSTFIELDS] = http_build_query($form);
         }
+
         $options[CURLOPT_HTTPHEADER] = $headers;
         curl_setopt_array($ch, $options);
 
         $body = curl_exec($ch);
-        $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $http = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
-        $effective = (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
-        $location = (string) curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+        $effective = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+        $location = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
         // No curl_close(): the handle is a CurlHandle object since PHP 8.0 and is
         // freed by refcounting. curl_close() became a no-op then and is deprecated
         // in PHP 8.5, so calling it would only add a notice.
@@ -1539,6 +1602,7 @@ class MailmanModeration
         if ($result['http'] === 302 && ! str_contains($result['location'], '/accounts/login')) {
             return true;
         }
+
         // Any other status is a failure of THIS write, not of the run: one 403 or
         // 500 must not abandon the remaining messages with no summary and no ledger.
         if ($result['http'] !== 0) {
@@ -1552,7 +1616,7 @@ class MailmanModeration
 
     private function csrfFrom(string $html): string
     {
-        if (preg_match('/name="csrfmiddlewaretoken"\s+value="([^"]+)"/', $html, $matches)) {
+        if (preg_match('/name="csrfmiddlewaretoken"\s+value="([^"]+)"/', $html, $matches) === 1) {
             return $matches[1];
         }
 
@@ -1571,6 +1635,7 @@ class MailmanModeration
         if ($path === false) {
             $this->quitError('Could not create a temporary file in ' . sys_get_temp_dir());
         }
+
         $this->temporaryFiles[] = $path;
 
         return $path;
@@ -1596,6 +1661,7 @@ class MailmanModeration
         if ($page['http'] !== 200) {
             $this->quitError('Could not reach the login page (HTTP ' . $page['http'] . ').');
         }
+
         $result = $this->http('POST', '/accounts/login/?next=/postorius/lists/', [
             'csrfmiddlewaretoken' => $this->csrfFrom($page['body']),
             'login' => $this->user,
@@ -1611,9 +1677,7 @@ class MailmanModeration
         $this->quitError('Login failed for user "' . $this->user . '".');
     }
 
-    /**
-     * @return list<array{id: int, subject: string, sender: string, reason: string, size: string, date: string}>
-     */
+    /** @return list<array{id: int, subject: string, sender: string, reason: string, size: string, date: string}> */
     private function fetchHeld(): array
     {
         // The listing is a single request whatever the count, and the per-domain
@@ -1641,10 +1705,11 @@ class MailmanModeration
 
         preg_match_all('#<tr[^>]*>(.*?)</tr>#s', $result['body'], $tableRows);
         foreach ($tableRows[1] as $row) {
-            if (! preg_match('/name="choices"\s+value="(\d+)"/', $row, $idMatch)) {
+            if (preg_match('/name="choices"\s+value="(\d+)"/', $row, $idMatch) !== 1) {
                 $skipped++;
                 continue;
             }
+
             preg_match_all('#<td[^>]*>(.*?)</td>#s', $row, $cells);
             $text = array_map($this->cellText(...), $cells[1]);
 
@@ -1725,10 +1790,11 @@ class MailmanModeration
         if ($result['error'] !== '') {
             return $this->unscorable($id, 'transfer failed: ' . $result['error']);
         }
+
         if ($result['http'] === 302) {
-            return $this->unscorable($id, 'redirected to ' . $result['location']
-                . ' (the session expired mid-run)');
+            return $this->unscorable($id, 'redirected to ' . $result['location'] . ' (the session expired mid-run)');
         }
+
         if ($result['http'] !== 200) {
             return $this->unscorable($id, 'HTTP ' . $result['http']);
         }
@@ -1739,6 +1805,7 @@ class MailmanModeration
                 ? 'HTML instead of JSON (session or stale id)'
                 : 'response was not JSON');
         }
+
         if (! isset($decoded['msg']) || ! is_array($decoded['msg'])) {
             return $this->unscorable($id, 'JSON carried no message');
         }
@@ -1848,10 +1915,7 @@ class MailmanModeration
         // already-banned sender look bannable, and the re-ban then fails.
         $bans = [];
         for ($page = 1; $page <= self::BANS_MAX_PAGES; $page++) {
-            $result = $this->http(
-                'GET',
-                '/postorius/bans/?count=' . self::BANS_PER_PAGE . '&page=' . $page
-            );
+            $result = $this->http('GET', '/postorius/bans/?count=' . self::BANS_PER_PAGE . '&page=' . $page);
             $chunk = $this->parseBanPageBody($result['body'], 'site-wide ban list');
             $bans = array_merge($bans, $chunk);
             if (count($chunk) < self::BANS_PER_PAGE) {
@@ -1906,6 +1970,7 @@ class MailmanModeration
             if (! str_contains($value, '@') && ! str_starts_with($value, '^')) {
                 continue;
             }
+
             $bans[] = $value;
         }
 
@@ -1919,6 +1984,7 @@ class MailmanModeration
         if ($header === null) {
             return '';
         }
+
         $value = (string) $header;
 
         return trim((string) preg_replace('/^' . preg_quote($name, '/') . '\s*:\s*/i', '', $value));
@@ -1933,18 +1999,21 @@ class MailmanModeration
             if ($header === null) {
                 break;
             }
+
             $value = (string) $header;
             preg_match_all('/\[([0-9a-f:.]+)\]|\(([0-9a-f:]{2,})\)/i', $value, $matches);
             foreach (array_merge($matches[1], $matches[2]) as $ip) {
                 if ($ip === '' || filter_var($ip, FILTER_VALIDATE_IP) === false) {
                     continue;
                 }
+
                 // Loopback and link-local hops are the receiving stack's own
                 // internal handoffs, not a reputation signal.
                 $publicFlags = FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE;
                 if (filter_var($ip, FILTER_VALIDATE_IP, $publicFlags) === false) {
                     continue;
                 }
+
                 if (in_array($ip, $ips, true)) {
                     continue;
                 }
@@ -1986,11 +2055,13 @@ class MailmanModeration
 
         // "pass (mail.example.net: domain of ...)", with the header name already
         // stripped. The leading verdict is the whole answer.
-        if ($out['spf'] === null && preg_match(
-            '/^\s*(?:[\w-]+:\s*)?(pass|fail|softfail|neutral|none|permerror|temperror|unknown)\b/i',
-            trim($receivedSpf),
-            $matches
-        ) === 1) {
+        if (
+            $out['spf'] === null && preg_match(
+                '/^\s*(?:[\w-]+:\s*)?(pass|fail|softfail|neutral|none|permerror|temperror|unknown)\b/i',
+                trim($receivedSpf),
+                $matches
+            ) === 1
+        ) {
             $out['spf'] = strtolower($matches[1]);
         }
 
@@ -2019,7 +2090,7 @@ class MailmanModeration
         preg_match_all('#\bhttps?://[^\s<>"\')\]]+#i', $body, $matches);
 
         /** @var list<string> $urls */
-        $urls = array_values(array_unique($matches[0] ?? []));
+        $urls = array_values(array_unique($matches[0]));
 
         return $urls;
     }
@@ -2034,6 +2105,7 @@ class MailmanModeration
         if (preg_match('/<([^<>@\s]+@[^<>\s]+)>/', $value, $matches) === 1) {
             return strtolower(trim($matches[1]));
         }
+
         if (preg_match('/[^\s<>@]+@[^\s<>@]+/', $value, $matches) === 1) {
             return strtolower(trim($matches[0]));
         }
@@ -2106,6 +2178,7 @@ class MailmanModeration
                 $message = null;
             }
         }
+
         $senderFromHeader = false;
         if ($message !== null) {
             // Prefer the parsed headers over the table cells.
@@ -2114,6 +2187,7 @@ class MailmanModeration
                 $sender = strtolower($address->email());
                 $senderFromHeader = true;
             }
+
             $parsedSubject = $message->subject();
             if (is_string($parsedSubject) && $parsedSubject !== '') {
                 $subject = $parsedSubject;
@@ -2132,6 +2206,7 @@ class MailmanModeration
                 if (trim($body) === '') {
                     $body = $this->plainText((string) $message->html());
                 }
+
                 // Names only: the payload is never fetched or written to disk.
                 foreach ($message->attachments() as $attachment) {
                     $attachments[] = (string) $attachment->filename();
@@ -2141,6 +2216,7 @@ class MailmanModeration
                     . $malformed->getMessage() . PHP_EOL);
             }
         }
+
         // Accents folded: the policy is ASCII but the queue is not. The From
         // display name is included because it is part of what a sender claims:
         // "РауРаl" in Cyrillic lives there, not in the subject or body, so
@@ -2148,8 +2224,9 @@ class MailmanModeration
         $displayName = '';
         if ($message !== null) {
             $from = $message->from();
-            $displayName = $from !== null ? (string) $from->name() : '';
+            $displayName = $from !== null ? $from->name() : '';
         }
+
         // URLs are removed before matching, on both sides of the decision. A link
         // slug like ".../invoice-and-soa-import-xss" would otherwise match a Ban
         // term while the "xss" in the same URL could not protect, because the veto
@@ -2209,6 +2286,7 @@ class MailmanModeration
 
             $matchedGroups[] = $group;
         }
+
         // Scam detection runs over every match, before the display list is
         // trimmed: otherwise an extortion mail that also trips two phishing lines
         // loses its Scam status and gets protected instead of banned.
@@ -2219,6 +2297,7 @@ class MailmanModeration
                 break;
             }
         }
+
         // Rank before slicing. Slicing first kept the two earliest matches, so with
         // Void, Bulk and Ban all matching, the Ban was discarded and the message
         // discarded instead of banned.
@@ -2275,6 +2354,9 @@ class MailmanModeration
         // likely a broken client as intent.
         $voidMessage = false;
         if ($empty) {
+            // $attachments is filled on the success path; phpstan models the
+            // catch-branch reassignment of $message as always taken.
+            // @phpstan-ignore-next-line
             $add('message is empty: no readable text' . ($attachments === [] ? ' and no attachment' : ''));
             $hintRank = self::RANK_EMPTY;
             $hintVerdict = self::VERDICT_DISCARD;
@@ -2301,10 +2383,12 @@ class MailmanModeration
                 if ($this->headerValue($message, $header) === '') {
                     continue;
                 }
+
                 $add('bulk-mailer header ' . $header);
                 $bulkHeaders++;
             }
         }
+
         // On a domain we trust, newsletter plumbing proves nothing: CISA's case
         // notifications carry that plumbing like any bulk sender does.
         if ($bulkHeaders > 0 && ! $isAllowlisted && $hintRank < self::RANK_BULK) {
@@ -2324,6 +2408,8 @@ class MailmanModeration
         // trusted domain let a Ban rule fire on a real report: an XSS write-up
         // from certik.com was banned because the word "wise" appeared inside
         // "Fix-wise", and the ban rule beat the XSS vocabulary.
+        // $veto is assigned by the allow-list branch above on the success path.
+        // @phpstan-ignore-next-line
         if ($veto === null) {
             // Links are stripped for this check: tracking URLs carry fragments
             // like "#security@phpmyadmin.net", which would otherwise rescue any
@@ -2333,6 +2419,7 @@ class MailmanModeration
                 if (preg_match($this->groupPattern($group['terms']), $vetoHaystack) !== 1) {
                     continue;
                 }
+
                 // The conditional group is the one that sales mail can trip, so it
                 // is skipped when a policy line already decided the verdict - or
                 // when the message reads as an extortion template, whose whole
@@ -2340,6 +2427,7 @@ class MailmanModeration
                 if ($group['conditional'] && ($actionableMatched || $isScam)) {
                     continue;
                 }
+
                 $veto = $group['label'];
                 break;
             }
@@ -2348,15 +2436,18 @@ class MailmanModeration
         if ($this->isDisposable($domain)) {
             $add("disposable mail domain '" . $domain . "'");
         }
+
         // Suffix match, not equality: "co.uk" in the list must also match
         // "shop.co.uk", whose last label is "uk".
         foreach ($this->repList('suspicious_tlds') as $suspicious) {
             if ($domain !== $suspicious && ! str_ends_with($domain, '.' . $suspicious)) {
                 continue;
             }
+
             $add("'." . $suspicious . "' TLD is mostly bulk senders");
             break;
         }
+
         if (preg_match('/^[0-9a-f]{6,16}\./i', $domain) === 1) {
             $add("opaque hex subdomain in '" . $domain . "'");
         }
@@ -2384,6 +2475,7 @@ class MailmanModeration
             if (! $this->isBlockedIp($ip)) {
                 continue;
             }
+
             $add('sending IP ' . $ip . ' is on the firehol_level1 blocklist');
             break;
         }
@@ -2392,12 +2484,15 @@ class MailmanModeration
         if ($auth['spf'] === 'fail') {
             $add('SPF fail');
         }
+
         if ($auth['spf'] === 'softfail') {
             $add('SPF softfail');
         }
+
         if ($auth['dkim'] === 'fail') {
             $add('DKIM fail');
         }
+
         if ($auth['dmarc'] === 'fail') {
             $add('DMARC fail');
         }
@@ -2410,6 +2505,7 @@ class MailmanModeration
                 break;
             }
         }
+
         if (count($urls) >= 8) {
             $add((string) count($urls) . ' links in one message');
         }
@@ -2437,6 +2533,7 @@ class MailmanModeration
                     if ($this->matchesDomain($domain, $entry['owned'])) {
                         continue;
                     }
+
                     $brand = $entry['brand'];
                     // The name must be the brand, not merely contain it: strip
                     // everything that is not a letter or digit and compare.
@@ -2445,12 +2542,14 @@ class MailmanModeration
                     if ($needle === '' || $bare === '') {
                         continue;
                     }
+
                     // Contains, not equals: "PayPal Support" and "PayPal Inc" are
                     // impersonation too, and exact comparison let them through.
                     // Anchored at the start so "notpaypal" does not match.
                     if (! str_starts_with($bare, $needle)) {
                         continue;
                     }
+
                     $add($group['label'] . ': display name claims "' . $brand . '"');
                     // Impersonating a brand in the display name is fraud, so it
                     // decides the verdict rather than merely adding a note.
@@ -2476,6 +2575,7 @@ class MailmanModeration
                     $add('Reply-To goes to ' . $replyDomain . ' instead of ' . $domain);
                 }
             }
+
             $spamFlag = strtolower($this->headerValue($message, 'x-spam-flag'));
             if (str_starts_with($spamFlag, 'yes') || str_contains($spamFlag, 'yes')) {
                 $add('upstream spam filter marked it (X-Spam-Flag: YES)');
@@ -2550,8 +2650,10 @@ class MailmanModeration
                     'plan' => [],
                 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), PHP_EOL;
             }
+
             exit(0);
         }
+
         $step('  ' . count($held) . ' held message(s)');
 
         $domainCounts = [];
@@ -2589,14 +2691,17 @@ class MailmanModeration
         if ($missingInRange > 0) {
             fwrite(STDERR, $missingInRange . ' id(s) in the range are not held; skipped' . PHP_EOL);
         }
+
         if ($missingExplicit !== []) {
             $ids = implode(', ', array_map(static fn (int $id): string => (string) $id, $missingExplicit));
             $this->quitError('Not in the held queue: ' . $ids
                 . PHP_EOL . 'Nothing was read. Run without --request-id to list what is held.');
         }
+
         if ($wanted === []) {
             $this->quitError('None of the requested ids are held. Nothing was read.');
         }
+
         $step('fetching ' . count($wanted) . ' message body/bodies and scoring ...');
 
         $plan = [];
@@ -2610,6 +2715,7 @@ class MailmanModeration
             if (! $this->json && $total > 5 && $done < $total && $this->stderrIsTerminal()) {
                 fwrite(STDERR, "\r  " . $done . '/' . $total . ' fetched and scored');
             }
+
             $message = $this->fetchMessage($entry['id']);
             $score = $this->score(
                 $entry['id'],
@@ -2622,6 +2728,7 @@ class MailmanModeration
             if ($score['parsed_subject'] !== '') {
                 $entry['subject'] = $score['parsed_subject'];
             }
+
             $already = $this->isBanned($entry['sender'], $bans);
             // The policy file decides. A heading verdict wins over the score, so
             // editing the registry changes behaviour without touching this code.
@@ -2645,12 +2752,15 @@ class MailmanModeration
                 'raw_missing' => $message === null,
             ];
         }
+
         if (! $this->json && $total > 5) {
             if ($this->stderrIsTerminal()) {
                 fwrite(STDERR, "\r  ");
             }
+
             fwrite(STDERR, '  ' . $total . '/' . $total . ' fetched and scored' . PHP_EOL);
         }
+
         // Say plainly which messages were judged on queue metadata alone, so a
         // thin verdict is never mistaken for a confident one.
         if ($this->unscorable !== []) {
@@ -2668,7 +2778,7 @@ class MailmanModeration
                     'mode' => 'DRY-RUN',
                     'held' => count($plan),
                     'plan' => array_map(function (array $entry): array {
-                        $entry['verdict'] = $this->verdictLabel((string) $entry['verdict']);
+                        $entry['verdict'] = $this->verdictLabel($entry['verdict']);
 
                         return $entry;
                     }, $plan),
@@ -2742,6 +2852,7 @@ class MailmanModeration
             if (isset($this->labelFlags[$label])) {
                 $tags[$this->labelFlags[$label]] = true;
             }
+
             foreach ($map as $needle => $tag) {
                 if (str_contains($label, $needle) !== true) {
                     continue;
@@ -2797,6 +2908,7 @@ class MailmanModeration
                 $used[$tag] = true;
             }
         }
+
         if ($used === []) {
             return;
         }
@@ -2807,6 +2919,7 @@ class MailmanModeration
             if (! isset($used[$tag])) {
                 continue;
             }
+
             echo '  ' . str_pad($tag, 17) . $meaning . PHP_EOL;
         }
     }
@@ -2817,12 +2930,15 @@ class MailmanModeration
         if ($verdict === self::VERDICT_BAN) {
             return 'Ban, Discard and notify';
         }
+
         if ($verdict === self::VERDICT_DISCARD) {
             return 'Discard and notify';
         }
+
         if ($verdict === self::VERDICT_BANNED) {
             return 'Already banned';
         }
+
         if ($verdict === self::VERDICT_ACCEPT) {
             return 'Accept';
         }
@@ -2864,19 +2980,12 @@ class MailmanModeration
         if (! $this->applyChanges) {
             echo 'nothing is changed: this run only reports.' . PHP_EOL;
         }
+
         echo PHP_EOL;
 
         // Table, worst first: ban candidates at the top. REASON is the short label
         // the policy line carries, so the table reads like the policy file.
-        $header = sprintf(
-            '%-5s %-24s %-28s %-28s %-38s %s',
-            'ID',
-            'VERDICT',
-            'SENDER',
-            'SUBJECT',
-            'REASON',
-            'FLAGS'
-        );
+        $header = sprintf('%-5s %-24s %-28s %-28s %-38s %s', 'ID', 'VERDICT', 'SENDER', 'SUBJECT', 'REASON', 'FLAGS');
         echo $header . PHP_EOL;
         // The rule is the width of the header it sits under, so the two cannot
         // drift apart when a column changes.
@@ -2935,13 +3044,16 @@ class MailmanModeration
                 $current = $word;
                 continue;
             }
+
             if (mb_strwidth($current . ' ' . $word) <= $width) {
                 $current .= ' ' . $word;
                 continue;
             }
+
             $lines[] = $current;
             $current = $word;
         }
+
         $lines[] = $current;
 
         return $lines;
@@ -2971,6 +3083,7 @@ class MailmanModeration
             if ($byVerdict !== 0) {
                 return $byVerdict;
             }
+
             $bySender = strcasecmp((string) $left['sender'], (string) $right['sender']);
             if ($bySender !== 0) {
                 return $bySender;
@@ -3026,12 +3139,15 @@ class MailmanModeration
         if ($this->showBans === 'list' || $this->showBans === 'all') {
             $this->printBanGroup($this->fetchBans(), 'bans on ' . $this->list);
         }
+
         if ($this->showBans !== 'global' && $this->showBans !== 'all') {
             return;
         }
+
         if ($this->showBans === 'all') {
             echo PHP_EOL;
         }
+
         $this->printBanGroup($this->fetchGlobalBans(), 'site-wide bans (all lists)');
     }
 
@@ -3085,11 +3201,16 @@ class MailmanModeration
         // Reflow after substitution: the policy file is hard-wrapped for reading,
         // but {list} is 27 characters and would leave ragged lines. Each paragraph
         // is wrapped on its own so blank lines still separate them.
+        $split = preg_split('/\n[ \t]*\n/', $text);
+        if ($split === false) {
+            $split = [$text];
+        }
+
         $paragraphs = array_map(
             fn (string $para): string => $para === ''
                 ? ''
                 : implode(PHP_EOL, $this->wrapText($para, 76)),
-            preg_split('/\n[ \t]*\n/', $text) ?: [$text]
+            $split
         );
 
         return implode(PHP_EOL . PHP_EOL, $paragraphs);
@@ -3141,6 +3262,7 @@ class MailmanModeration
 
             return false;
         }
+
         $result = $this->http('POST', $path, [
             'csrfmiddlewaretoken' => $this->csrfFrom($page['body']),
             ($add ? 'add' : 'del') => '1',
@@ -3187,10 +3309,12 @@ class MailmanModeration
         if (($entry['sender_from_header'] ?? false) !== true) {
             return '';
         }
+
         $sender = (string) ($entry['sender_parsed'] ?? '');
         if ($sender === '') {
             return '';
         }
+
         $count = $domainCounts[$domain] ?? 0;
 
         if (
@@ -3244,6 +3368,7 @@ class MailmanModeration
 
             return;
         }
+
         $line = $encoded . PHP_EOL;
 
         // Created 0600 up front: chmod after the first write left the file at the
@@ -3253,6 +3378,7 @@ class MailmanModeration
             touch($this->ledger);
             umask($created);
         }
+
         @chmod($this->ledger, 0600);
 
         // LOCK_EX so two runs cannot interleave a half-written line.
@@ -3262,6 +3388,7 @@ class MailmanModeration
 
             return;
         }
+
         flock($handle, LOCK_EX);
         fwrite($handle, $line);
         flock($handle, LOCK_UN);
@@ -3286,9 +3413,11 @@ class MailmanModeration
             if (strcasecmp($ban, $email) === 0) {
                 return $ban;
             }
+
             if ($ban !== '' && $ban[0] === '^' && preg_match('#' . str_replace('#', '\#', $ban) . '#i', $email) === 1) {
                 return $ban;
             }
+
             if (! str_starts_with($ban, '*@') || $domain === '') {
                 continue;
             }
@@ -3316,7 +3445,7 @@ class MailmanModeration
         // id explicitly still works, as a deliberate override.
         $unreadable = array_values(array_filter(
             $plan,
-            fn (array $entry): bool => ($entry['raw_missing'] ?? false)
+            fn (array $entry): bool => ($entry['raw_missing'] ?? false) === true
                 && in_array($entry['verdict'], $this->actions, true)
                 && ! in_array($entry['id'], $this->requestIds, true)
         ));
@@ -3366,6 +3495,7 @@ class MailmanModeration
             $ids = implode(', ', array_map(static fn (array $e): string => (string) $e['id'], $refused));
             $this->quitError('Those messages are not actionable: ' . $ids);
         }
+
         // A review row without a stated decision is still nothing to act on.
         if ($this->reviewActions === []) {
             $unreviewed = array_filter(
@@ -3384,6 +3514,7 @@ class MailmanModeration
 
         $results = [];
         $done = 0;
+        $action = $this->silent ? 'discard' : 'reject';
         // Senders banned during this run, so a duplicate in the same batch does
         // not look like a failed ban: the server would answer "already banned".
         /** @var array<string, true> $bannedThisRun */
@@ -3498,6 +3629,7 @@ class MailmanModeration
                 fwrite(STDERR, 'warning: request ' . $entry['id'] . ' failed: '
                     . $failure->getMessage() . PHP_EOL);
             }
+
             $this->writeLedger($entry, $banValue, $ok, $action, $banAdded, $banFailed);
             if ($ok) {
                 $done++;
@@ -3543,9 +3675,9 @@ class MailmanModeration
 
         $banFailures = count(array_filter($results, static fn (array $r): bool => $r['ban_failed']));
         if ($banFailures > 0) {
-            fwrite(STDERR, 'ERROR: ' . $banFailures . ' ban(s) failed; those senders are NOT banned'
-                . PHP_EOL);
+            fwrite(STDERR, 'ERROR: ' . $banFailures . ' ban(s) failed; those senders are NOT banned' . PHP_EOL);
         }
+
         exit($done === count($selected) && $banFailures === 0 ? 0 : 1);
     }
 
