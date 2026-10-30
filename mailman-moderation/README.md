@@ -44,18 +44,27 @@ Read-only triage, the default:
 ./mailman-moderation/phpmyadmin-mailman-moderation.php
 ```
 
-Nothing is changed without `--commit`. Moderating held messages also needs either `--request-id`, naming exact messages, or `--apply`, naming verdict classes.
+Every run is read-only until `--apply` is given. `--apply` performs; `--action` and
+`--review-action` only select what would be performed, so the two can be separated:
 
 ```
-# act on named messages
-./mailman-moderation/phpmyadmin-mailman-moderation.php --commit --request-id=412,413
+./mailman-moderation/phpmyadmin-mailman-moderation.php --action=ban            # preview
+./mailman-moderation/phpmyadmin-mailman-moderation.php --apply --action=ban   # perform
+```
+
+```
+# act on named messages, ranges allowed
+./mailman-moderation/phpmyadmin-mailman-moderation.php --apply --request-id=412,415-418
 
 # act on every Ban row, capped at 25
-./mailman-moderation/phpmyadmin-mailman-moderation.php --commit --apply=ban
+./mailman-moderation/phpmyadmin-mailman-moderation.php --apply --action=ban
 
-# ban changes need only --commit
-./mailman-moderation/phpmyadmin-mailman-moderation.php --commit --ban=spammer@example.test
-./mailman-moderation/phpmyadmin-mailman-moderation.php --commit --unban=spammer@example.test
+# decide rows the triage left for review: one decision, named ids
+./mailman-moderation/phpmyadmin-mailman-moderation.php --apply --review-action=accept --request-id=412
+
+# ban list changes
+./mailman-moderation/phpmyadmin-mailman-moderation.php --apply --ban=spammer@example.test
+./mailman-moderation/phpmyadmin-mailman-moderation.php --apply --unban=spammer@example.test
 ./mailman-moderation/phpmyadmin-mailman-moderation.php --show-bans=all
 ```
 
@@ -63,11 +72,12 @@ Nothing is changed without `--commit`. Moderating held messages also needs eithe
 
 | option | |
 |---|---|
-| `--commit` | apply changes; without it the run is read-only |
-| `--request-id=<id[,id]>` | act on these held messages |
-| `--apply=<class>` | act on a whole verdict class: `ban`, `discard`, `accept`, `already-banned` |
-| `--max-actions=<n>` | cap messages per `--commit` run, default 25, `0` lifts it |
-| `--domain-bans` | allow banning a whole domain; off by default |
+| `--apply` | perform the changes; without it the run only reports |
+| `--request-id=<ids>` | held messages: `412,415-418` (also `--request-ids`) |
+| `--action=<class>` | select a verdict class: `ban`, `discard`, `accept`, `already-banned` |
+| `--review-action=<decision>` | decide review rows: `accept` or `discard`, needs `--request-id` |
+| `--dry-run` | force read-only even alongside `--apply` |
+| `--ban-domain` | allow banning a whole domain; off by default |
 | `--silent` | use discard instead of reject: no mail to the sender |
 | `--list=<address>` | list to moderate |
 | `--limit=<n>` | held messages to read, default 200 |
@@ -84,7 +94,7 @@ A table, ordered by verdict then sender then subject. `REASON` is the short labe
 ```
 DRY-RUN  security@example.org  41 held
 6 to ban, 3 to discard and notify, 31 to review, 1 to accept, 0 already banned
-read-only: nothing is changed without --commit plus --request-id or --apply
+nothing is changed: this run only reports.
 
 ID    VERDICT                  SENDER                       SUBJECT                      REASON                                 FLAGS
 -------------------------------------------------------------------------------------------------------------------------------------
@@ -133,4 +143,4 @@ A verdict comes from the `-> Verdict` in the policy section heading whose line m
 
 ## Tests
 
-Not yet written. A change to the policy or the scoring should be checked with a dry run before `--commit`.
+Not yet written. A change to the policy or the scoring should be checked with a dry run before acting.

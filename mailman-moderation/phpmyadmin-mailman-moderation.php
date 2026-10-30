@@ -25,7 +25,7 @@ use DirectoryTree\ImapEngine\FileMessage;
 /**
  * Triage and moderate the phpMyAdmin mailing-list moderation queues.
  *
- * Read-only unless --commit is given, and --commit requires --request-id
+ * Read-only unless --apply is given; --apply requires --request-id or --action
  * naming exactly which held messages to act on.
  *
  * Endpoints used:
@@ -236,7 +236,9 @@ class MailmanModeration
      */
     private array $labelFlags = [];
 
-    private bool $commit = false;
+    private bool $applyChanges = false;
+    /** Force read-only: report what would happen and change nothing. */
+    private bool $dryRun = false;
     private bool $json = false;
     private bool $silent = false;
     /** '', 'list', 'global' or 'all'. */
@@ -245,16 +247,23 @@ class MailmanModeration
     /** @var list<int> */
     private array $requestIds = [];
     /**
-     * Verdicts --commit may act on without naming request ids, e.g. "ban,accept".
+     * Verdicts --action names, e.g. "ban,accept".
      *
      * Naming a whole class is a deliberate, explicit choice: it is never implied by
-     * --commit alone, so a run can still require --request-id for everything.
+     * --action alone, so a run can still require --request-id for everything.
      *
      * @var list<string>
      */
-    private array $apply = [];
-    /** Hard cap on messages one --commit run may touch. 0 means no cap. */
-    private int $maxActions = 25;
+    private array $actions = [];
+    /**
+     * Decisions for rows the triage left for a human, e.g. ["accept"].
+     *
+     * A Needs review row carries no verdict, so the tool has nothing to act on
+     * until the operator states the decision. Naming one here is that statement.
+     *
+     * @var list<string>
+     */
+    private array $reviewActions = [];
     /**
      * Whether a repeated domain may be banned as a whole.
      *
@@ -263,7 +272,7 @@ class MailmanModeration
      * including a researcher's employer. Per-address bans do not have that failure
      * mode, so widening needs to be asked for.
      */
-    private bool $domainBans = false;
+    private bool $banDomain = false;
     private string |null $banNow = null;
     private string |null $unbanNow = null;
 
@@ -274,7 +283,7 @@ class MailmanModeration
 
         // Settle the ban-list intents before anything else: a dry run of
         // --ban/--unban needs no configuration, no network and no session, and a
-        // missing --commit must be reported before any credentials are used.
+        // missing --apply must be reported before any credentials are used.
         $banChange = null;
         if ($this->unbanNow !== null) {
             $banChange = [$this->requireCommit('unban', $this->unbanNow), false];
@@ -310,16 +319,16 @@ class MailmanModeration
     }
 
     /**
-     * Changing the ban list is an outward-facing action, so it needs --commit
+     * Changing the ban list is an outward-facing action, so it needs --apply
      * like every other write. Without it, print the intended change and stop.
      */
     private function requireCommit(string $what, string $target): string
     {
-        if ($this->commit) {
+        if ($this->applyChanges) {
             return $target;
         }
         echo 'DRY-RUN: would ' . $what . ' ' . $target . ' on ' . $this->list . PHP_EOL;
-        echo 'nothing was changed; add --commit to apply.' . PHP_EOL;
+        echo 'nothing was changed; add --apply to perform it.' . PHP_EOL;
         // 0: nothing is wrong, there is simply nothing to commit to. Exit 2 means
         // "spam was found", which a ban preview is not.
         exit(0);
@@ -363,22 +372,16 @@ class MailmanModeration
                 exit(0);
             }
 
-            if ($arg === '--commit') {
-                $this->commit = true;
+            if ($arg === '--apply' || $arg === '-apply') {
+                $this->applyChanges = true;
+            } elseif ($arg === '--dry-run') {
+                $this->dryRun = true;
             } elseif ($arg === '--json') {
                 $this->json = true;
-            } elseif ($arg === '--domain-bans') {
-                $this->domainBans = true;
-            } elseif (str_starts_with($arg, '--max-actions=')) {
-                // (int) 'abc' is 0, and 0 means "no cap": a typo would remove the
-                // only guard against --apply sweeping a whole queue.
-                $raw = substr($arg, 14);
-                if (preg_match('/^\d+$/', $raw) !== 1) {
-                    $this->quitError('--max-actions takes a non-negative integer, got "' . $raw . '".');
-                }
-                $this->maxActions = (int) $raw;
-            } elseif (str_starts_with($arg, '--apply=')) {
-                foreach (explode(',', substr($arg, 8)) as $name) {
+            } elseif ($arg === '--ban-domain') {
+                $this->banDomain = true;
+            } elseif (str_starts_with($arg, '--action=')) {
+                foreach (explode(',', substr($arg, 9)) as $name) {
                     $name = strtolower(trim($name));
                     $map = [
                         'ban' => self::VERDICT_BAN,
@@ -391,9 +394,9 @@ class MailmanModeration
                         'accept' => self::VERDICT_ACCEPT,
                     ];
                     if (! isset($map[$name])) {
-                        $this->quitError('--apply takes ban, already-banned, discard or accept; got "' . $name . '".');
+                        $this->quitError('--action takes ban, already-banned, discard or accept; got "' . $name . '".');
                     }
-                    $this->apply[] = $map[$name];
+                    $this->actions[] = $map[$name];
                 }
             } elseif ($arg === '--silent') {
                 $this->silent = true;
@@ -423,19 +426,47 @@ class MailmanModeration
                     $this->quitError('--limit takes a positive integer, got "' . $raw . '".');
                 }
                 $this->limit = (int) $raw;
-            } elseif (str_starts_with($arg, '--request-id=')) {
-                foreach (explode(',', substr($arg, 13)) as $id) {
-                    $id = trim($id);
-                    if ($id === '') {
+            } elseif (str_starts_with($arg, '--request-id=') || str_starts_with($arg, '--request-ids=')) {
+                $value = str_starts_with($arg, '--request-id=')
+                    ? substr($arg, 13)
+                    : substr($arg, 14);
+                foreach (explode(',', $value) as $token) {
+                    $token = trim($token);
+                    if ($token === '') {
+                        continue;
+                    }
+                    // A range keeps a long list readable: 412-415 is four messages.
+                    if (preg_match('/^(\d+)-(\d+)$/', $token, $range) === 1) {
+                        [$from, $to] = [(int) $range[1], (int) $range[2]];
+                        if ($to < $from) {
+                            $this->quitError('--request-id range is backwards: ' . $token);
+                        }
+                        if ($to - $from > 500) {
+                            $this->quitError('--request-id range is too wide: ' . $token);
+                        }
+                        for ($id = $from; $id <= $to; $id++) {
+                            $this->requestIds[] = $id;
+                        }
                         continue;
                     }
                     // Silently dropping "12x" would act on a different set than the
                     // operator typed.
-                    if (ctype_digit($id) !== true) {
-                        $this->quitError('--request-id takes comma-separated numbers; got "'
-                            . $id . '".');
+                    if (ctype_digit($token) !== true) {
+                        $this->quitError('--request-id takes ids and ranges such as 412,415-418; got "'
+                            . $token . '".');
                     }
-                    $this->requestIds[] = (int) $id;
+                    $this->requestIds[] = (int) $token;
+                }
+            } elseif (str_starts_with($arg, '--review-action=')) {
+                foreach (explode(',', substr($arg, 16)) as $decision) {
+                    $decision = strtolower(trim($decision));
+                    if ($decision === '') {
+                        continue;
+                    }
+                    if (! in_array($decision, ['accept', 'discard'], true)) {
+                        $this->quitError('--review-action takes accept or discard; got "' . $decision . '".');
+                    }
+                    $this->reviewActions[] = $decision;
                 }
             } elseif (str_starts_with($arg, '--ban=')) {
                 $this->banNow = $this->validBanValue(substr($arg, 6));
@@ -451,6 +482,28 @@ class MailmanModeration
                 $this->quitError('Unknown option: ' . $arg);
             }
         }
+
+        // Naming an action is not performing it. --action and --review-action select what
+        // would be done; --apply is the only thing that does it. An earlier version
+        // let --apply imply the write, which turned a preview into 66 live actions.
+        if ($this->dryRun) {
+            $this->applyChanges = false;
+        }
+
+        // --review-action decides rows that carry no verdict, so the set must be named.
+        if ($this->reviewActions === []) {
+            return;
+        }
+
+        if ($this->requestIds === []) {
+            $this->quitError('--review-action needs --request-id=<ids> naming the rows to decide.');
+        }
+        if (count($this->reviewActions) <= 1) {
+            return;
+        }
+
+        $this->quitError('--review-action takes one decision per run: accept or discard. Got "'
+            . implode(',', $this->reviewActions) . '".');
     }
 
     /**
@@ -2585,10 +2638,10 @@ class MailmanModeration
         }
 
         if ($this->json) {
-            // With --commit the plan is followed by the results, which would make
+            // With --apply the plan is followed by the results, which would make
             // two JSON documents on one stream. Emit the plan only for a dry run;
             // act() then reports what it did.
-            if (! $this->commit) {
+            if (! $this->applyChanges) {
                 echo (string) json_encode([
                     'list' => $this->list,
                     'mode' => 'DRY-RUN',
@@ -2604,7 +2657,7 @@ class MailmanModeration
             $this->printPlan($plan, count($held));
         }
 
-        if (! $this->commit) {
+        if (! $this->applyChanges) {
             // Something to act on means a ban or a discard; Accept and
             // Already banned need nothing from the operator.
             $actionable = array_filter($plan, static fn (array $entry): bool => $entry['verdict'] === self::VERDICT_BAN
@@ -2769,7 +2822,6 @@ class MailmanModeration
     /** @param list<array<string, mixed>> $plan */
     private function printPlan(array $plan, int $queueSize = 0): void
     {
-        $mode = $this->commit ? 'COMMIT' : 'DRY-RUN';
         $bans = array_filter($plan, static fn (array $entry): bool => $entry['verdict'] === self::VERDICT_BAN);
         $discards = array_filter($plan, static fn (array $entry): bool => $entry['verdict'] === self::VERDICT_DISCARD);
         $reviews = array_filter($plan, static fn (array $entry): bool => $entry['verdict'] === self::VERDICT_REVIEW);
@@ -2779,12 +2831,17 @@ class MailmanModeration
         $scope = $queueSize > count($plan)
             ? count($plan) . ' of ' . $queueSize . ' selected'
             : count($plan) . ' held';
-        echo $mode . '  ' . $this->list . '  ' . $scope . PHP_EOL;
+
+        // First line states what the run will do, before anything else is read.
+        echo $this->applyChanges
+            ? 'COMMIT mode, changes will be applied.' . PHP_EOL
+            : 'DRY-RUN mode, use --apply to perform the changes.' . PHP_EOL;
+        echo $this->list . '  ' . $scope . PHP_EOL;
         echo count($bans) . ' to ban, ' . count($discards) . ' to discard and notify, '
             . count($reviews) . ' to review, ' . count($accepted) . ' to accept, '
             . count($already) . ' already banned' . PHP_EOL;
-        if (! $this->commit) {
-            echo 'read-only: nothing is changed without --commit plus --request-id or --apply' . PHP_EOL;
+        if (! $this->applyChanges) {
+            echo 'nothing is changed: this run only reports.' . PHP_EOL;
         }
         echo PHP_EOL;
 
@@ -3116,7 +3173,7 @@ class MailmanModeration
         $count = $domainCounts[$domain] ?? 0;
 
         if (
-            $this->domainBans
+            $this->banDomain
             && $count >= $this->domainBanMinMessages
             && $entry['verdict'] === self::VERDICT_BAN
             && ! $this->matchesDomain($domain, $this->repList('shared_domains'))
@@ -3230,16 +3287,16 @@ class MailmanModeration
      */
     private function act(array $plan, array $domainCounts): void
     {
-        // Selection comes from --request-id, and from --apply for whole verdict
-        // classes. --apply is the only way to act without naming ids, so the
+        // Selection comes from --request-id, and from --action for whole verdict
+        // classes. --action is the only way to act without naming ids, so the
         // operator states which class they mean rather than a flag implying it.
         // A message whose body could not be read was judged on its subject alone.
-        // Acting on that is guessing, so --apply skips it and says so. Naming the
+        // Acting on that is guessing, so --action skips it and says so. Naming the
         // id explicitly still works, as a deliberate override.
         $unreadable = array_values(array_filter(
             $plan,
             fn (array $entry): bool => ($entry['raw_missing'] ?? false)
-                && in_array($entry['verdict'], $this->apply, true)
+                && in_array($entry['verdict'], $this->actions, true)
                 && ! in_array($entry['id'], $this->requestIds, true)
         ));
         if ($unreadable !== []) {
@@ -3251,25 +3308,12 @@ class MailmanModeration
         $selected = array_values(array_filter(
             $plan,
             fn (array $entry): bool => (in_array($entry['id'], $this->requestIds, true)
-                    || in_array($entry['verdict'], $this->apply, true))
+                    || in_array($entry['verdict'], $this->actions, true))
                 && ! in_array($entry, $unreadable, true)
         ));
         if ($selected === []) {
-            $this->quitError('--commit needs --request-id=<id[,id...]> or --apply=<ban,discard,accept>.'
+            $this->quitError('A write needs --request-id=<id[,id...]> or --action=<ban,discard,accept>.'
                 . ' Nothing was changed.');
-        }
-
-        // A class name is not a count. One --apply=ban on a large queue would ban
-        // and mail every row in one unpausable action, so cap it and say what was
-        // left. --max-actions=0 lifts the cap deliberately.
-        if ($this->maxActions > 0 && count($selected) > $this->maxActions) {
-            $this->quitError('This would act on ' . count($selected) . ' messages, above the cap of '
-                . $this->maxActions . '. Nothing was changed.' . PHP_EOL
-                . 'Raise it with --max-actions=N, or name ids with --request-id.');
-        }
-        if ($this->maxActions === 0 && count($selected) > 50) {
-            fwrite(STDERR, 'warning: acting on ' . count($selected)
-                . ' messages with the cap lifted' . PHP_EOL);
         }
 
         // The verdict decides the action, never the request alone. Acting on an
@@ -3285,14 +3329,36 @@ class MailmanModeration
             $selected,
             static fn (array $entry): bool => ! in_array(
                 $entry['verdict'],
-                [self::VERDICT_BAN, self::VERDICT_DISCARD, self::VERDICT_ACCEPT, self::VERDICT_BANNED],
+                [
+                    self::VERDICT_BAN,
+                    self::VERDICT_DISCARD,
+                    self::VERDICT_ACCEPT,
+                    self::VERDICT_BANNED,
+                    // A review row carries no verdict, so it is actionable only
+                    // because --review-action supplied one.
+                    self::VERDICT_REVIEW,
+                ],
                 true
             )
         );
         if ($refused !== []) {
             $ids = implode(', ', array_map(static fn (array $e): string => (string) $e['id'], $refused));
-            $this->quitError('Those messages are not actionable: ' . $ids
-                . PHP_EOL . 'Needs review rows cannot be acted on.');
+            $this->quitError('Those messages are not actionable: ' . $ids);
+        }
+        // A review row without a stated decision is still nothing to act on.
+        if ($this->reviewActions === []) {
+            $unreviewed = array_filter(
+                $selected,
+                static fn (array $entry): bool => $entry['verdict'] === self::VERDICT_REVIEW
+            );
+            if ($unreviewed !== []) {
+                $ids = implode(', ', array_map(
+                    static fn (array $e): string => (string) $e['id'],
+                    $unreviewed
+                ));
+                $this->quitError('Needs review rows need a decision: add --review-action=accept or'
+                    . ' --review-action=discard. Not acted on: ' . $ids);
+            }
         }
 
         $results = [];
@@ -3302,8 +3368,19 @@ class MailmanModeration
         /** @var array<string, true> $bannedThisRun */
         $bannedThisRun = [];
         foreach ($selected as $entry) {
-            $accepting = $entry['verdict'] === self::VERDICT_ACCEPT;
-            $action = $accepting ? 'accept' : ($this->silent ? 'discard' : 'reject');
+            // A stated review decision replaces the verdict for this row: the row
+            // had none, and the operator supplied one.
+            $decision = $entry['verdict'] === self::VERDICT_REVIEW && $this->reviewActions !== []
+                ? $this->reviewActions[0]
+                : '';
+            $accepting = $entry['verdict'] === self::VERDICT_ACCEPT
+                || $decision === 'accept';
+
+            if ($decision === 'discard') {
+                $action = 'reject';
+            } else {
+                $action = $accepting ? 'accept' : ($this->silent ? 'discard' : 'reject');
+            }
 
             /** @var list<string> $signals */
             $signals = $entry['signals'];
@@ -3320,7 +3397,8 @@ class MailmanModeration
             // Only a Ban verdict touches the ban list. Discard drops the message
             // and tells the sender why; the policy file promises it is not added
             // to the ban list, so the notification must be able to say that.
-            $banning = $entry['verdict'] === self::VERDICT_BAN;
+            $banning = $entry['verdict'] === self::VERDICT_BAN
+                && $decision === '';
             // A sender banned earlier in this same run: the server would answer
             // "already banned", which used to be reported as a failure.
             $alreadyInRun = isset($bannedThisRun[$entry['sender']]);
@@ -3453,30 +3531,36 @@ class MailmanModeration
     private function printHelp(): void
     {
         echo 'Triage the mailing-list moderation queue.' . PHP_EOL . PHP_EOL;
+        echo 'By default nothing is changed. Using --apply performs the changes,'
+             . ' --action and --review-action only select what would be done.' . PHP_EOL . PHP_EOL;
         echo 'Usage:' . PHP_EOL;
-        echo '  phpmyadmin-mailman-moderation.php                          read-only triage' . PHP_EOL;
-        echo '  phpmyadmin-mailman-moderation.php --json                   triage as JSON' . PHP_EOL;
-        echo '  phpmyadmin-mailman-moderation.php --show-bans=list|global|all' . PHP_EOL;
-        echo '                                                            which bans apply' . PHP_EOL;
-        echo '  phpmyadmin-mailman-moderation.php --ban=<address>          add a ban' . PHP_EOL;
-        echo '  phpmyadmin-mailman-moderation.php --unban=<address>        remove a ban' . PHP_EOL;
-        echo '  phpmyadmin-mailman-moderation.php --commit --request-id=1,2  act on these ids' . PHP_EOL;
-        echo '  phpmyadmin-mailman-moderation.php --commit --apply=ban      act on every Ban row' . PHP_EOL;
-        echo '  phpmyadmin-mailman-moderation.php --commit --apply=ban,accept' . PHP_EOL;
-        echo '  phpmyadmin-mailman-moderation.php --commit --apply=already-banned  clear held' . PHP_EOL;
-        echo '  phpmyadmin-mailman-moderation.php --commit --apply=ban --max-actions=0' . PHP_EOL;
+        echo '  ...                                    report what is held (read-only)' . PHP_EOL;
+        echo '  ... --json                             the same, as JSON on stdout' . PHP_EOL;
+        echo '  ... --show-bans=list|global|all        which bans apply' . PHP_EOL;
+        echo PHP_EOL;
+        echo '  ... --apply --request-id=412,415-418   act on these held messages' . PHP_EOL;
+        echo '  ... --apply --action=ban               act on every Ban row' . PHP_EOL;
+        echo '  ... --apply --action=ban,accept        act on those two classes' . PHP_EOL;
+        echo '  ... --apply --action=already-banned    clear messages whose sender is banned' . PHP_EOL;
+        echo '  ... --apply --review-action=accept --request-id=412' . PHP_EOL;
+        echo '                                         decide rows left for review' . PHP_EOL;
+        echo '  ... --apply --ban=<address>            add a ban' . PHP_EOL;
+        echo '  ... --apply --unban=<address>          remove a ban' . PHP_EOL;
         echo PHP_EOL;
         echo 'Options:' . PHP_EOL;
-        echo '  --list=<address>  list to work on (default ' . self::DEFAULT_LIST . ')' . PHP_EOL;
-        echo '  --silent          discard without notifying the sender' . PHP_EOL;
-        echo '  --limit=<n>       held messages to read (default 200)' . PHP_EOL;
-        echo '  --max-actions=<n> cap messages per --commit run (default 25, 0 = no cap)' . PHP_EOL;
-        echo '  --domain-bans     allow banning a whole domain (off: a From is forgeable)' . PHP_EOL;
-        echo '  --offline         do not refresh the upstream feeds' . PHP_EOL;
-        echo '  --json            machine-readable plan on stdout' . PHP_EOL;
-        echo '  --config=<path>   config file (default ~/.config/phpmyadmin)' . PHP_EOL;
+        echo '  --apply            perform the changes; without it the run only reports' . PHP_EOL;
+        echo '  --action=<class>   select a verdict class: ban, already-banned, discard, accept' . PHP_EOL;
+        echo '  --review-action=<decision> decide review rows: accept or discard (needs --request-id)' . PHP_EOL;
+        echo '  --request-id=<ids> the held messages, e.g. 412,415-418 (or --request-ids)' . PHP_EOL;
+        echo '  --list=<address>   list to work on (default ' . self::DEFAULT_LIST . ')' . PHP_EOL;
+        echo '  --silent           discard without notifying the sender' . PHP_EOL;
+        echo '  --limit=<n>        held messages to read (default 200)' . PHP_EOL;
+        echo '  --ban-domain       allow banning a whole domain (off: a From is forgeable)' . PHP_EOL;
+        echo '  --dry-run          force read-only even alongside --apply' . PHP_EOL;
+        echo '  --offline          do not refresh the upstream feeds' . PHP_EOL;
+        echo '  --config=<path>    config file (default ~/.config/phpmyadmin)' . PHP_EOL;
         echo PHP_EOL;
-        echo 'Exit: 0 nothing to do, 2 spam found, 3 plan incomplete, 1 error' . PHP_EOL;
+        echo 'Exit: 0 nothing to do, 2 something actionable, 3 plan incomplete, 1 error' . PHP_EOL;
     }
 
     private function quitError(string $message): never
