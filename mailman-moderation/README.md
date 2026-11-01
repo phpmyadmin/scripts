@@ -34,7 +34,7 @@ Optional keys:
 | `ledger` | `../private/mailman-moderation-ledger.jsonl` | append-only audit trail |
 | `reputation` | `../private/mailman-moderation-reputation.md` | policy file, **required** |
 
-The policy file holds the domain lists, the detection terms, the sender-facing notices and the thresholds. It is kept out of this repository: it records which senders are trusted and what counts as abuse.
+The policy file holds the domain lists, the detection terms, the sender-facing notices and one threshold: how many held messages from a domain count as a pattern. It is kept out of this repository: it records which senders are trusted and what counts as abuse.
 
 ## Usage
 
@@ -56,7 +56,7 @@ Every run is read-only until `--apply` is given. `--apply` performs; `--action` 
 # act on named messages, ranges allowed
 ./mailman-moderation/phpmyadmin-mailman-moderation.php --apply --request-id=412,415-418
 
-# act on every Ban row, capped at 25
+# act on every Ban row
 ./mailman-moderation/phpmyadmin-mailman-moderation.php --apply --action=ban
 
 # decide rows the triage left for review: one decision, named ids
@@ -92,7 +92,8 @@ Every run is read-only until `--apply` is given. `--apply` performs; `--action` 
 A table, ordered by verdict then sender then subject. `REASON` is the short label of the policy line that decided the verdict; a wrapped reason continues under its own column. A legend below the table spells out the flags.
 
 ```
-DRY-RUN  security@example.org  41 held
+DRY-RUN mode, use --apply to perform the changes.
+security@example.org  41 held
 6 to ban, 3 to discard and notify, 31 to review, 1 to accept, 0 already banned
 nothing is changed: this run only reports.
 
@@ -105,7 +106,7 @@ ID    VERDICT                  SENDER                       SUBJECT             
                                                                                          nothing found against it
 ```
 
-Flags: `SIGNED`, `ATTACHMENT-ONLY`, `AUTH`, `PHISHING`, `SCAM`, `BULK`, `SUSPECT-DOMAIN`, `REPEAT`, `BLOCKLISTED-IP`, `LOOKALIKE`, `LINKS`, `REPLY-TO`, `SPAM-FLAG`, `BULK-MAILER`, `LANGUAGE`, `EMPTY`, `BAN-RULE`.
+Flags: `SIGNED`, `ATTACHMENT-ONLY`, `AUTH`, `PHISHING`, `SCAM`, `BULK`, `SUSPECT-DOMAIN`, `REPEAT`, `BLOCKLISTED-IP`, `LOOKALIKE`, `LINKS`, `REPLY-TO`, `SPAM-FLAG`, `BULK-MAILER`, `LANGUAGE`, `EMPTY`, `NO-REPLY`, `BAN-RULE`.
 
 Progress goes to stderr, one line per step. Each message body is a separate request, so a full queue takes a couple of minutes.
 
