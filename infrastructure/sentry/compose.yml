@@ -1,16 +1,31 @@
 services:
-  redis:
-    restart: on-failure:5
-    image: redis:6.0-alpine
-    healthcheck:
-        test: ["CMD", "redis-cli", "ping"]
-        interval: 1s
-        timeout: 3s
-        retries: 30
-
   postgres:
-    restart: on-failure:5
-    image: postgres:13-alpine
+    <<: &hardening
+      restart: unless-stopped
+      security_opt:
+        - no-new-privileges:true
+      cap_drop:
+        - ALL
+      logging:
+        driver: json-file
+        options:
+          max-size: "10m"
+          max-file: "3"
+    # Docker's resolver still answers peer names, but forwards anything else to
+    # 127.0.0.1, where nothing listens, so external names SERVFAIL. Not in the
+    # anchor: smtp needs real DNS. This is what completes the no-masquerade
+    # networks, which stop TCP but not DNS lookups.
+    dns:
+      - 127.0.0.1
+    # postgres:16-alpine, multi-arch index digest, resolved 2026-11-09
+    image: postgres:16-alpine@sha256:aa6cb33cf4c19c765cefcf48d96176258800870a9a1e930ad126200f9d825139
+    # Image's own postgres user; the bind mount must be owned by uid 70.
+    user: "70:70"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m,mode=1777
+      - /var/run/postgresql:rw,noexec,nosuid,size=16m,mode=1777
+    shm_size: 256mb
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sentry"]
       interval: 10s
@@ -21,71 +36,132 @@ services:
       POSTGRES_USER: sentry
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_DB: sentry
+      POSTGRES_INITDB_ARGS: --data-checksums
     volumes:
      - ${POSTGRES_DATA_VOLUME}:/var/lib/postgresql/data
-  smtp:
-    restart: unless-stopped
-    # Use this value to have correct SMTP HELO value
-    hostname: hertz.phpmyadmin.net
-    image: tianon/exim4
+    networks:
+      - db
+    mem_limit: 1g
+    cpus: 1
+    pids_limit: 200
 
   sentry:
-    image: sentry:9.1.2
+    <<: *hardening
+    dns:
+      - 127.0.0.1
+    # rustrak/rustrak-server:v0.25.0-postgres, multi-arch index digest, resolved 2026-11-09
+    image: rustrak/rustrak-server:v0.25.0-postgres@sha256:30e7a20df58d62d5e295b6800ef43134afd82962b415d6691a507859c1b94b23
+    # distroless, already USER nonroot; repeated so the intent survives a base
+    # image change.
+    user: "65532:65532"
+    read_only: true
+    init: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m,mode=1777
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     ports:
-     - 9000:9000
+     - ${SERVER_PORT:-9000}:8080
     environment:
-      SENTRY_SECRET_KEY: "${SENTRY_SECRET_KEY}"
-      SENTRY_POSTGRES_HOST: postgres
-      SENTRY_DB_USER: sentry
-      SENTRY_DB_PASSWORD: "${POSTGRES_PASSWORD}"
-      SENTRY_REDIS_HOST: redis
-      SENTRY_FILESTORE_DIR: /data/filestorage
-      SENTRY_SERVER_EMAIL: "${SENTRY_SERVER_EMAIL}"
-      SENTRY_EMAIL_HOST: smtp
+      DATABASE_URL: "postgres://sentry:${POSTGRES_PASSWORD}@postgres:5432/sentry"
+      # 64 bytes minimum; carried by the Sentry-era variable name.
+      SESSION_SECRET_KEY: "${SENTRY_SECRET_KEY}"
+      PUBLIC_URL: "${PUBLIC_URL:?set PUBLIC_URL in .env}"
+      # The binary reads SSL_PROXY and only marks the session cookie Secure
+      # (it also makes SESSION_SECRET_KEY mandatory). Named here for what it
+      # does; set it false only when serving plain HTTP.
+      SSL_PROXY: "${COOKIE_SESSION_SECURE:-true}"
+      # "email:password"; read once, while the users table is empty.
+      CREATE_SUPERUSER: "${CREATE_SUPERUSER:-}"
+      # Names read by the image.
+      RUSTRAK_TELEMETRY: "off"
+      DO_NOT_TRACK: "1"
+      RUSTRAK_METRICS: "off"
+      # Email alerts through the exim relay on the internal network.
+      SMTP_HOST: smtp
+      SMTP_PORT: "25"
+      SMTP_TLS: none
+      # Required: no default, a bare localhost sender is rejected widely.
+      SMTP_FROM: "${SENTRY_SERVER_EMAIL:?set SENTRY_SERVER_EMAIL in .env}"
+      # In the volume, so an undigested backlog survives a restart.
+      INGEST_DIR: /data/ingest
+      SOURCEMAP_STORAGE_PATH: /data/sourcemaps
     volumes:
+     - ${SENTRY_DATA_VOLUME}:/data
+    networks:
+      - db
+      - mail
+      - front
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 256
+    stop_grace_period: 30s
+
+  # Local MTA for alert and invitation email. The only container with a route
+  # to the internet: postgres and sentry answer on `mail`, and never dial out.
+  smtp:
+    <<: *hardening
+    # tianon/exim4, multi-arch index digest, resolved 2026-11-09
+    image: tianon/exim4@sha256:c91ae2da0135713b1a70662502a2e76e0df7306bb2c366659787ce85c9d242d0
+    # The HELO name exim sends; it must be a name that resolves to this host.
+    hostname: ${SMTP_HELO_HOSTNAME:?set SMTP_HELO_HOSTNAME in .env}
+    # The entrypoint starts as root and drops to Debian-exim for delivery,
+    # which needs these and nothing else. Port 25 needs no capability.
+    user: "0:0"
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    read_only: true
+    tmpfs:
+      - /var/spool/exim4:rw,noexec,nosuid,size=64m
+      - /var/log/exim4:rw,noexec,nosuid,size=16m
+      - /tmp:rw,noexec,nosuid,size=16m
+    networks:
+      - mail
+      # Internet access, for delivery only. Default DNS, so MX lookups work.
+      - egress
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 100
+
+  # One-shot, not started by default: sets the ownership the two bind mounts
+  # need. Rootless Docker remaps uids, so this cannot be done from the host.
+  #   docker compose --profile init run --rm init
+  init:
+    profiles: ["init"]
+    # postgres:16-alpine, same digest as above
+    image: postgres:16-alpine@sha256:aa6cb33cf4c19c765cefcf48d96176258800870a9a1e930ad126200f9d825139
+    user: "0:0"
+    entrypoint: sh
+    command:
+      - -c
+      - >-
+        chown 70:70 /pg && chmod 0700 /pg &&
+        chown 65532:65532 /data && chmod 0700 /data
+    volumes:
+     - ${POSTGRES_DATA_VOLUME}:/pg
      - ${SENTRY_DATA_VOLUME}:/data
 
-  cron:
-    image: sentry:9.1.2
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: "sentry run cron"
-    environment:
-      SENTRY_SECRET_KEY: "${SENTRY_SECRET_KEY}"
-      SENTRY_POSTGRES_HOST: postgres
-      SENTRY_DB_USER: sentry
-      SENTRY_DB_PASSWORD: "${POSTGRES_PASSWORD}"
-      SENTRY_REDIS_HOST: redis
-      SENTRY_FILESTORE_DIR: /data/filestorage
-      SENTRY_SERVER_EMAIL: "${SENTRY_SERVER_EMAIL}"
-      SENTRY_EMAIL_HOST: smtp
-    volumes:
-     - ${SENTRY_DATA_VOLUME}:/data
-
-  worker:
-    image: sentry:9.1.2
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: "sentry run worker"
-    environment:
-      SENTRY_SECRET_KEY: "${SENTRY_SECRET_KEY}"
-      SENTRY_POSTGRES_HOST: postgres
-      SENTRY_DB_USER: sentry
-      SENTRY_DB_PASSWORD: "${POSTGRES_PASSWORD}"
-      SENTRY_REDIS_HOST: redis
-      SENTRY_FILESTORE_DIR: /data/filestorage
-      SENTRY_SERVER_EMAIL: "${SENTRY_SERVER_EMAIL}"
-      SENTRY_EMAIL_HOST: smtp
-    volumes:
-     - ${SENTRY_DATA_VOLUME}:/data
+# Every network is a plain bridge. All but `egress` disable masquerading, which
+# is what removes internet access: the packet leaves the container with its
+# private 172.x source address, the host does not rewrite it, and nothing
+# answers. Containers that must not even resolve an external name also carry
+# `dns: 127.0.0.1` (see the anchor at the top of services), which stops Docker's
+# resolver from forwarding the query upstream.
+networks:
+  db:
+    <<: &no-masquerade
+      driver: bridge
+      driver_opts:
+        com.docker.network.bridge.enable_ip_masquerade: "false"
+  mail:
+    <<: *no-masquerade
+  front:
+    <<: *no-masquerade
+  # The only network with NAT, and `smtp` is its only member.
+  egress:
+    driver: bridge
