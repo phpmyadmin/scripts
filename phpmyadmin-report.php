@@ -49,6 +49,7 @@ class Reports
             'phpmyadmin-team/sql-parser',
             'phpmyadmin-team/shapefile',
             'phpmyadmin-team/tcpdf',
+            'php-team/pear/google-recaptcha',
         ],
 	// Token scopes: read_api
 	// https://gitlab.alpinelinux.org/-/user_settings/personal_access_tokens?page=1&state=active&sort=expires_asc
@@ -288,6 +289,15 @@ class Reports
         }
     }
 
+/**
+ * Projects that left the phpMyAdmin team. Their history before the given date is
+ * legitimately part of a report; after it, the project belongs to someone else
+ * and must not appear. google-recaptcha moved to php-team/pear (see b83c52d).
+ */
+private const PROJECT_UNTIL = [
+    'php-team/pear/google-recaptcha' => '2025-01-31',
+];
+
     private function getGitLabHost(?string $host): string
     {
         if ($host === null || $host === '') {
@@ -436,6 +446,15 @@ class Reports
         $this->logDebug('Processing GitLab project: ' . $projectSlug);
         $startDate = $this->startDate->format('Y-m-d\TH:i:sp');
         $endDate = $this->endDate->format('Y-m-d\TH:i:sp');
+        if (isset(self::PROJECT_UNTIL[$projectSlug])) {
+            $until = self::PROJECT_UNTIL[$projectSlug] . 'T23:59:59Z';
+            if ($until < $endDate) {
+                $endDate = $until;
+            }
+            if ($startDate > $endDate) {
+                return; // the whole window is after the project left the team
+            }
+        }
         $commits = $this->callGitLabApi(
             $configBlockIn,
             "v4/projects/${projectSlugUrl}/repository/commits?since=${startDate}&until=${endDate}&per_page=100"
