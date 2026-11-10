@@ -24,7 +24,7 @@ services:
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=32m,mode=1777
-      - /var/run/postgresql:rw,noexec,nosuid,size=16m,mode=1777
+      - /var/run/postgresql:rw,noexec,nosuid,size=16m,mode=0755,uid=70,gid=70
     shm_size: 256mb
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sentry"]
@@ -64,6 +64,8 @@ services:
     ports:
      - ${SERVER_PORT:-9000}:8080
     environment:
+      # POSTGRES_PASSWORD goes in verbatim, so it must be URL-safe: a "/", "#"
+      # or "?" in it breaks parsing with "invalid port number". Use hex.
       DATABASE_URL: "postgres://sentry:${POSTGRES_PASSWORD}@postgres:5432/sentry"
       # 64 bytes minimum; carried by the Sentry-era variable name.
       SESSION_SECRET_KEY: "${SENTRY_SECRET_KEY}"
