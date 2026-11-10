@@ -372,19 +372,34 @@ class Reports
     {
         $token = $configBlockIn['token'];
 
-        $data = $this->callApi(
-            'https://api.github.com/' . $path,
-            [
-                'Authorization: token ' . $token,
-                'Accept: application/vnd.github+json',
-            ]
-        );
+        // Follow the pages. Both callers ask for per_page=100, so a page shorter
+        // than 100 means it was the last one. Without this the report silently
+        // stopped at the first page: a GitLab project returned its default of 20
+        // commits and everything past it never reached the report, which is
+        // invisible because the output still looks complete.
+        $all = [];
+        for ($page = 1; $page <= 100; $page++) {
+            $data = $this->callApi(
+                'https://api.github.com/' . $path . '&page=' . $page,
+                [
+                    'Authorization: token ' . $token,
+                    'Accept: application/vnd.github+json',
+                ]
+            );
 
-        if ($data['message'] ?? false) {
-            $this->quitError('GitHub API (' . $path . ') error: ' . $data['message']);
+            if ($data['message'] ?? false) {
+                $this->quitError('GitHub API (' . $path . ') error: ' . $data['message']);
+            }
+            if (! is_array($data) || $data === []) {
+                break;
+            }
+            $all = array_merge($all, $data);
+            if (count($data) < 100) {
+                break;
+            }
         }
 
-        return $data;
+        return $all;
     }
 
     private function callGitLabApi(array $configBlockIn, string $path): array
@@ -392,13 +407,26 @@ class Reports
         $token = $configBlockIn['token'];
         $host = $configBlockIn['host'];
 
-        $data = $this->callApi('https://' . $host . '/api/' . $path, ['Authorization: Bearer ' . $token]);
+        $all = [];
+        for ($page = 1; $page <= 100; $page++) {
+            $data = $this->callApi(
+                'https://' . $host . '/api/' . $path . '&page=' . $page,
+                ['Authorization: Bearer ' . $token]
+            );
 
-        if ($data['error'] ?? false) {
-            $this->quitError('GitLab (' . $host . ') API (' . $path . ') error (' . $data['error'] . ') : ' . $data['error_description']);
+            if ($data['error'] ?? false) {
+                $this->quitError('GitLab (' . $host . ') API (' . $path . ') error (' . $data['error'] . ') : ' . $data['error_description']);
+            }
+            if (! is_array($data) || $data === []) {
+                break;
+            }
+            $all = array_merge($all, $data);
+            if (count($data) < 100) {
+                break;
+            }
         }
 
-        return $data;
+        return $all;
     }
 
     private function processGitLabProject(array $configBlockIn, string $projectSlug): void
@@ -410,7 +438,7 @@ class Reports
         $endDate = $this->endDate->format('Y-m-d\TH:i:sp');
         $commits = $this->callGitLabApi(
             $configBlockIn,
-            "v4/projects/${projectSlugUrl}/repository/commits?since=${startDate}&until=${endDate}"
+            "v4/projects/${projectSlugUrl}/repository/commits?since=${startDate}&until=${endDate}&per_page=100"
         );
 
         $commits = array_filter($commits, static function (array $commit) use ($authorEmail): bool {
