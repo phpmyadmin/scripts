@@ -17,7 +17,7 @@ services:
     # networks, which stop TCP but not DNS lookups.
     dns:
       - 127.0.0.1
-    # postgres:16-alpine, multi-arch index digest, resolved 2026-11-09
+    # postgres:16-alpine, multi-arch index digest, resolved 2026-11-09, same 2026-11-12
     image: postgres:16-alpine@sha256:aa6cb33cf4c19c765cefcf48d96176258800870a9a1e930ad126200f9d825139
     # Image's own postgres user; the bind mount must be owned by uid 70.
     user: "70:70"
@@ -49,8 +49,8 @@ services:
     <<: *hardening
     dns:
       - 127.0.0.1
-    # rustrak/rustrak-server:v0.25.0-postgres, multi-arch index digest, resolved 2026-11-09
-    image: rustrak/rustrak-server:v0.25.0-postgres@sha256:30e7a20df58d62d5e295b6800ef43134afd82962b415d6691a507859c1b94b23
+    # rustrak/rustrak-server:v0.26.0-postgres, multi-arch index digest, resolved 2026-11-12
+    image: rustrak/rustrak-server:v0.26.0-postgres@sha256:6dd4e28418c44c2c253e064291a68080a4833e13e5a908da1d1bf98df2e943b1
     # distroless, already USER nonroot; repeated so the intent survives a base
     # image change.
     user: "65532:65532"
@@ -80,6 +80,10 @@ services:
       RUSTRAK_TELEMETRY: "off"
       DO_NOT_TRACK: "1"
       RUSTRAK_METRICS: "off"
+      # 0.26 confines webhook and Slack alerts to public addresses and ignores
+      # HTTP(S)_PROXY. No such channel here, so keep it off; set "on" only to
+      # alert to an internal Mattermost, n8n or the like.
+      RUSTRAK_ALERTS_ALLOW_PRIVATE_NETWORKS: "off"
       # Email alerts through the exim relay on the internal network.
       SMTP_HOST: smtp
       SMTP_PORT: "25"
@@ -104,7 +108,7 @@ services:
   # to the internet: postgres and sentry answer on `mail`, and never dial out.
   smtp:
     <<: *hardening
-    # tianon/exim4, multi-arch index digest, resolved 2026-11-09
+    # tianon/exim4, multi-arch index digest, resolved 2026-11-09, same 2026-11-12
     image: tianon/exim4@sha256:c91ae2da0135713b1a70662502a2e76e0df7306bb2c366659787ce85c9d242d0
     # The HELO name exim sends; it must be a name that resolves to this host.
     hostname: ${SMTP_HELO_HOSTNAME:?set SMTP_HELO_HOSTNAME in .env}

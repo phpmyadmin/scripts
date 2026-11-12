@@ -41,7 +41,7 @@ See `MIGRATION.md` §3: add `client_max_body_size` and the plain-HTTP redirect b
 
 Projects → New. The DSN is `https://<key>@<host>/<id>`, where `<host>` is the hostname in `PUBLIC_URL`; ingestion is `POST /api/<id>/envelope/`.
 
-Not available: `POST /api/<id>/store/` (400, deprecated) and `/api/embed/error-page/` (404). Feedback goes in a `user_report` envelope item, or through `POST /api/0/projects/<org>/<project>/user-feedback/`.
+Both the legacy `POST /api/<id>/store/` and the envelope endpoint are accepted since 0.26, so the error-reporting server forwards without code changes. `/api/embed/error-page/` is still 404: feedback goes in a `user_report` envelope item, or through `POST /api/0/projects/<org>/<project>/user-feedback/`.
 
 ## Email
 
@@ -94,7 +94,15 @@ Set `SENTRY_DATA_VOLUME` aside too (source maps). Restore with `psql -U sentry s
 
 ## Upgrade
 
-Change the tag and digest of `sentry`, update the date in `compose.yml`, then `docker compose up -d`. Dump first.
+Change the tag and digest of `sentry`, update the date in `compose.yml`, then `docker compose up -d`. Dump first. Migrations run at startup; 0.25 → 0.26 was tested in place on an existing cluster.
+
+Breaking in 0.26:
+
+- Sessions moved to the database, so everyone signs in once more.
+- `GET /api/projects` answers `{"items": […]}` instead of a bare array; anything parsing the list needs updating.
+- `/auth/register` is gone, and any idempotent client that read it needs a different check.
+- `per_page` above 100 answers 400.
+- Webhook and Slack alerts no longer reach private addresses, and proxy variables are ignored. Set `RUSTRAK_ALERTS_ALLOW_PRIVATE_NETWORKS=on` only if an alert target is internal. Email through `smtp` is unaffected.
 
 ## Sentry → now
 
