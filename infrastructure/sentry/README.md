@@ -13,7 +13,7 @@ Sentry-SDK-compatible error tracking on PostgreSQL. Migration steps: [MIGRATION.
 
 ## Images
 
-Pinned by tag and digest in `compose.yml`, where each digest has a comment with the tag it resolves and the date. Bump both together; check a digest against its tag with `docker buildx imagetools inspect postgres:16-alpine`.
+Pinned by tag and digest in `compose.yml`, where each `image:` line has a comment naming its tag and a `last-checked-at` date. Bump tag and digest together and move that date. To confirm a digest still belongs to its tag: `docker buildx imagetools inspect postgres:16-alpine`.
 
 ## Data directories
 
@@ -94,15 +94,32 @@ Set `SENTRY_DATA_VOLUME` aside too (source maps). Restore with `psql -U sentry s
 
 ## Upgrade
 
-Change the tag and digest of `sentry`, update the date in `compose.yml`, then `docker compose up -d`. Dump first. Migrations run at startup; 0.25 → 0.26 was tested in place on an existing cluster.
+Change the tag and digest of `sentry`, update its `last-checked-at` in `compose.yml`, then `docker compose up -d`. Take a dump first. Migrations run at startup, before the port opens.
 
-Breaking in 0.26:
+### From 0.26 or older (0.27 is breaking)
+
+0.27 indexes the `events` table and builds the indexes by reading the whole table before it opens the port.
+
+- The first start takes noticeably longer on a large table. Do not restart it midway: the index build is not resumable and starting over costs the same again. Give any liveness probe at least 30 minutes, or leave the service out of a probe for the upgrade.
+- On PostgreSQL, run `VACUUM (ANALYZE) events;` afterwards to give the planner fresh statistics.
+- A numeric environment variable that does not parse now stops startup instead of silently falling back to its default. The two this stack sets (`DATABASE_MAX_CONNECTIONS`, `DATABASE_MIN_CONNECTIONS`) are valid.
+- New since 0.27 and left at their defaults here: `INGEST_MAX_PENDING_EVENTS` (100000) and `INGEST_MIN_FREE_DISK_MB` (64), the latter refusing new uploads when the volume is nearly full.
+
+0.26 → 0.28 was verified in place on an existing cluster, and from an empty one.
+
+### From 0.25 or older
 
 - Sessions moved to the database, so everyone signs in once more.
 - `GET /api/projects` answers `{"items": […]}` instead of a bare array; anything parsing the list needs updating.
 - `/auth/register` is gone, and any idempotent client that read it needs a different check.
 - `per_page` above 100 answers 400.
 - Webhook and Slack alerts no longer reach private addresses, and proxy variables are ignored. Set `RUSTRAK_ALERTS_ALLOW_PRIVATE_NETWORKS=on` only if an alert target is internal. Email through `smtp` is unaffected.
+
+### What changed in 0.28
+
+- Sessions are persistent: the cookie carries a 30-day `Max-Age`, with a 14-day idle and 30-day absolute limit enforced server-side.
+- The dashboard is an installable PWA, so `/sw.js` and `/manifest.webmanifest` are served.
+- Assets are served precompressed (Brotli or gzip, chosen from `Accept-Encoding`, with `Vary: accept-encoding`). nginx must pass `Accept-Encoding` through, which it does by default; do not clear it, or every client gets the uncompressed build.
 
 ## Sentry → now
 

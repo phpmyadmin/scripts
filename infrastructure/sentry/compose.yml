@@ -17,8 +17,8 @@ services:
     # networks, which stop TCP but not DNS lookups.
     dns:
       - 127.0.0.1
-    # postgres:16-alpine, multi-arch index digest, resolved 2026-11-09, same 2026-11-12
-    image: postgres:16-alpine@sha256:aa6cb33cf4c19c765cefcf48d96176258800870a9a1e930ad126200f9d825139
+    # postgres:16-alpine, last-checked-at 2026-11-17
+    image: postgres:16-alpine@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e
     # Image's own postgres user; the bind mount must be owned by uid 70.
     user: "70:70"
     read_only: true
@@ -49,8 +49,8 @@ services:
     <<: *hardening
     dns:
       - 127.0.0.1
-    # rustrak/rustrak-server:v0.26.0-postgres, multi-arch index digest, resolved 2026-11-12
-    image: rustrak/rustrak-server:v0.26.0-postgres@sha256:6dd4e28418c44c2c253e064291a68080a4833e13e5a908da1d1bf98df2e943b1
+    # rustrak/rustrak-server:v0.28.0-postgres, last-checked-at 2026-11-17
+    image: rustrak/rustrak-server:v0.28.0-postgres@sha256:5e30133c93c6b24c25a1731f05f9089163367712cf42ee6053e148cee433e949
     # distroless, already USER nonroot; repeated so the intent survives a base
     # image change.
     user: "65532:65532"
@@ -108,7 +108,7 @@ services:
   # to the internet: postgres and sentry answer on `mail`, and never dial out.
   smtp:
     <<: *hardening
-    # tianon/exim4, multi-arch index digest, resolved 2026-11-09, same 2026-11-12
+    # tianon/exim4, last-checked-at 2026-11-17
     image: tianon/exim4@sha256:c91ae2da0135713b1a70662502a2e76e0df7306bb2c366659787ce85c9d242d0
     # The HELO name exim sends; it must be a name that resolves to this host.
     hostname: ${SMTP_HELO_HOSTNAME:?set SMTP_HELO_HOSTNAME in .env}
@@ -139,8 +139,8 @@ services:
   #   docker compose --profile init run --rm init
   init:
     profiles: ["init"]
-    # postgres:16-alpine, same digest as above
-    image: postgres:16-alpine@sha256:aa6cb33cf4c19c765cefcf48d96176258800870a9a1e930ad126200f9d825139
+    # postgres:16-alpine, last-checked-at 2026-11-17
+    image: postgres:16-alpine@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e
     user: "0:0"
     entrypoint: sh
     command:
