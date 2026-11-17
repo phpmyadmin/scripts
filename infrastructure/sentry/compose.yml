@@ -126,6 +126,11 @@ services:
       - /var/spool/exim4:rw,noexec,nosuid,size=64m
       - /var/log/exim4:rw,noexec,nosuid,size=16m
       - /tmp:rw,noexec,nosuid,size=16m
+    volumes:
+      # IPv4-only resolution; see the file's own comment.
+      - ./exim/ipv4-only.conf:/etc/exim4/ipv4-only.conf:ro
+    # Same as the image's CMD, with our overlay config.
+    command: ["exim", "-bd", "-v", "-C", "/etc/exim4/ipv4-only.conf"]
     networks:
       - mail
       # Internet access, for delivery only. Default DNS, so MX lookups work.

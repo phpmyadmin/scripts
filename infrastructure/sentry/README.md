@@ -49,6 +49,18 @@ Alerts and invitations go through the local `smtp` relay: `smtp:25`, no TLS, on 
 
 The queue is a tmpfs, so a message queued while delivery is failing is lost on restart. Add a named volume on `/var/spool/exim4` if that matters. The relay is a plain relay on a trusted network — it accepts mail from anything on `mail`, and only that network.
 
+### IPv4 only
+
+The relay resolves IPv4 only (`exim/ipv4-only.conf`, `dns_ipv4_lookup = *`). exim prefers AAAA records, and `egress` has no IPv6, so every delivery first tried an IPv6 host and logged `Network is unreachable` before falling back.
+
+Using the host's IPv6 instead needs all three of:
+
+- rootful Docker — rootless gives containers no outbound IPv6
+- `ip6tables` enabled in the daemon, and IPv6 forwarding on the host
+- `enable_ipv6: true` with a ULA subnet on `egress`, so Docker NATs it
+
+Then drop the overlay mount and `command:` from `smtp`. Note that receivers weigh IPv6 senders by forward-confirmed reverse DNS: the address needs a PTR record pointing at `SMTP_HELO_HOSTNAME`, which a sending address needs either way.
+
 ## Turning products off (crons, agents, logs…)
 
 There is **no environment variable and no server-wide switch**: products are a per-project setting, `disabled_products`, editable in **Settings → Data → Products** or by API. Values: `feedback`, `releases`, `performance`, `agents`, `logs`, `crons`. `issues` cannot be turned off (400), and turning `performance` off turns `agents` off too.
